@@ -1,6 +1,6 @@
 # worksheetGenerator
 
-Use `/tmp/workspace/bakerpdgit/worksheetGenerator/pdf-render-controls.js` in AI-generated worksheet HTML to allow user control of whitespace and line-break behavior before PDF rendering.
+Use `./pdf-render-controls.js` in AI-generated worksheet HTML to allow user control of whitespace and line-break behavior before PDF rendering.
 
 Example:
 
