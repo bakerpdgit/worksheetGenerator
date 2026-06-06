@@ -1,0 +1,1463 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Worksheet Pagination Tools Demo</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style id="dynamic-print-style"></style>
+  <style>
+    :root {
+      --page-width-px: 794px;
+      --page-height-px: 1123px;
+      --page-margin-y-px: 57px;
+      --page-margin-x-px: 57px;
+      --page-gap-px: 30px;
+      --printable-height-px: 1009px;
+      --printable-width-px: 680px;
+      --rule-gap-px: 30px;
+      --ink: #17202a;
+      --muted: #5b6673;
+      --panel: #ffffff;
+      --surface: #f4f7fb;
+      --line: #d5dde8;
+      --line-strong: #95a3b6;
+      --accent: #0f766e;
+      --accent-dark: #115e59;
+      --danger: #b42318;
+      --danger-soft: #fee4e2;
+      --focus: #e0f2fe;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--surface);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    body {
+      min-height: 100%;
+      margin: 0;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0) 220px),
+        var(--surface);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .app-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.94);
+      backdrop-filter: blur(12px);
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-title {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 700;
+      color: #111827;
+      margin-right: 6px;
+      white-space: nowrap;
+    }
+
+    .toolbar-title svg {
+      color: var(--accent);
+      flex: 0 0 auto;
+    }
+
+    .field {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .field select,
+    .field input[type="number"] {
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      padding: 0 10px;
+      min-width: 96px;
+    }
+
+    .field input[type="range"] {
+      width: 112px;
+      accent-color: var(--accent);
+    }
+
+    .segmented {
+      display: inline-flex;
+      align-items: center;
+      height: 34px;
+      padding: 2px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #eef3f8;
+    }
+
+    .segmented button {
+      height: 28px;
+      padding: 0 10px;
+      border: 0;
+      border-radius: 5px;
+      color: #425066;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .segmented button[aria-pressed="true"] {
+      color: #0f172a;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
+    }
+
+    .icon-button,
+    .pdf-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 36px;
+      min-width: 36px;
+      border-radius: 7px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .icon-button:hover,
+    .pdf-button:hover {
+      border-color: var(--line-strong);
+      background: #f8fafc;
+    }
+
+    .pdf-button {
+      gap: 8px;
+      padding: 0 13px;
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .pdf-button:hover {
+      border-color: var(--accent-dark);
+      background: var(--accent-dark);
+    }
+
+    .pdf-button[disabled] {
+      opacity: 0.65;
+      cursor: wait;
+    }
+
+    .page-count {
+      color: var(--muted);
+      font-size: 0.9rem;
+      min-width: 86px;
+      text-align: right;
+    }
+
+    .stage {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 30px 20px 52px;
+      overflow-x: auto;
+    }
+
+    .paper-preview {
+      position: relative;
+      width: var(--page-width-px);
+      min-height: var(--page-height-px);
+      padding: var(--page-margin-y-px) var(--page-margin-x-px);
+      border: 1px solid #c9d4e3;
+      background:
+        linear-gradient(90deg, rgba(15,118,110,0.10), rgba(15,118,110,0.10)) left var(--page-margin-x-px) top 0 / 1px 100% no-repeat,
+        linear-gradient(90deg, rgba(15,118,110,0.10), rgba(15,118,110,0.10)) right var(--page-margin-x-px) top 0 / 1px 100% no-repeat,
+        #fff;
+      box-shadow: 0 18px 50px rgba(15, 23, 42, 0.18);
+    }
+
+    .paper-preview::before,
+    .paper-preview::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      pointer-events: none;
+    }
+
+    .paper-preview::before {
+      top: var(--page-margin-y-px);
+      border-top: 1px solid rgba(15, 118, 110, 0.22);
+    }
+
+    .paper-preview::after {
+      top: calc(var(--page-height-px) - var(--page-margin-y-px));
+      border-top: 1px solid rgba(15, 118, 110, 0.22);
+    }
+
+    .worksheet-content {
+      position: relative;
+      width: var(--printable-width-px);
+      min-height: var(--printable-height-px);
+      padding-bottom: 0.1px;
+      background-image: none;
+      color: #1f2937;
+      counter-reset: question answer;
+    }
+
+    body.hide-guides .paper-preview {
+      background: #fff;
+    }
+
+    body.hide-guides .paper-preview::before,
+    body.hide-guides .paper-preview::after,
+    body.hide-guides .worksheet-content {
+      background-image: none;
+      border-color: transparent;
+    }
+
+    .worksheet-header {
+      text-align: center;
+      padding-bottom: 11mm;
+      border-bottom: 1px solid #d9e2ee;
+      margin-bottom: 9mm;
+    }
+
+    .worksheet-header h1 {
+      margin: 0;
+      color: #111827;
+      font-size: 26pt;
+      line-height: 1.12;
+      font-weight: 780;
+    }
+
+    .worksheet-header p {
+      margin: 5mm 0 0;
+      color: var(--muted);
+      font-size: 12pt;
+    }
+
+    .worksheet-section {
+      margin: 0 0 7mm;
+    }
+
+    .worksheet-section h2 {
+      margin: 0 0 3mm;
+      color: #0f766e;
+      font-size: 14.5pt;
+      line-height: 1.25;
+    }
+
+    .worksheet-section p {
+      margin: 0;
+      color: #4b5563;
+      font-size: 10.5pt;
+    }
+
+    .question,
+    .answer {
+      position: relative;
+      margin: 0 0 8mm;
+      padding: 0;
+      break-inside: auto;
+      page-break-inside: auto;
+    }
+
+    .question {
+      counter-increment: question;
+    }
+
+    .answer {
+      counter-increment: answer;
+      margin-bottom: 6mm;
+    }
+
+    .question-prompt,
+    .answer-body {
+      position: relative;
+      display: grid;
+      grid-template-columns: 9mm minmax(0, 1fr);
+      column-gap: 3mm;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .question-prompt::before,
+    .answer-body::before {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 7mm;
+      height: 7mm;
+      border-radius: 50%;
+      color: #fff;
+      background: #1f2937;
+      font-size: 9pt;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .question-prompt::before {
+      content: counter(question);
+    }
+
+    .answer-body::before {
+      content: counter(answer);
+      background: #0f766e;
+    }
+
+    .question-prompt p,
+    .answer-body p {
+      margin: 0 0 3mm;
+      font-size: 11pt;
+    }
+
+    .question-prompt p:last-child,
+    .answer-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    .marks {
+      display: inline-flex;
+      align-items: center;
+      float: right;
+      min-height: 22px;
+      margin-left: 8px;
+      padding: 0 8px;
+      border: 1px solid #cfd8e6;
+      border-radius: 999px;
+      color: #425066;
+      font-size: 9pt;
+      font-weight: 700;
+      background: #f8fafc;
+    }
+
+    .working-space {
+      width: calc(100% - 12mm);
+      height: 34mm;
+      margin-top: 4mm;
+      margin-left: 12mm;
+      border: 1px dashed #c9d4e3;
+      border-radius: 6px;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          transparent 0,
+          transparent calc(var(--rule-gap-px) - 1px),
+          rgba(99, 116, 139, 0.30) calc(var(--rule-gap-px) - 1px),
+          rgba(99, 116, 139, 0.30) var(--rule-gap-px)
+        );
+      background-color: #fff;
+    }
+
+    body.no-ruled-lines .working-space {
+      background-image: none;
+    }
+
+    .question.page-break-after .working-space {
+      display: none;
+    }
+
+    .question.page-break-after,
+    .answer.page-break-after {
+      margin-bottom: 0;
+    }
+
+    .page-break-after {
+      break-after: page;
+      page-break-after: always;
+    }
+
+    .pagination-tools {
+      position: absolute;
+      right: calc(-1 * var(--page-margin-x-px) + 7px);
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: max-content;
+      max-width: 150px;
+      color: #334155;
+      font-size: 0.78rem;
+      z-index: 5;
+    }
+
+    .tool-row {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 5px;
+      padding: 4px;
+      border: 1px solid #d8e0eb;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.11);
+    }
+
+    .tool-row .space-value {
+      min-width: 42px;
+      text-align: center;
+      color: #475569;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tool-row button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border: 1px solid #d1dae7;
+      border-radius: 6px;
+      background: #fff;
+      color: #1f2937;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .tool-row button:hover {
+      background: var(--focus);
+      border-color: #93c5fd;
+    }
+
+    .tool-row button[disabled] {
+      opacity: 0.38;
+      cursor: not-allowed;
+    }
+
+    .break-button[aria-pressed="true"] {
+      border-color: #fda29b;
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .screen-page-spacer,
+    .manual-break-spacer {
+      --page-fill-px: 0px;
+      position: relative;
+      display: none;
+      height: 0;
+      margin: 0;
+      width: var(--page-width-px);
+      margin-left: calc(-1 * var(--page-margin-x-px));
+      background:
+        linear-gradient(90deg, rgba(15, 118, 110, 0.24), rgba(15, 118, 110, 0.24)) left 0 top var(--page-fill-px) / 100% 1px no-repeat,
+        #fff;
+    }
+
+    .screen-page-spacer::after,
+    .manual-break-spacer::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(var(--page-fill-px) + var(--page-margin-y-px));
+      height: var(--page-gap-px);
+      border-top: 1px solid #c6d1df;
+      border-bottom: 1px solid #c6d1df;
+      background: var(--surface);
+      box-shadow:
+        inset 0 10px 14px -16px rgba(15, 23, 42, 0.75),
+        inset 0 -10px 14px -16px rgba(15, 23, 42, 0.75);
+    }
+
+    .manual-break-spacer::before {
+      content: "manual page break";
+      position: absolute;
+      left: 50%;
+      top: calc(var(--page-fill-px) + var(--page-margin-y-px) + 15px);
+      transform: translate(-50%, -50%);
+      padding: 3px 8px;
+      border: 1px solid #fda29b;
+      border-radius: 999px;
+      color: #9f1b12;
+      background: #fff;
+      font-size: 8.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      z-index: 1;
+    }
+
+    .natural-page-spacer {
+      display: block;
+    }
+
+    .page-break-after > .manual-break-spacer {
+      display: block;
+    }
+
+    .pdf-break-marker {
+      display: none;
+    }
+
+    .starts-new-page {
+      position: relative;
+    }
+
+    .starts-new-page::before {
+      content: "";
+      position: absolute;
+      left: calc(-1 * var(--page-margin-x-px));
+      right: calc(-1 * var(--page-margin-x-px));
+      top: 0;
+      z-index: 4;
+      border-top: 1px solid rgba(15, 118, 110, 0.24);
+      pointer-events: none;
+    }
+
+    body.hide-guides .screen-page-spacer,
+    body.hide-guides .manual-break-spacer {
+      background: #fff;
+    }
+
+    body.hide-guides .starts-new-page::before {
+      display: none;
+    }
+
+    .answers-title {
+      margin: 12mm 0 7mm;
+      padding-top: 5mm;
+      border-top: 2px solid #1f2937;
+    }
+
+    .answers-title h2 {
+      margin: 0 0 2mm;
+      color: #111827;
+      font-size: 16pt;
+      line-height: 1.2;
+    }
+
+    .answers-title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 10.5pt;
+    }
+
+    .katex-display {
+      margin: 2mm 0;
+    }
+
+    body.exporting .no-pdf {
+      display: none !important;
+    }
+
+    body.exporting .natural-page-spacer.no-pdf,
+    body.exporting .pdf-break-marker {
+      display: block !important;
+      width: auto !important;
+      height: 0 !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      background: none !important;
+      break-before: page;
+      page-break-before: always;
+    }
+
+    body.exporting .natural-page-spacer::before,
+    body.exporting .natural-page-spacer::after,
+    body.exporting .manual-break-spacer::before,
+    body.exporting .manual-break-spacer::after,
+    body.exporting .starts-new-page::before {
+      display: none !important;
+    }
+
+    body.exporting .page-break-after {
+      break-after: auto !important;
+      page-break-after: auto !important;
+    }
+
+    body.exporting .worksheet-content {
+      background-image: none !important;
+    }
+
+    body.exporting .paper-preview {
+      box-shadow: none;
+      border: 0;
+      padding: 0;
+      width: var(--printable-width-px);
+      background: #fff;
+    }
+
+    @media (max-width: 900px) {
+      .app-toolbar {
+        align-items: flex-start;
+      }
+
+      .toolbar-title {
+        width: 100%;
+      }
+
+      .toolbar-left,
+      .toolbar-right {
+        width: 100%;
+      }
+
+      .toolbar-right {
+        justify-content: space-between;
+      }
+
+      .pagination-tools {
+        position: static;
+        flex-direction: row;
+        flex-wrap: wrap;
+        margin: 4mm 0 0 12mm;
+        max-width: none;
+      }
+    }
+
+    @media print {
+      html,
+      body {
+        background: #fff !important;
+      }
+
+      .app-toolbar,
+      .no-pdf {
+        display: none !important;
+      }
+
+      .stage {
+        display: block;
+        padding: 0;
+        overflow: visible;
+      }
+
+      .paper-preview {
+        width: auto !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        background: #fff !important;
+      }
+
+      .paper-preview::before,
+      .paper-preview::after {
+        display: none !important;
+      }
+
+      .worksheet-content {
+        width: auto !important;
+        min-height: 0 !important;
+        background-image: none !important;
+      }
+
+      .working-space {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-toolbar no-pdf">
+    <div class="toolbar-left">
+      <div class="toolbar-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 2.75h8.2L19 7.55V21.25H6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+          <path d="M14 3v5h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+          <path d="M8.8 12.2h6.4M8.8 15.2h4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+        </svg>
+        Worksheet PDF Preview
+      </div>
+
+      <label class="field" for="page-size">
+        Page
+        <select id="page-size">
+          <option value="a4" selected>A4</option>
+          <option value="letter">US Letter</option>
+          <option value="legal">US Legal</option>
+        </select>
+      </label>
+
+      <div class="field">
+        Layout
+        <div class="segmented" role="group" aria-label="Page orientation">
+          <button type="button" data-orientation="portrait" aria-pressed="true">Portrait</button>
+          <button type="button" data-orientation="landscape" aria-pressed="false">Landscape</button>
+        </div>
+      </div>
+
+      <label class="field" for="page-margin-y">
+        Top/bottom
+        <input id="page-margin-y" type="range" min="8" max="35" step="1" value="15">
+        <input id="page-margin-y-number" type="number" min="8" max="35" step="1" value="15" aria-label="Top and bottom margin in millimetres">
+        mm
+      </label>
+
+      <label class="field" for="page-margin-x">
+        Left/right
+        <input id="page-margin-x" type="range" min="8" max="35" step="1" value="15">
+        <input id="page-margin-x-number" type="number" min="8" max="35" step="1" value="15" aria-label="Left and right margin in millimetres">
+        mm
+      </label>
+
+      <label class="field" for="line-gap">
+        Lines
+        <select id="line-gap">
+          <option value="none">Blank</option>
+          <option value="7">7 mm</option>
+          <option value="8" selected>8 mm</option>
+          <option value="10">10 mm</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="toolbar-right">
+      <button class="icon-button" id="toggle-guides" type="button" aria-label="Toggle page guides" title="Toggle page guides">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 5.5h16M4 12h16M4 18.5h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+        </svg>
+      </button>
+      <div class="page-count" id="page-count">1 page</div>
+      <button class="pdf-button" id="save-pdf" type="button">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3v10.5m0 0 4-4m-4 4-4-4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+          <path d="M5 15.5v3.75h14V15.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        <span id="save-pdf-label">Save PDF</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div class="paper-preview" id="paper-preview">
+      <!-- WORKSHEET CONTENT START
+        An AI generating a worksheet should edit this article only.
+        Keep .question for questions that need adjustable working space.
+        Keep .answer for worked solutions that only need optional page breaks.
+        The script below injects all controls and PDF behavior.
+      -->
+      <article class="worksheet-content" id="worksheet-content">
+        <section class="worksheet-header">
+          <h1>Integration by Recognition</h1>
+          <p>A-Level Mathematics Worksheet: Reverse Chain Rule</p>
+        </section>
+
+        <section class="worksheet-section">
+          <h2>Warm-Up</h2>
+          <p>Evaluate each integral. Show enough working to identify the inner function and its derivative.</p>
+        </section>
+
+        <div class="question" data-working-space-mm="30">
+          <div class="question-prompt">
+            <div>
+              <p>Evaluate \( \displaystyle \int 2x(x^2+5)^4 \, dx \). <span class="marks">2 marks</span></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="question" data-working-space-mm="34">
+          <div class="question-prompt">
+            <div>
+              <p>Find \( \displaystyle \int 3x^2e^{x^3-1} \, dx \). <span class="marks">2 marks</span></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="question" data-working-space-mm="36">
+          <div class="question-prompt">
+            <div>
+              <p>Evaluate \( \displaystyle \int \frac{6x}{3x^2+7} \, dx \). <span class="marks">2 marks</span></p>
+            </div>
+          </div>
+        </div>
+
+        <section class="worksheet-section">
+          <h2>Core Practice</h2>
+          <p>Use the reverse chain rule. Include the constant of integration where appropriate.</p>
+        </section>
+
+        <div class="question" data-working-space-mm="42">
+          <div class="question-prompt">
+            <div>
+              <p>Find \( \displaystyle \int (x+2)(x^2+4x+9)^5 \, dx \). <span class="marks">3 marks</span></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="question" data-working-space-mm="42">
+          <div class="question-prompt">
+            <div>
+              <p>Find \( \displaystyle \int \cos x \sqrt{4+\sin x} \, dx \). <span class="marks">3 marks</span></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="question" data-working-space-mm="48">
+          <div class="question-prompt">
+            <div>
+              <p>Find \( \displaystyle \int \frac{\sin x}{2+\cos x} \, dx \). <span class="marks">3 marks</span></p>
+            </div>
+          </div>
+        </div>
+
+        <section class="worksheet-section">
+          <h2>Definite Integrals</h2>
+          <p>Give exact answers, simplifying logarithms where possible.</p>
+        </section>
+
+        <div class="question" data-working-space-mm="52">
+          <div class="question-prompt">
+            <div>
+              <p>Calculate \( \displaystyle \int_0^2 4x(x^2+1)^3 \, dx \). <span class="marks">4 marks</span></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="question" data-working-space-mm="58">
+          <div class="question-prompt">
+            <div>
+              <p>Calculate \( \displaystyle \int_0^{\pi/4} 6\sec^2 x\, e^{3\tan x} \, dx \). <span class="marks">4 marks</span></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="question" data-working-space-mm="60">
+          <div class="question-prompt">
+            <div>
+              <p>Show that \( \displaystyle \int_{\pi/6}^{\pi/3} \frac{2\sin x}{1+\cos x}\,dx = 2\ln(1+\sqrt{3}/2)-2\ln(3/2) \). <span class="marks">5 marks</span></p>
+            </div>
+          </div>
+        </div>
+
+        <section class="answers-title">
+          <h2>Worked Answers</h2>
+          <p>These solutions are included after the questions and can also receive page breaks.</p>
+        </section>
+
+        <div class="answer">
+          <div class="answer-body">
+            <div>
+              <p>Let \(u=x^2+5\), so \(du=2x\,dx\).</p>
+              <p>\(\displaystyle \int 2x(x^2+5)^4\,dx=\int u^4\,du=\frac{1}{5}(x^2+5)^5+c\).</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="answer">
+          <div class="answer-body">
+            <div>
+              <p>Let \(u=x^3-1\), so \(du=3x^2\,dx\).</p>
+              <p>\(\displaystyle \int 3x^2e^{x^3-1}\,dx=e^{x^3-1}+c\).</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="answer">
+          <div class="answer-body">
+            <div>
+              <p>Let \(u=3x^2+7\), so \(du=6x\,dx\).</p>
+              <p>\(\displaystyle \int \frac{6x}{3x^2+7}\,dx=\ln|3x^2+7|+c\).</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="answer">
+          <div class="answer-body">
+            <div>
+              <p>Let \(u=x^2+4x+9\), so \(du=2(x+2)\,dx\).</p>
+              <p>\(\displaystyle \int (x+2)(x^2+4x+9)^5\,dx=\frac{1}{2}\int u^5\,du=\frac{1}{12}(x^2+4x+9)^6+c\).</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="answer">
+          <div class="answer-body">
+            <div>
+              <p>Let \(u=4+\sin x\), so \(du=\cos x\,dx\).</p>
+              <p>\(\displaystyle \int \cos x\sqrt{4+\sin x}\,dx=\int u^{1/2}\,du=\frac{2}{3}(4+\sin x)^{3/2}+c\).</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="answer">
+          <div class="answer-body">
+            <div>
+              <p>Let \(u=2+\cos x\), so \(du=-\sin x\,dx\).</p>
+              <p>\(\displaystyle \int \frac{\sin x}{2+\cos x}\,dx=-\ln|2+\cos x|+c\).</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="answer">
+          <div class="answer-body">
+            <div>
+              <p>Let \(u=x^2+1\), so \(du=2x\,dx\). The factor \(4x\,dx\) is \(2du\).</p>
+              <p>\(\displaystyle \int_0^2 4x(x^2+1)^3\,dx=2\int_1^5 u^3\,du=\frac{1}{2}(5^4-1^4)=312\).</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="answer">
+          <div class="answer-body">
+            <div>
+              <p>Let \(u=3\tan x\), so \(du=3\sec^2x\,dx\). The factor \(6\sec^2x\,dx\) is \(2du\).</p>
+              <p>\(\displaystyle \int_0^{\pi/4}6\sec^2x e^{3\tan x}\,dx=2\int_0^3 e^u\,du=2(e^3-1)\).</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="answer">
+          <div class="answer-body">
+            <div>
+              <p>Let \(u=1+\cos x\), so \(du=-\sin x\,dx\).</p>
+              <p>\(\displaystyle \int \frac{2\sin x}{1+\cos x}\,dx=-2\ln|1+\cos x|+c\).</p>
+              <p>Substitute \(x=\pi/3\) and \(x=\pi/6\) to obtain \( -2\ln(3/2)+2\ln(1+\sqrt{3}/2) \), which is the required result.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+      <!-- WORKSHEET CONTENT END -->
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      const MM_TO_PX = 96 / 25.4;
+      const SCREEN_PAGE_GAP_PX = 30;
+      const PAGE_SIZES = {
+        a4: { label: "A4", width: 210, height: 297 },
+        letter: { label: "US Letter", width: 215.9, height: 279.4 },
+        legal: { label: "US Legal", width: 215.9, height: 355.6 }
+      };
+
+      const state = {
+        pageSize: "a4",
+        orientation: "portrait",
+        marginYMm: 15,
+        marginXMm: 15,
+        lineGapMm: 8,
+        hideGuides: false,
+        layoutRaf: 0,
+        renderedPageCount: 1
+      };
+
+      const els = {};
+
+      document.addEventListener("DOMContentLoaded", init);
+
+      function init() {
+        els.root = document.documentElement;
+        els.body = document.body;
+        els.paper = document.getElementById("paper-preview");
+        els.content = document.getElementById("worksheet-content");
+        els.pageSize = document.getElementById("page-size");
+        els.marginY = document.getElementById("page-margin-y");
+        els.marginYNumber = document.getElementById("page-margin-y-number");
+        els.marginX = document.getElementById("page-margin-x");
+        els.marginXNumber = document.getElementById("page-margin-x-number");
+        els.lineGap = document.getElementById("line-gap");
+        els.pageCount = document.getElementById("page-count");
+        els.savePdf = document.getElementById("save-pdf");
+        els.savePdfLabel = document.getElementById("save-pdf-label");
+        els.printStyle = document.getElementById("dynamic-print-style");
+
+        decorateWorksheet();
+        wireControls();
+        applyPageSettings();
+        renderMath();
+
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(scheduleLayout);
+        }
+        window.addEventListener("resize", scheduleLayout);
+      }
+
+      function decorateWorksheet() {
+        els.content.querySelectorAll(".question").forEach((block) => {
+          if (!block.querySelector(":scope > .working-space")) {
+            const work = document.createElement("div");
+            work.className = "working-space";
+            work.setAttribute("aria-hidden", "true");
+            block.appendChild(work);
+          }
+          appendTools(block, true);
+          syncQuestionSpace(block);
+        });
+
+        els.content.querySelectorAll(".answer").forEach((block) => {
+          appendTools(block, false);
+        });
+      }
+
+      function appendTools(block, hasSpacing) {
+        if (block.querySelector(":scope > .pagination-tools")) {
+          return;
+        }
+
+        const spacer = document.createElement("div");
+        spacer.className = "manual-break-spacer no-pdf";
+        spacer.setAttribute("aria-hidden", "true");
+        block.appendChild(spacer);
+
+        const tools = document.createElement("div");
+        tools.className = "pagination-tools no-pdf";
+        tools.innerHTML = [
+          hasSpacing ? `
+            <div class="tool-row" aria-label="Working space controls">
+              <button type="button" data-action="space-down" aria-label="Decrease working space" title="Decrease working space">-</button>
+              <span class="space-value" data-space-value></span>
+              <button type="button" data-action="space-up" aria-label="Increase working space" title="Increase working space">+</button>
+            </div>
+          ` : "",
+          `
+            <div class="tool-row" aria-label="Page break controls">
+              <button class="break-button" type="button" data-action="toggle-break" aria-pressed="false" aria-label="Toggle page break after this item" title="Toggle page break">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 3.5h9l3 3v5M15 3.5v4h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+                  <path d="M5 16h14M9 12l-4 4 4 4M15 12l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </button>
+            </div>
+          `
+        ].join("");
+        block.appendChild(tools);
+      }
+
+      function wireControls() {
+        els.content.addEventListener("click", (event) => {
+          const button = event.target.closest("button[data-action]");
+          if (!button) {
+            return;
+          }
+
+          const block = button.closest(".question, .answer");
+          if (!block) {
+            return;
+          }
+
+          const action = button.dataset.action;
+          if (action === "space-up") {
+            adjustWorkingSpace(block, 8);
+          } else if (action === "space-down") {
+            adjustWorkingSpace(block, -8);
+          } else if (action === "toggle-break") {
+            toggleBreak(block);
+          }
+        });
+
+        els.pageSize.addEventListener("change", () => {
+          state.pageSize = els.pageSize.value;
+          applyPageSettings();
+        });
+
+        document.querySelectorAll("[data-orientation]").forEach((button) => {
+          button.addEventListener("click", () => {
+            state.orientation = button.dataset.orientation;
+            document.querySelectorAll("[data-orientation]").forEach((item) => {
+              item.setAttribute("aria-pressed", String(item === button));
+            });
+            applyPageSettings();
+          });
+        });
+
+        els.marginY.addEventListener("input", () => {
+          state.marginYMm = Number(els.marginY.value);
+          els.marginYNumber.value = String(state.marginYMm);
+          applyPageSettings();
+        });
+
+        els.marginYNumber.addEventListener("change", () => {
+          const next = clamp(Number(els.marginYNumber.value) || 15, 8, 35);
+          state.marginYMm = next;
+          els.marginY.value = String(next);
+          els.marginYNumber.value = String(next);
+          applyPageSettings();
+        });
+
+        els.marginX.addEventListener("input", () => {
+          state.marginXMm = Number(els.marginX.value);
+          els.marginXNumber.value = String(state.marginXMm);
+          applyPageSettings();
+        });
+
+        els.marginXNumber.addEventListener("change", () => {
+          const next = clamp(Number(els.marginXNumber.value) || 15, 8, 35);
+          state.marginXMm = next;
+          els.marginX.value = String(next);
+          els.marginXNumber.value = String(next);
+          applyPageSettings();
+        });
+
+        els.lineGap.addEventListener("change", () => {
+          if (els.lineGap.value === "none") {
+            state.lineGapMm = 0;
+            els.body.classList.add("no-ruled-lines");
+          } else {
+            state.lineGapMm = Number(els.lineGap.value);
+            els.body.classList.remove("no-ruled-lines");
+          }
+          els.root.style.setProperty("--rule-gap-px", `${Math.max(1, state.lineGapMm * MM_TO_PX)}px`);
+        });
+
+        document.getElementById("toggle-guides").addEventListener("click", () => {
+          state.hideGuides = !state.hideGuides;
+          els.body.classList.toggle("hide-guides", state.hideGuides);
+        });
+
+        els.savePdf.addEventListener("click", savePdf);
+      }
+
+      function adjustWorkingSpace(block, deltaMm) {
+        if (block.classList.contains("page-break-after")) {
+          return;
+        }
+        const current = readSpaceMm(block);
+        block.dataset.workingSpaceMm = String(clamp(current + deltaMm, 0, 130));
+        syncQuestionSpace(block);
+        scheduleLayout();
+      }
+
+      function toggleBreak(block) {
+        const next = !block.classList.contains("page-break-after");
+        block.classList.toggle("page-break-after", next);
+        block.dataset.pageBreakAfter = next ? "true" : "false";
+
+        const breakButton = block.querySelector('[data-action="toggle-break"]');
+        if (breakButton) {
+          breakButton.setAttribute("aria-pressed", String(next));
+        }
+
+        block.querySelectorAll('[data-action="space-up"], [data-action="space-down"]').forEach((button) => {
+          button.disabled = next;
+        });
+
+        scheduleLayout();
+      }
+
+      function syncQuestionSpace(block) {
+        const mm = readSpaceMm(block);
+        const work = block.querySelector(":scope > .working-space");
+        if (work) {
+          work.style.height = `${mm}mm`;
+        }
+        const value = block.querySelector("[data-space-value]");
+        if (value) {
+          value.textContent = `${Math.round(mm)} mm`;
+        }
+      }
+
+      function readSpaceMm(block) {
+        const raw = Number(block.dataset.workingSpaceMm);
+        return Number.isFinite(raw) ? raw : 34;
+      }
+
+      function applyPageSettings() {
+        const page = getPage();
+        const marginYPx = state.marginYMm * MM_TO_PX;
+        const marginXPx = state.marginXMm * MM_TO_PX;
+        const printableWidthPx = Math.max(260, (page.width - state.marginXMm * 2) * MM_TO_PX);
+        const printableHeightPx = Math.max(260, (page.height - state.marginYMm * 2) * MM_TO_PX);
+
+        els.root.style.setProperty("--page-width-px", `${page.width * MM_TO_PX}px`);
+        els.root.style.setProperty("--page-height-px", `${page.height * MM_TO_PX}px`);
+        els.root.style.setProperty("--page-margin-y-px", `${marginYPx}px`);
+        els.root.style.setProperty("--page-margin-x-px", `${marginXPx}px`);
+        els.root.style.setProperty("--page-gap-px", `${SCREEN_PAGE_GAP_PX}px`);
+        els.root.style.setProperty("--printable-width-px", `${printableWidthPx}px`);
+        els.root.style.setProperty("--printable-height-px", `${printableHeightPx}px`);
+        els.root.style.setProperty("--rule-gap-px", `${Math.max(1, state.lineGapMm * MM_TO_PX)}px`);
+
+        els.printStyle.textContent = `@page { size: ${page.width}mm ${page.height}mm; margin: ${state.marginYMm}mm ${state.marginXMm}mm; }`;
+
+        scheduleLayout();
+      }
+
+      function getPage() {
+        const base = PAGE_SIZES[state.pageSize];
+        const portrait = state.orientation === "portrait";
+        const width = portrait ? base.width : base.height;
+        const height = portrait ? base.height : base.width;
+        return { width, height, label: base.label, orientation: state.orientation };
+      }
+
+      function scheduleLayout() {
+        cancelAnimationFrame(state.layoutRaf);
+        state.layoutRaf = requestAnimationFrame(updateScreenPagination);
+      }
+
+      function updateScreenPagination() {
+        const printableHeight = getPrintableHeightPx();
+        const blocks = Array.from(els.content.querySelectorAll(".question, .answer"));
+
+        els.content.querySelectorAll(".starts-new-page").forEach((item) => {
+          item.classList.remove("starts-new-page");
+        });
+        els.content.querySelectorAll(":scope > .natural-page-spacer").forEach((spacer) => spacer.remove());
+        blocks.forEach((block) => {
+          const spacer = block.querySelector(":scope > .manual-break-spacer");
+          if (spacer) {
+            spacer.style.setProperty("--page-fill-px", "0px");
+            spacer.style.height = "0px";
+          }
+        });
+
+        void els.content.offsetHeight;
+
+        let pageY = 0;
+        let pages = 1;
+        let nextStartsNewPage = false;
+        const items = Array.from(els.content.children).filter((item) => {
+          return !item.classList.contains("natural-page-spacer");
+        });
+
+        items.forEach((item, index) => {
+          if (item.classList.contains("manual-break-spacer")) {
+            return;
+          }
+
+          if (nextStartsNewPage) {
+            item.classList.add("starts-new-page");
+            nextStartsNewPage = false;
+          }
+
+          const itemHeight = getOuterHeight(item);
+          const nextItem = items[index + 1];
+          const keepWithNextHeight = shouldKeepWithNext(item, nextItem) ? getOuterHeight(nextItem) : 0;
+          const fitHeight = itemHeight + keepWithNextHeight;
+          const fitsCurrentPage = pageY === 0 || pageY + fitHeight <= printableHeight;
+          const canMoveWholeItem = fitHeight < printableHeight * 0.98;
+
+          if (!fitsCurrentPage && canMoveWholeItem) {
+            const naturalSpacer = createPageSpacer(printableHeight - pageY);
+            els.content.insertBefore(naturalSpacer, item);
+            item.classList.add("starts-new-page");
+            pages += 1;
+            pageY = 0;
+          }
+
+          pageY += itemHeight;
+
+          if (item.classList.contains("page-break-after")) {
+            const spacer = item.querySelector(":scope > .manual-break-spacer");
+            setPageSpacerHeight(spacer, Math.max(0, printableHeight - Math.min(pageY, printableHeight)));
+            pages += 1;
+            pageY = 0;
+            nextStartsNewPage = true;
+            return;
+          }
+
+          if (pageY > printableHeight) {
+            const overflowPages = Math.floor(pageY / printableHeight);
+            pages += overflowPages;
+            pageY = pageY % printableHeight;
+          }
+        });
+
+        state.renderedPageCount = pages;
+        updatePageCount();
+      }
+
+      function createPageSpacer(fillPx) {
+        const spacer = document.createElement("div");
+        spacer.className = "screen-page-spacer natural-page-spacer no-pdf";
+        spacer.setAttribute("aria-hidden", "true");
+        setPageSpacerHeight(spacer, fillPx);
+        return spacer;
+      }
+
+      function setPageSpacerHeight(spacer, fillPx) {
+        if (!spacer) {
+          return;
+        }
+        const fill = Math.max(0, fillPx);
+        const total = fill + (state.marginYMm * MM_TO_PX * 2) + SCREEN_PAGE_GAP_PX;
+        spacer.style.setProperty("--page-fill-px", `${fill}px`);
+        spacer.style.height = `${total}px`;
+      }
+
+      function getOuterHeight(element) {
+        const rect = element.getBoundingClientRect();
+        const style = window.getComputedStyle(element);
+        const marginTop = parseFloat(style.marginTop) || 0;
+        const marginBottom = parseFloat(style.marginBottom) || 0;
+        return rect.height + marginTop + marginBottom;
+      }
+
+      function shouldKeepWithNext(item, nextItem) {
+        if (!nextItem) {
+          return false;
+        }
+        const isHeadingBlock = item.classList.contains("worksheet-section") || item.classList.contains("answers-title");
+        const isContentBlock = nextItem.classList.contains("question") || nextItem.classList.contains("answer");
+        return isHeadingBlock && isContentBlock;
+      }
+
+      function updatePageCount() {
+        const pages = Math.max(1, state.renderedPageCount || 1);
+        els.pageCount.textContent = `${pages} ${pages === 1 ? "page" : "pages"}`;
+      }
+
+      function getPrintableHeightPx() {
+        const page = getPage();
+        return Math.max(260, (page.height - state.marginYMm * 2) * MM_TO_PX);
+      }
+
+      async function savePdf() {
+        const page = getPage();
+        const filename = makeFilename();
+        let pdfBreakMarkers = [];
+
+        els.savePdf.disabled = true;
+        els.savePdfLabel.textContent = "Saving";
+
+        try {
+          updateScreenPagination();
+          pdfBreakMarkers = insertPdfBreakMarkers();
+          els.body.classList.add("exporting");
+          await nextFrame();
+
+          if (typeof window.html2pdf !== "function") {
+            window.print();
+            return;
+          }
+
+          await window.html2pdf()
+            .set({
+              margin: [state.marginYMm, state.marginXMm, state.marginYMm, state.marginXMm],
+              filename,
+              image: { type: "jpeg", quality: 0.98 },
+              html2canvas: {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: "#ffffff",
+                scrollX: 0,
+                scrollY: 0,
+                windowWidth: document.documentElement.clientWidth
+              },
+              jsPDF: {
+                unit: "mm",
+                format: [page.width, page.height],
+                orientation: page.orientation
+              },
+              pagebreak: {
+                mode: ["css", "legacy"],
+                before: [".natural-page-spacer", ".pdf-break-marker"],
+                avoid: [".question", ".answer", ".worksheet-section", ".answers-title", ".question-prompt", ".answer-body"]
+              }
+            })
+            .from(els.content)
+            .save();
+        } catch (error) {
+          console.error(error);
+          window.alert("PDF export failed. The browser print dialog will open as a fallback.");
+          window.print();
+        } finally {
+          pdfBreakMarkers.forEach((marker) => marker.remove());
+          els.body.classList.remove("exporting");
+          els.savePdf.disabled = false;
+          els.savePdfLabel.textContent = "Save PDF";
+          scheduleLayout();
+        }
+      }
+
+      function insertPdfBreakMarkers() {
+        els.content.querySelectorAll(":scope > .pdf-break-marker").forEach((marker) => marker.remove());
+
+        return Array.from(els.content.querySelectorAll(".page-break-after"))
+          .map((block) => {
+            const nextContent = findNextExportContent(block);
+            if (!nextContent) {
+              return null;
+            }
+
+            const marker = document.createElement("div");
+            marker.className = "pdf-break-marker";
+            marker.setAttribute("aria-hidden", "true");
+            block.insertAdjacentElement("afterend", marker);
+            return marker;
+          })
+          .filter(Boolean);
+      }
+
+      function findNextExportContent(block) {
+        let next = block.nextElementSibling;
+        while (next && (next.classList.contains("natural-page-spacer") || next.classList.contains("pdf-break-marker"))) {
+          next = next.nextElementSibling;
+        }
+        return next;
+      }
+
+      function renderMath() {
+        const run = () => {
+          if (typeof window.renderMathInElement === "function") {
+            window.renderMathInElement(els.content, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+                { left: "$", right: "$", display: false }
+              ],
+              throwOnError: false
+            });
+            scheduleLayout();
+          }
+        };
+
+        if (document.readyState === "complete") {
+          run();
+        } else {
+          window.addEventListener("load", run, { once: true });
+        }
+      }
+
+      function makeFilename() {
+        const title = els.content.querySelector("h1");
+        const raw = title ? title.textContent : "worksheet";
+        const slug = raw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+        return `${slug || "worksheet"}-pagination-demo.pdf`;
+      }
+
+      function nextFrame() {
+        return new Promise((resolve) => requestAnimationFrame(() => resolve()));
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+    })();
+  </script>
+</body>
+</html>
