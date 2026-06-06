@@ -35,7 +35,7 @@
   const pickAllowedValue = (key, value) =>
     allowedValues[key].has(value) ? value : defaults[key];
 
-  const safeSelectorPattern = /^[a-zA-Z0-9_#[\].\-\s="'^$*|~:>()+]+$/;
+  const safeSelectorPattern = /^[a-zA-Z0-9_#[\].\-\s=]+$/;
 
   const sanitizeSelector = (selector) =>
     typeof selector === 'string' &&
@@ -93,7 +93,11 @@
   };
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applyTextStyles, { once: true });
+    const handleDomReady = () => {
+      document.removeEventListener('DOMContentLoaded', handleDomReady);
+      applyTextStyles();
+    };
+    document.addEventListener('DOMContentLoaded', handleDomReady);
   } else {
     applyTextStyles();
   }
