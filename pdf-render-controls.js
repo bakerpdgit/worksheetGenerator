@@ -35,13 +35,14 @@
   const pickAllowedValue = (key, value) =>
     allowedValues[key].has(value) ? value : defaults[key];
 
-  const safeSelectorPattern = /^[a-zA-Z0-9_#[\].\-\s=]+$/;
+  const maxSelectorLength = 200;
+  const safeSelectorPattern = /^[a-zA-Z0-9_#\[\].\-\s]+$/;
 
   const sanitizeSelector = (selector) =>
     typeof selector === 'string' &&
     selector.trim() &&
     safeSelectorPattern.test(selector) &&
-    selector.length <= 200
+    selector.length <= maxSelectorLength
       ? selector
       : defaults.selector;
 
