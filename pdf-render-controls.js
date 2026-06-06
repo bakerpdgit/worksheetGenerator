@@ -72,14 +72,24 @@
     ),
   };
 
-  const style = document.createElement('style');
-  style.setAttribute('data-pdf-render-controls', 'true');
-  style.textContent = `
-${options.selector} {
-  white-space: ${options.whiteSpace};
-  overflow-wrap: ${options.overflowWrap};
-  word-break: ${options.wordBreak};
-}
-`;
-  document.head.appendChild(style);
+  const applyTextStyles = () => {
+    let nodes;
+    try {
+      nodes = document.querySelectorAll(options.selector);
+    } catch (_error) {
+      nodes = document.querySelectorAll(defaults.selector);
+    }
+
+    nodes.forEach((node) => {
+      node.style.whiteSpace = options.whiteSpace;
+      node.style.overflowWrap = options.overflowWrap;
+      node.style.wordBreak = options.wordBreak;
+    });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyTextStyles, { once: true });
+  } else {
+    applyTextStyles();
+  }
 })();
