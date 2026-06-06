@@ -4,7 +4,6 @@
   }
 
   const root = document.documentElement;
-  const body = document.body;
   const userOptions =
     typeof window !== 'undefined' && window.WorksheetPdfRenderOptions
       ? window.WorksheetPdfRenderOptions
@@ -36,43 +35,49 @@
   const pickAllowedValue = (key, value) =>
     allowedValues[key].has(value) ? value : defaults[key];
 
+  const safeSelectorPattern = /^[a-zA-Z0-9_#[\].\-\s="'^$*|~:>()+]+$/;
+
   const sanitizeSelector = (selector) =>
     typeof selector === 'string' &&
     selector.trim() &&
-    !/[{};]/.test(selector) &&
+    safeSelectorPattern.test(selector) &&
     selector.length <= 200
       ? selector
       : defaults.selector;
 
-  const options = {
-    selector: sanitizeSelector(userOptions.selector || defaults.selector),
-    whiteSpace: pickAllowedValue(
-      'whiteSpace',
-      query.get('pdfWhiteSpace') ||
-        userOptions.whiteSpace ||
-        root.getAttribute('data-pdf-white-space') ||
-        (body && body.getAttribute('data-pdf-white-space')) ||
-        defaults.whiteSpace
-    ),
-    overflowWrap: pickAllowedValue(
-      'overflowWrap',
-      query.get('pdfOverflowWrap') ||
-        userOptions.overflowWrap ||
-        root.getAttribute('data-pdf-overflow-wrap') ||
-        (body && body.getAttribute('data-pdf-overflow-wrap')) ||
-        defaults.overflowWrap
-    ),
-    wordBreak: pickAllowedValue(
-      'wordBreak',
-      query.get('pdfWordBreak') ||
-        userOptions.wordBreak ||
-        root.getAttribute('data-pdf-word-break') ||
-        (body && body.getAttribute('data-pdf-word-break')) ||
-        defaults.wordBreak
-    ),
+  const resolveOptions = () => {
+    const body = document.body;
+    return {
+      selector: sanitizeSelector(userOptions.selector || defaults.selector),
+      whiteSpace: pickAllowedValue(
+        'whiteSpace',
+        query.get('pdfWhiteSpace') ||
+          userOptions.whiteSpace ||
+          root.getAttribute('data-pdf-white-space') ||
+          (body && body.getAttribute('data-pdf-white-space')) ||
+          defaults.whiteSpace
+      ),
+      overflowWrap: pickAllowedValue(
+        'overflowWrap',
+        query.get('pdfOverflowWrap') ||
+          userOptions.overflowWrap ||
+          root.getAttribute('data-pdf-overflow-wrap') ||
+          (body && body.getAttribute('data-pdf-overflow-wrap')) ||
+          defaults.overflowWrap
+      ),
+      wordBreak: pickAllowedValue(
+        'wordBreak',
+        query.get('pdfWordBreak') ||
+          userOptions.wordBreak ||
+          root.getAttribute('data-pdf-word-break') ||
+          (body && body.getAttribute('data-pdf-word-break')) ||
+          defaults.wordBreak
+      ),
+    };
   };
 
   const applyTextStyles = () => {
+    const options = resolveOptions();
     let nodes;
     try {
       nodes = document.querySelectorAll(options.selector);
