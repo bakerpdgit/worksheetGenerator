@@ -19,7 +19,7 @@
     ></script>
     <script
       defer
-      src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+      src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.12.1/html2pdf.bundle.min.js"
     ></script>
 
     <style id="dynamic-print-style"></style>
@@ -290,9 +290,9 @@
 
       .worksheet-header {
         text-align: center;
-        padding-bottom: 11mm;
+        padding-bottom: 6mm;
         border-bottom: 1px solid #d9e2ee;
-        margin-bottom: 9mm;
+        margin-bottom: 5mm;
       }
 
       .worksheet-header h1 {
@@ -304,7 +304,7 @@
       }
 
       .worksheet-header p {
-        margin: 5mm 0 0;
+        margin: 3mm 0 0;
         color: var(--muted);
         font-size: 12pt;
       }
@@ -481,6 +481,15 @@
         font-variant-numeric: tabular-nums;
       }
 
+      .tool-row .resize-handle {
+        cursor: ns-resize;
+        color: #64748b;
+      }
+
+      .tool-row .resize-handle svg {
+        pointer-events: none;
+      }
+
       .tool-row button {
         display: inline-flex;
         align-items: center;
@@ -577,10 +586,6 @@
         display: block;
       }
 
-      .pdf-break-marker {
-        display: none;
-      }
-
       .starts-new-page {
         position: relative;
       }
@@ -632,18 +637,10 @@
         display: none !important;
       }
 
-      body.exporting .natural-page-spacer.no-pdf,
-      body.exporting .pdf-break-marker {
-        display: block !important;
-        width: auto !important;
-        height: 0 !important;
-        min-height: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        border: 0 !important;
-        background: none !important;
+      body.exporting .starts-new-page {
         break-before: page;
         page-break-before: always;
+        padding-top: 2mm;
       }
 
       body.exporting .natural-page-spacer::before,
@@ -1165,6 +1162,8 @@
       (function () {
         const MM_TO_PX = 96 / 25.4;
         const SCREEN_PAGE_GAP_PX = 30;
+        const PAGE_BREAK_SAFETY_PX = 12;
+        const MIN_SPLIT_WORKING_PX = 8;
         const PAGE_SIZES = {
           a4: { label: "A4", width: 210, height: 297 },
           letter: { label: "US Letter", width: 215.9, height: 279.4 },
@@ -1180,6 +1179,7 @@
           hideGuides: false,
           layoutRaf: 0,
           renderedPageCount: 1,
+          resizeDrag: null,
         };
 
         const els = {};
@@ -1246,6 +1246,11 @@
             hasSpacing
               ? `
             <div class="tool-row" aria-label="Working space controls">
+              <button class="resize-handle" type="button" data-action="space-drag" aria-label="Drag to resize working space" title="Drag to resize working space">
+                <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m8 7 4-4 4 4M8 17l4 4 4-4M12 4v16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </button>
               <button type="button" data-action="space-down" aria-label="Decrease working space" title="Decrease working space">-</button>
               <span class="space-value" data-space-value></span>
               <button type="button" data-action="space-up" aria-label="Increase working space" title="Increase working space">+</button>
@@ -1277,6 +1282,15 @@
         }
 
         function wireControls() {
+          els.content.addEventListener("pointerdown", (event) => {
+            const handle = event.target.closest('[data-action="space-drag"]');
+            if (!handle) {
+              return;
+            }
+
+            startSpaceDrag(event, handle);
+          });
+
           els.content.addEventListener("click", (event) => {
             const button = event.target.closest("button[data-action]");
             if (!button) {
@@ -1293,6 +1307,8 @@
               adjustWorkingSpace(block, 8);
             } else if (action === "space-down") {
               adjustWorkingSpace(block, -8);
+            } else if (action === "space-drag") {
+              return;
             } else if (action === "toggle-split") {
               toggleSplit(block);
             } else if (action === "toggle-break") {
@@ -1367,6 +1383,62 @@
             });
 
           els.savePdf.addEventListener("click", savePdf);
+          window.addEventListener("pointermove", updateSpaceDrag);
+          window.addEventListener("pointerup", endSpaceDrag);
+          window.addEventListener("pointercancel", endSpaceDrag);
+        }
+
+        function startSpaceDrag(event, handle) {
+          const block = handle.closest(".question");
+          if (!block) {
+            return;
+          }
+
+          event.preventDefault();
+          state.resizeDrag = {
+            block,
+            handle,
+            pointerId: event.pointerId,
+            startY: event.clientY,
+            startMm: readSpaceMm(block),
+          };
+          try {
+            handle.setPointerCapture?.(event.pointerId);
+          } catch {
+            // Some synthetic pointer events cannot be captured.
+          }
+          handle.classList.add("is-dragging");
+        }
+
+        function updateSpaceDrag(event) {
+          if (
+            !state.resizeDrag ||
+            event.pointerId !== state.resizeDrag.pointerId
+          ) {
+            return;
+          }
+
+          const deltaMm = (event.clientY - state.resizeDrag.startY) / MM_TO_PX;
+          const next = clamp(state.resizeDrag.startMm + deltaMm, 0, 130);
+          setWorkingSpace(state.resizeDrag.block, next);
+        }
+
+        function endSpaceDrag(event) {
+          if (
+            !state.resizeDrag ||
+            event.pointerId !== state.resizeDrag.pointerId
+          ) {
+            return;
+          }
+
+          state.resizeDrag.handle.classList.remove("is-dragging");
+          try {
+            state.resizeDrag.handle.releasePointerCapture?.(event.pointerId);
+          } catch {
+            // Ignore release errors from already-ended pointer captures.
+          }
+          state.resizeDrag = null;
+          scheduleLayout();
         }
 
         function adjustWorkingSpace(block, deltaMm) {
@@ -1374,9 +1446,11 @@
             return;
           }
           const current = readSpaceMm(block);
-          block.dataset.workingSpaceMm = String(
-            clamp(current + deltaMm, 0, 130),
-          );
+          setWorkingSpace(block, current + deltaMm);
+        }
+
+        function setWorkingSpace(block, nextMm) {
+          block.dataset.workingSpaceMm = String(clamp(nextMm, 0, 130));
           syncQuestionSpace(block);
           scheduleLayout();
         }
@@ -1497,7 +1571,7 @@
         }
 
         function updateScreenPagination() {
-          const printableHeight = getPrintableHeightPx();
+          const printableHeight = getLayoutHeightPx();
           const blocks = Array.from(
             els.content.querySelectorAll(".question, .answer"),
           );
@@ -1543,6 +1617,7 @@
             }
 
             const itemHeight = getOuterHeight(item);
+            const itemContentHeight = getBoxHeight(item);
             const nextItem = items[index + 1];
             const keepWithNextHeight = shouldKeepWithNext(item, nextItem)
               ? getOuterHeight(nextItem)
@@ -1555,6 +1630,27 @@
             const canMoveWholeItem = fitHeight < printableHeight * 0.98;
 
             if (!fitsCurrentPage) {
+              if (canTrySplit && pageY + itemContentHeight <= printableHeight) {
+                pageY += itemContentHeight;
+
+                if (item.classList.contains("page-break-after")) {
+                  const spacer = item.querySelector(
+                    ":scope > .manual-break-spacer",
+                  );
+                  setPageSpacerHeight(
+                    spacer,
+                    Math.max(
+                      0,
+                      printableHeight - Math.min(pageY, printableHeight),
+                    ),
+                  );
+                  pages += 1;
+                  pageY = 0;
+                  nextStartsNewPage = true;
+                }
+                return;
+              }
+
               const split = splitQuestionWorkingSpace(
                 item,
                 pageY,
@@ -1652,21 +1748,20 @@
           const promptAndGapHeight = work.offsetTop;
           const workingHeight = work.getBoundingClientRect().height;
           const available = printableHeight - pageY;
-          const minSplitPx = 24;
 
           if (
-            available <= promptAndGapHeight + minSplitPx ||
-            available >= promptAndGapHeight + workingHeight - minSplitPx
+            available <= promptAndGapHeight + MIN_SPLIT_WORKING_PX ||
+            available >= promptAndGapHeight + workingHeight - 1
           ) {
             return null;
           }
 
           const firstWorkingHeight = Math.max(
-            minSplitPx,
+            MIN_SPLIT_WORKING_PX,
             available - promptAndGapHeight,
           );
           const remainingWorkingHeight = Math.max(
-            minSplitPx,
+            MIN_SPLIT_WORKING_PX,
             workingHeight - firstWorkingHeight,
           );
 
@@ -1709,6 +1804,10 @@
           const marginTop = parseFloat(style.marginTop) || 0;
           const marginBottom = parseFloat(style.marginBottom) || 0;
           return rect.height + marginTop + marginBottom;
+        }
+
+        function getBoxHeight(element) {
+          return element.getBoundingClientRect().height;
         }
 
         function getPrimaryWorkingSpace(block) {
@@ -1765,6 +1864,10 @@
           els.pageCount.textContent = `${pages} ${pages === 1 ? "page" : "pages"}`;
         }
 
+        function getLayoutHeightPx() {
+          return Math.max(1, getPrintableHeightPx() - PAGE_BREAK_SAFETY_PX);
+        }
+
         function getPrintableHeightPx() {
           const page = getPage();
           return Math.max(260, (page.height - state.marginYMm * 2) * MM_TO_PX);
@@ -1773,14 +1876,12 @@
         async function savePdf() {
           const page = getPage();
           const filename = makeFilename();
-          let pdfBreakMarkers = [];
 
           els.savePdf.disabled = true;
           els.savePdfLabel.textContent = "Saving";
 
           try {
             updateScreenPagination();
-            pdfBreakMarkers = insertPdfBreakMarkers();
             els.body.classList.add("exporting");
             await nextFrame();
             await waitForPdfLibrary();
@@ -1811,7 +1912,7 @@
                 },
                 pagebreak: {
                   mode: ["css", "legacy"],
-                  before: [".natural-page-spacer", ".pdf-break-marker"],
+                  before: [".starts-new-page"],
                   avoid: [
                     ".question:not(.split-across-pages)",
                     ".answer",
@@ -1830,45 +1931,11 @@
               "PDF export failed because the PDF library did not finish correctly. No browser print fallback was used, so headers and footers will not be added by this button.",
             );
           } finally {
-            pdfBreakMarkers.forEach((marker) => marker.remove());
             els.body.classList.remove("exporting");
             els.savePdf.disabled = false;
             els.savePdfLabel.textContent = "Save PDF";
             scheduleLayout();
           }
-        }
-
-        function insertPdfBreakMarkers() {
-          els.content
-            .querySelectorAll(":scope > .pdf-break-marker")
-            .forEach((marker) => marker.remove());
-
-          return Array.from(els.content.querySelectorAll(".page-break-after"))
-            .map((block) => {
-              const nextContent = findNextExportContent(block);
-              if (!nextContent) {
-                return null;
-              }
-
-              const marker = document.createElement("div");
-              marker.className = "pdf-break-marker";
-              marker.setAttribute("aria-hidden", "true");
-              block.insertAdjacentElement("afterend", marker);
-              return marker;
-            })
-            .filter(Boolean);
-        }
-
-        function findNextExportContent(block) {
-          let next = block.nextElementSibling;
-          while (
-            next &&
-            (next.classList.contains("natural-page-spacer") ||
-              next.classList.contains("pdf-break-marker"))
-          ) {
-            next = next.nextElementSibling;
-          }
-          return next;
         }
 
         function renderMath() {
