@@ -390,6 +390,7 @@
       }
 
       .marks {
+        position: relative;
         display: inline-flex;
         align-items: center;
         float: right;
@@ -402,6 +403,65 @@
         font-size: 9pt;
         font-weight: 700;
         background: #f8fafc;
+        transition: opacity 0.15s ease;
+      }
+
+      .marks:hover {
+        border-color: var(--line-strong);
+      }
+
+      .marks.marks-hidden {
+        opacity: 0.28;
+      }
+
+      .marks-actions {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        display: none;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 5px;
+        background: rgba(255, 255, 255, 0.98);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+        z-index: 9;
+        color: #1f2937;
+        font-weight: 500;
+        white-space: nowrap;
+      }
+
+      .marks:hover > .marks-actions,
+      .marks-actions:hover {
+        display: inline-flex;
+      }
+
+      .marks-actions button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 4px;
+        border: 1px solid #d1dae7;
+        border-radius: 5px;
+        background: #fff;
+        color: #1f2937;
+        cursor: pointer;
+        font-size: 13px;
+        line-height: 1;
+      }
+
+      .marks-actions button:hover {
+        background: var(--focus);
+        border-color: #93c5fd;
+      }
+
+      .marks-actions .marks-toggle[aria-pressed="true"] {
+        background: var(--danger-soft);
+        border-color: #fda29b;
+        color: var(--danger);
       }
 
       .working-space {
@@ -688,6 +748,16 @@
         color: var(--danger);
       }
 
+      .question-actions button[disabled] {
+        opacity: 0.38;
+        cursor: not-allowed;
+      }
+
+      .question-actions button[disabled]:hover {
+        background: #fff;
+        border-color: #d1dae7;
+      }
+
       #question-edit-dialog {
         width: min(640px, 92vw);
         padding: 0;
@@ -773,6 +843,10 @@
       }
 
       body.exporting .no-pdf {
+        display: none !important;
+      }
+
+      body.exporting .marks.marks-hidden {
         display: none !important;
       }
 
@@ -1370,6 +1444,7 @@
               block.appendChild(work);
             }
             preserveOriginalLatex(block);
+            decorateMarksIn(block);
             appendQuestionActions(block);
             appendTools(block, true);
             syncQuestionSpace(block);
@@ -1402,6 +1477,16 @@
           const actions = document.createElement("div");
           actions.className = "question-actions no-pdf";
           actions.innerHTML = `
+            <button type="button" data-action="move-up" aria-label="Move question up" title="Move question up (also moves matching answer)">
+              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </button>
+            <button type="button" data-action="move-down" aria-label="Move question down" title="Move question down (also moves matching answer)">
+              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 5v14M19 12l-7 7-7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </button>
             <button class="edit-button" type="button" data-action="edit-question" aria-label="Edit question" title="Edit question">
               <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M4 20h4l10.5-10.5-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
@@ -1503,7 +1588,146 @@
             });
           }
 
+          decorateMarksIn(promptDiv);
           scheduleLayout();
+        }
+
+        function decorateMarksIn(root) {
+          root.querySelectorAll(".marks").forEach(decorateMarks);
+        }
+
+        function decorateMarks(marks) {
+          if (marks.dataset.marksDecorated === "true") {
+            return;
+          }
+
+          const initialValue = readMarksValue(marks);
+          marks.dataset.marksDecorated = "true";
+          marks.dataset.marksValue = String(initialValue);
+
+          while (marks.firstChild) {
+            marks.removeChild(marks.firstChild);
+          }
+
+          const text = document.createElement("span");
+          text.className = "marks-text";
+          text.textContent = formatMarksText(initialValue);
+          marks.appendChild(text);
+
+          const panel = document.createElement("span");
+          panel.className = "marks-actions no-pdf";
+          panel.innerHTML = `
+            <button type="button" data-action="marks-down" aria-label="Decrease marks" title="Decrease marks">−</button>
+            <button type="button" data-action="marks-up" aria-label="Increase marks" title="Increase marks">+</button>
+            <button class="marks-toggle" type="button" data-action="marks-toggle" aria-pressed="false" aria-label="Show or hide marks" title="Show or hide marks (faint when hidden, excluded from PDF)">
+              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"></path>
+                <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"></circle>
+              </svg>
+            </button>
+          `;
+          marks.appendChild(panel);
+        }
+
+        function readMarksValue(marks) {
+          if (marks.dataset.marksValue !== undefined) {
+            const stored = Number(marks.dataset.marksValue);
+            if (Number.isFinite(stored) && stored >= 1) {
+              return Math.round(stored);
+            }
+          }
+          const match = (marks.textContent || "").match(/(\d+)/);
+          return match ? Math.max(1, parseInt(match[1], 10)) : 1;
+        }
+
+        function formatMarksText(value) {
+          const v = Math.max(1, Math.round(value));
+          return `${v} ${v === 1 ? "mark" : "marks"}`;
+        }
+
+        function adjustMarks(marks, delta) {
+          const current = readMarksValue(marks);
+          const next = Math.max(1, current + delta);
+          if (next === current) {
+            return;
+          }
+          marks.dataset.marksValue = String(next);
+          const text = marks.querySelector(":scope > .marks-text");
+          if (text) {
+            text.textContent = formatMarksText(next);
+          }
+          scheduleLayout();
+        }
+
+        function toggleMarksHidden(marks) {
+          const nowHidden = !marks.classList.contains("marks-hidden");
+          marks.classList.toggle("marks-hidden", nowHidden);
+          const toggle = marks.querySelector(
+            ':scope > .marks-actions [data-action="marks-toggle"]',
+          );
+          if (toggle) {
+            toggle.setAttribute("aria-pressed", String(nowHidden));
+          }
+          scheduleLayout();
+        }
+
+        function moveQuestion(block, direction) {
+          const questions = Array.from(
+            els.content.querySelectorAll(".question"),
+          );
+          const idx = questions.indexOf(block);
+          if (idx < 0) {
+            return;
+          }
+
+          const targetIdx = idx + direction;
+          const target = questions[targetIdx];
+          if (!target) {
+            return;
+          }
+
+          const answers = Array.from(
+            els.content.querySelectorAll(".answer"),
+          );
+          const blockAnswer = answers[idx];
+          const targetAnswer = answers[targetIdx];
+
+          if (direction < 0) {
+            target.parentNode.insertBefore(block, target);
+            if (blockAnswer && targetAnswer) {
+              targetAnswer.parentNode.insertBefore(blockAnswer, targetAnswer);
+            }
+          } else {
+            target.parentNode.insertBefore(block, target.nextSibling);
+            if (blockAnswer && targetAnswer) {
+              targetAnswer.parentNode.insertBefore(
+                blockAnswer,
+                targetAnswer.nextSibling,
+              );
+            }
+          }
+
+          scheduleLayout();
+        }
+
+        function updateMoveButtonStates() {
+          const questions = Array.from(
+            els.content.querySelectorAll(".question"),
+          );
+          questions.forEach((q, idx) => {
+            const actions = q.querySelector(":scope > .question-actions");
+            if (!actions) {
+              return;
+            }
+            const up = actions.querySelector('[data-action="move-up"]');
+            const down = actions.querySelector('[data-action="move-down"]');
+            if (up) {
+              up.disabled = idx === 0;
+            }
+            if (down) {
+              down.disabled = idx === questions.length - 1;
+            }
+          });
         }
 
         function deleteQuestion(block) {
@@ -1602,12 +1826,32 @@
               return;
             }
 
+            const action = button.dataset.action;
+
+            if (
+              action === "marks-up" ||
+              action === "marks-down" ||
+              action === "marks-toggle"
+            ) {
+              const marks = button.closest(".marks");
+              if (!marks) {
+                return;
+              }
+              if (action === "marks-up") {
+                adjustMarks(marks, 1);
+              } else if (action === "marks-down") {
+                adjustMarks(marks, -1);
+              } else {
+                toggleMarksHidden(marks);
+              }
+              return;
+            }
+
             const block = button.closest(".question, .answer");
             if (!block) {
               return;
             }
 
-            const action = button.dataset.action;
             if (action === "space-up") {
               adjustWorkingSpace(block, 8);
             } else if (action === "space-down") {
@@ -1622,6 +1866,10 @@
               openEditDialog(block);
             } else if (action === "delete-question") {
               deleteQuestion(block);
+            } else if (action === "move-up") {
+              moveQuestion(block, -1);
+            } else if (action === "move-down") {
+              moveQuestion(block, 1);
             }
           });
 
@@ -2033,6 +2281,7 @@
 
           state.renderedPageCount = pages;
           positionQuestionTools();
+          updateMoveButtonStates();
           updatePageCount();
         }
 
