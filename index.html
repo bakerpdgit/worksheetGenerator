@@ -633,6 +633,145 @@
         margin: 2mm 0;
       }
 
+      .question-number-trigger {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 9mm;
+        height: 7mm;
+        z-index: 7;
+      }
+
+      .question-actions {
+        position: absolute;
+        left: calc(7mm + 6px);
+        top: -3px;
+        display: none;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 5px;
+        background: rgba(255, 255, 255, 0.98);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+        z-index: 8;
+      }
+
+      .question-number-trigger:hover ~ .question-actions,
+      .question-actions:hover {
+        display: inline-flex;
+      }
+
+      .question-actions button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        padding: 0;
+        border: 1px solid #d1dae7;
+        border-radius: 6px;
+        background: #fff;
+        color: #1f2937;
+        cursor: pointer;
+        line-height: 1;
+      }
+
+      .question-actions button:hover {
+        background: var(--focus);
+        border-color: #93c5fd;
+      }
+
+      .question-actions .delete-button:hover {
+        background: var(--danger-soft);
+        border-color: #fda29b;
+        color: var(--danger);
+      }
+
+      #question-edit-dialog {
+        width: min(640px, 92vw);
+        padding: 0;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        color: var(--ink);
+        box-shadow: 0 30px 60px rgba(15, 23, 42, 0.28);
+      }
+
+      #question-edit-dialog::backdrop {
+        background: rgba(15, 23, 42, 0.45);
+      }
+
+      .edit-dialog-form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 20px 22px;
+        margin: 0;
+      }
+
+      .edit-dialog-form h3 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .edit-dialog-hint {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .edit-dialog-hint code {
+        padding: 1px 5px;
+        border-radius: 4px;
+        background: #eef3f8;
+        font-size: 0.82rem;
+      }
+
+      #edit-dialog-text {
+        width: 100%;
+        min-height: 200px;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        font:
+          13px/1.5 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          Consolas,
+          monospace;
+        resize: vertical;
+        box-sizing: border-box;
+      }
+
+      .edit-dialog-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .edit-dialog-actions button {
+        height: 34px;
+        padding: 0 16px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+        cursor: pointer;
+      }
+
+      .edit-dialog-actions button[type="submit"] {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #fff;
+        font-weight: 700;
+      }
+
+      .edit-dialog-actions button[type="submit"]:hover {
+        background: var(--accent-dark);
+        border-color: var(--accent-dark);
+      }
+
       body.exporting .no-pdf {
         display: none !important;
       }
@@ -1170,6 +1309,13 @@
           legal: { label: "US Legal", width: 215.9, height: 355.6 },
         };
 
+        const KATEX_DELIMITERS = [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\(", right: "\\)", display: false },
+          { left: "\\[", right: "\\]", display: true },
+          { left: "$", right: "$", display: false },
+        ];
+
         const state = {
           pageSize: "a4",
           orientation: "portrait",
@@ -1180,6 +1326,7 @@
           layoutRaf: 0,
           renderedPageCount: 1,
           resizeDrag: null,
+          activeEditTarget: null,
         };
 
         const els = {};
@@ -1202,6 +1349,7 @@
           els.savePdfLabel = document.getElementById("save-pdf-label");
           els.printStyle = document.getElementById("dynamic-print-style");
 
+          ensureEditDialog();
           decorateWorksheet();
           wireControls();
           applyPageSettings();
@@ -1221,6 +1369,8 @@
               work.setAttribute("aria-hidden", "true");
               block.appendChild(work);
             }
+            preserveOriginalLatex(block);
+            appendQuestionActions(block);
             appendTools(block, true);
             syncQuestionSpace(block);
           });
@@ -1228,6 +1378,161 @@
           els.content.querySelectorAll(".answer").forEach((block) => {
             appendTools(block, false);
           });
+        }
+
+        function preserveOriginalLatex(block) {
+          const promptDiv = block.querySelector(
+            ":scope > .question-prompt > div",
+          );
+          if (promptDiv && !("originalLatex" in promptDiv.dataset)) {
+            promptDiv.dataset.originalLatex = promptDiv.innerHTML;
+          }
+        }
+
+        function appendQuestionActions(block) {
+          if (block.querySelector(":scope > .question-actions")) {
+            return;
+          }
+
+          const trigger = document.createElement("span");
+          trigger.className = "question-number-trigger no-pdf";
+          trigger.setAttribute("aria-hidden", "true");
+          block.insertBefore(trigger, block.firstChild);
+
+          const actions = document.createElement("div");
+          actions.className = "question-actions no-pdf";
+          actions.innerHTML = `
+            <button class="edit-button" type="button" data-action="edit-question" aria-label="Edit question" title="Edit question">
+              <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 20h4l10.5-10.5-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+                <path d="m13.5 6.5 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+              </svg>
+            </button>
+            <button class="delete-button" type="button" data-action="delete-question" aria-label="Delete question" title="Delete question (also removes matching answer)">
+              <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </button>
+          `;
+          block.appendChild(actions);
+        }
+
+        function ensureEditDialog() {
+          if (document.getElementById("question-edit-dialog")) {
+            return;
+          }
+
+          const dialog = document.createElement("dialog");
+          dialog.id = "question-edit-dialog";
+          dialog.className = "no-pdf";
+          dialog.innerHTML = `
+            <form method="dialog" class="edit-dialog-form">
+              <h3>Edit question</h3>
+              <p class="edit-dialog-hint">LaTeX delimiters like <code>\\(...\\)</code> and <code>$$...$$</code> are preserved. Edit the source markup below.</p>
+              <textarea id="edit-dialog-text" spellcheck="false" rows="12"></textarea>
+              <div class="edit-dialog-actions">
+                <button type="button" data-action="edit-dialog-cancel">Cancel</button>
+                <button type="submit" value="ok" data-action="edit-dialog-ok">OK</button>
+              </div>
+            </form>
+          `;
+          document.body.appendChild(dialog);
+
+          dialog
+            .querySelector('[data-action="edit-dialog-cancel"]')
+            .addEventListener("click", () => {
+              dialog.close("cancel");
+            });
+
+          dialog.addEventListener("close", () => {
+            if (dialog.returnValue === "ok") {
+              commitEditDialog();
+            }
+            state.activeEditTarget = null;
+          });
+        }
+
+        function openEditDialog(block) {
+          const promptDiv = block.querySelector(
+            ":scope > .question-prompt > div",
+          );
+          if (!promptDiv) {
+            return;
+          }
+
+          const source = (
+            promptDiv.dataset.originalLatex ?? promptDiv.innerHTML
+          ).trim();
+
+          const dialog = document.getElementById("question-edit-dialog");
+          const textarea = document.getElementById("edit-dialog-text");
+          textarea.value = source;
+          state.activeEditTarget = block;
+          dialog.returnValue = "";
+          dialog.showModal();
+          requestAnimationFrame(() => {
+            textarea.focus();
+            textarea.setSelectionRange(
+              textarea.value.length,
+              textarea.value.length,
+            );
+          });
+        }
+
+        function commitEditDialog() {
+          const block = state.activeEditTarget;
+          if (!block) {
+            return;
+          }
+          const promptDiv = block.querySelector(
+            ":scope > .question-prompt > div",
+          );
+          if (!promptDiv) {
+            return;
+          }
+
+          const newSource = document.getElementById("edit-dialog-text").value;
+          promptDiv.innerHTML = newSource;
+          promptDiv.dataset.originalLatex = newSource;
+
+          if (typeof window.renderMathInElement === "function") {
+            window.renderMathInElement(promptDiv, {
+              delimiters: KATEX_DELIMITERS,
+              output: "html",
+              throwOnError: false,
+            });
+          }
+
+          scheduleLayout();
+        }
+
+        function deleteQuestion(block) {
+          const allQuestions = Array.from(
+            els.content.querySelectorAll(".question"),
+          );
+          const index = allQuestions.indexOf(block);
+          if (index < 0) {
+            return;
+          }
+
+          const ok = window.confirm(
+            "Delete this question? Its matching answer (if present) will also be removed.",
+          );
+          if (!ok) {
+            return;
+          }
+
+          const allAnswers = Array.from(
+            els.content.querySelectorAll(".answer"),
+          );
+          const matchingAnswer = allAnswers[index];
+
+          block.remove();
+          if (matchingAnswer) {
+            matchingAnswer.remove();
+          }
+
+          scheduleLayout();
         }
 
         function appendTools(block, hasSpacing) {
@@ -1313,6 +1618,10 @@
               toggleSplit(block);
             } else if (action === "toggle-break") {
               toggleBreak(block);
+            } else if (action === "edit-question") {
+              openEditDialog(block);
+            } else if (action === "delete-question") {
+              deleteQuestion(block);
             }
           });
 
@@ -1942,12 +2251,7 @@
           const run = () => {
             if (typeof window.renderMathInElement === "function") {
               window.renderMathInElement(els.content, {
-                delimiters: [
-                  { left: "$$", right: "$$", display: true },
-                  { left: "\\(", right: "\\)", display: false },
-                  { left: "\\[", right: "\\]", display: true },
-                  { left: "$", right: "$", display: false },
-                ],
+                delimiters: KATEX_DELIMITERS,
                 output: "html",
                 throwOnError: false,
               });
