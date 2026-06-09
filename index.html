@@ -512,7 +512,7 @@
         flex-direction: column;
         gap: 6px;
         width: max-content;
-        max-width: 150px;
+        max-width: 190px;
         color: #334155;
         font-size: 0.78rem;
         z-index: 5;
@@ -526,8 +526,8 @@
         display: inline-flex;
         align-items: center;
         justify-content: flex-end;
-        gap: 5px;
-        padding: 4px;
+        gap: 4px;
+        padding: 3px;
         border: 1px solid #d8e0eb;
         border-radius: 7px;
         background: rgba(255, 255, 255, 0.96);
@@ -535,7 +535,7 @@
       }
 
       .tool-row .space-value {
-        min-width: 42px;
+        min-width: 38px;
         text-align: center;
         color: #475569;
         font-variant-numeric: tabular-nums;
@@ -554,10 +554,10 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 26px;
-        height: 26px;
+        width: 24px;
+        height: 24px;
         border: 1px solid #d1dae7;
-        border-radius: 6px;
+        border-radius: 5px;
         background: #fff;
         color: #1f2937;
         cursor: pointer;
@@ -693,36 +693,23 @@
         margin: 2mm 0;
       }
 
-      .question-number-trigger {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 9mm;
-        height: 7mm;
-        z-index: 7;
+      .editable-text-target {
+        position: relative;
       }
 
-      .question-actions {
+      .content-element-tools {
         position: absolute;
-        left: calc(7mm + 6px);
-        top: -3px;
-        display: none;
+        right: calc(-1 * var(--page-margin-x-px) + 7px);
+        top: 50%;
+        transform: translateY(-50%);
+        display: inline-flex;
         align-items: center;
         gap: 4px;
-        padding: 3px 5px;
-        background: rgba(255, 255, 255, 0.98);
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
-        z-index: 8;
+        z-index: 6;
       }
 
-      .question-number-trigger:hover ~ .question-actions,
-      .question-actions:hover {
-        display: inline-flex;
-      }
-
-      .question-actions button {
+      .content-edit-button,
+      .content-delete-button {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -731,31 +718,39 @@
         padding: 0;
         border: 1px solid #d1dae7;
         border-radius: 6px;
-        background: #fff;
+        background: rgba(255, 255, 255, 0.96);
         color: #1f2937;
         cursor: pointer;
         line-height: 1;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.11);
       }
 
-      .question-actions button:hover {
+      .content-edit-button:hover {
         background: var(--focus);
         border-color: #93c5fd;
       }
 
-      .question-actions .delete-button:hover {
+      .content-delete-button:hover {
         background: var(--danger-soft);
         border-color: #fda29b;
         color: var(--danger);
       }
 
-      .question-actions button[disabled] {
-        opacity: 0.38;
-        cursor: not-allowed;
+      .content-element-tools svg {
+        pointer-events: none;
       }
 
-      .question-actions button[disabled]:hover {
-        background: #fff;
-        border-color: #d1dae7;
+      .tool-row .action-divider {
+        width: 1px;
+        height: 16px;
+        margin: 0 1px;
+        background: #d8e0eb;
+      }
+
+      .tool-row .delete-button:hover {
+        background: var(--danger-soft);
+        border-color: #fda29b;
+        color: var(--danger);
       }
 
       #question-edit-dialog {
@@ -775,7 +770,7 @@
       .edit-dialog-form {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 4px;
         padding: 20px 22px;
         margin: 0;
       }
@@ -840,6 +835,15 @@
       .edit-dialog-actions button[type="submit"]:hover {
         background: var(--accent-dark);
         border-color: var(--accent-dark);
+      }
+
+      @media (max-width: 900px) {
+        .content-element-tools {
+          position: static;
+          transform: none;
+          margin-left: 6px;
+          vertical-align: middle;
+        }
       }
 
       body.exporting .no-pdf {
@@ -1436,70 +1440,127 @@
         }
 
         function decorateWorksheet() {
+          decorateStandaloneEditableText();
+
           els.content.querySelectorAll(".question").forEach((block) => {
+            block
+              .querySelectorAll(
+                ":scope > .question-number-trigger, :scope > .question-actions",
+              )
+              .forEach((item) => item.remove());
+
             if (!block.querySelector(":scope > .working-space")) {
               const work = document.createElement("div");
               work.className = "working-space";
               work.setAttribute("aria-hidden", "true");
               block.appendChild(work);
             }
-            preserveOriginalLatex(block);
+            preserveEditableSource(getQuestionEditableTarget(block));
             decorateMarksIn(block);
-            appendQuestionActions(block);
             appendTools(block, true);
             syncQuestionSpace(block);
           });
 
           els.content.querySelectorAll(".answer").forEach((block) => {
+            preserveEditableSource(getAnswerEditableTarget(block));
+            decorateMarksIn(block);
             appendTools(block, false);
           });
         }
 
-        function preserveOriginalLatex(block) {
-          const promptDiv = block.querySelector(
-            ":scope > .question-prompt > div",
-          );
-          if (promptDiv && !("originalLatex" in promptDiv.dataset)) {
-            promptDiv.dataset.originalLatex = promptDiv.innerHTML;
+        function decorateStandaloneEditableText() {
+          const editableSelectors = [
+            ".worksheet-header > h1",
+            ".worksheet-header > p",
+            ".worksheet-section > h2",
+            ".worksheet-section > p",
+            ".answers-title > h2",
+            ".answers-title > p",
+          ];
+
+          els.content
+            .querySelectorAll(editableSelectors.join(", "))
+            .forEach((target) => {
+              preserveEditableSource(target);
+              target.classList.add("editable-text-target");
+
+              if (target.querySelector(":scope > .content-element-tools")) {
+                return;
+              }
+
+              const tools = document.createElement("span");
+              tools.className = "content-element-tools no-pdf";
+
+              const editButton = document.createElement("button");
+              editButton.className = "content-edit-button";
+              editButton.type = "button";
+              editButton.dataset.action = "edit-content";
+              editButton.dataset.editLabel = getStandaloneEditLabel(target);
+              editButton.setAttribute("aria-label", editButton.dataset.editLabel);
+              editButton.title = editButton.dataset.editLabel;
+              editButton.innerHTML = `
+                <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 20h4l10.5-10.5-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+                  <path d="m13.5 6.5 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                </svg>
+              `;
+
+              const deleteButton = document.createElement("button");
+              deleteButton.className = "content-delete-button";
+              deleteButton.type = "button";
+              deleteButton.dataset.action = "delete-content";
+              deleteButton.dataset.deleteLabel = getStandaloneDeleteLabel(target);
+              deleteButton.setAttribute(
+                "aria-label",
+                deleteButton.dataset.deleteLabel,
+              );
+              deleteButton.title = deleteButton.dataset.deleteLabel;
+              deleteButton.innerHTML = `
+                <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              `;
+
+              tools.append(editButton, deleteButton);
+              target.appendChild(tools);
+            });
+        }
+
+        function getStandaloneEditLabel(target) {
+          if (target.closest(".worksheet-header")) {
+            return target.matches("h1")
+              ? "Edit worksheet title"
+              : "Edit worksheet subtitle";
+          }
+          if (target.closest(".answers-title")) {
+            return target.matches("h2")
+              ? "Edit answers heading"
+              : "Edit answers instructions";
+          }
+          if (target.matches("h2")) {
+            return "Edit section heading";
+          }
+          return "Edit section instructions";
+        }
+
+        function getStandaloneDeleteLabel(target) {
+          return getStandaloneEditLabel(target).replace(/^Edit /, "Delete ");
+        }
+
+        function preserveEditableSource(target) {
+          if (target && !("originalLatex" in target.dataset)) {
+            target.dataset.originalLatex = target.innerHTML;
           }
         }
 
-        function appendQuestionActions(block) {
-          if (block.querySelector(":scope > .question-actions")) {
-            return;
-          }
+        function getQuestionEditableTarget(block) {
+          return block.querySelector(
+            ":scope > .question-prompt > div",
+          );
+        }
 
-          const trigger = document.createElement("span");
-          trigger.className = "question-number-trigger no-pdf";
-          trigger.setAttribute("aria-hidden", "true");
-          block.insertBefore(trigger, block.firstChild);
-
-          const actions = document.createElement("div");
-          actions.className = "question-actions no-pdf";
-          actions.innerHTML = `
-            <button type="button" data-action="move-up" aria-label="Move question up" title="Move question up (also moves matching answer)">
-              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-              </svg>
-            </button>
-            <button type="button" data-action="move-down" aria-label="Move question down" title="Move question down (also moves matching answer)">
-              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 5v14M19 12l-7 7-7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-              </svg>
-            </button>
-            <button class="edit-button" type="button" data-action="edit-question" aria-label="Edit question" title="Edit question">
-              <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 20h4l10.5-10.5-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
-                <path d="m13.5 6.5 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
-              </svg>
-            </button>
-            <button class="delete-button" type="button" data-action="delete-question" aria-label="Delete question" title="Delete question (also removes matching answer)">
-              <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-              </svg>
-            </button>
-          `;
-          block.appendChild(actions);
+        function getAnswerEditableTarget(block) {
+          return block.querySelector(":scope > .answer-body > div");
         }
 
         function ensureEditDialog() {
@@ -1537,22 +1598,24 @@
           });
         }
 
-        function openEditDialog(block) {
-          const promptDiv = block.querySelector(
-            ":scope > .question-prompt > div",
-          );
-          if (!promptDiv) {
+        function openEditDialog(target, label) {
+          if (!target) {
             return;
           }
+          preserveEditableSource(target);
 
           const source = (
-            promptDiv.dataset.originalLatex ?? promptDiv.innerHTML
+            target.dataset.originalLatex ?? target.innerHTML
           ).trim();
 
           const dialog = document.getElementById("question-edit-dialog");
+          const heading = dialog.querySelector("h3");
           const textarea = document.getElementById("edit-dialog-text");
+          if (heading) {
+            heading.textContent = label || "Edit content";
+          }
           textarea.value = source;
-          state.activeEditTarget = block;
+          state.activeEditTarget = target;
           dialog.returnValue = "";
           dialog.showModal();
           requestAnimationFrame(() => {
@@ -1565,30 +1628,39 @@
         }
 
         function commitEditDialog() {
-          const block = state.activeEditTarget;
-          if (!block) {
-            return;
-          }
-          const promptDiv = block.querySelector(
-            ":scope > .question-prompt > div",
-          );
-          if (!promptDiv) {
+          const target = state.activeEditTarget;
+          if (!target) {
             return;
           }
 
           const newSource = document.getElementById("edit-dialog-text").value;
-          promptDiv.innerHTML = newSource;
-          promptDiv.dataset.originalLatex = newSource;
+          target.innerHTML = newSource;
+          target.dataset.originalLatex = newSource;
 
           if (typeof window.renderMathInElement === "function") {
-            window.renderMathInElement(promptDiv, {
+            window.renderMathInElement(target, {
               delimiters: KATEX_DELIMITERS,
               output: "html",
               throwOnError: false,
             });
           }
 
-          decorateMarksIn(promptDiv);
+          decorateMarksIn(target);
+          decorateStandaloneEditableText();
+          scheduleLayout();
+        }
+
+        function deleteStandaloneEditableText(target, label) {
+          if (!target) {
+            return;
+          }
+
+          const ok = window.confirm(`${label}?`);
+          if (!ok) {
+            return;
+          }
+
+          target.remove();
           scheduleLayout();
         }
 
@@ -1715,12 +1787,12 @@
             els.content.querySelectorAll(".question"),
           );
           questions.forEach((q, idx) => {
-            const actions = q.querySelector(":scope > .question-actions");
-            if (!actions) {
-              return;
-            }
-            const up = actions.querySelector('[data-action="move-up"]');
-            const down = actions.querySelector('[data-action="move-down"]');
+            const up = q.querySelector(
+              ':scope > .pagination-tools [data-action="move-up"]',
+            );
+            const down = q.querySelector(
+              ':scope > .pagination-tools [data-action="move-down"]',
+            );
             if (up) {
               up.disabled = idx === 0;
             }
@@ -1771,10 +1843,59 @@
 
           const tools = document.createElement("div");
           tools.className = "pagination-tools no-pdf";
+          const editIcon = `
+            <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 20h4l10.5-10.5-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+              <path d="m13.5 6.5 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+            </svg>
+          `;
+          const questionActions = `
+            <button type="button" data-action="move-up" aria-label="Move question up" title="Move question up (also moves matching answer)">
+              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </button>
+            <button type="button" data-action="move-down" aria-label="Move question down" title="Move question down (also moves matching answer)">
+              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 5v14M19 12l-7 7-7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </button>
+            <button class="edit-button" type="button" data-action="edit-question" aria-label="Edit question" title="Edit question">
+              ${editIcon}
+            </button>
+            <button class="delete-button" type="button" data-action="delete-question" aria-label="Delete question" title="Delete question (also removes matching answer)">
+              <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </button>
+          `;
+          const answerActions = `
+            <button class="edit-button" type="button" data-action="edit-answer" aria-label="Edit answer" title="Edit answer">
+              ${editIcon}
+            </button>
+            <span class="action-divider" aria-hidden="true"></span>
+          `;
+          const splitButton = hasSpacing
+            ? `
+              <button class="split-button" type="button" data-action="toggle-split" aria-pressed="false" aria-label="Allow this working space to split across pages" title="Allow working space split">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 4v16M18 4v16M10 8h4M10 16h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                  <path d="m13 11 3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </button>
+            `
+            : "";
           tools.innerHTML = [
             hasSpacing
               ? `
-            <div class="tool-row" aria-label="Working space controls">
+            <div class="tool-row" aria-label="Question edit and ordering controls">
+              ${questionActions}
+            </div>
+          `
+              : "",
+            hasSpacing
+              ? `
+            <div class="tool-row" aria-label="Working space and page break controls">
               <button class="resize-handle" type="button" data-action="space-drag" aria-label="Drag to resize working space" title="Drag to resize working space">
                 <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="m8 7 4-4 4 4M8 17l4 4 4-4M12 4v16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -1783,22 +1904,22 @@
               <button type="button" data-action="space-down" aria-label="Decrease working space" title="Decrease working space">-</button>
               <span class="space-value" data-space-value></span>
               <button type="button" data-action="space-up" aria-label="Increase working space" title="Increase working space">+</button>
+              ${splitButton}
+              <button class="break-button" type="button" data-action="toggle-break" aria-pressed="false" aria-label="Toggle page break after this item" title="${hasSpacing ? "Toggle page break after working space" : "Toggle page break"}">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 3.5h9l3 3v5M15 3.5v4h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+                  <path d="M5 16h14M9 12l-4 4 4 4M15 12l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </button>
             </div>
           `
               : "",
-            `
-            <div class="tool-row" aria-label="Page break controls">
-              ${
-                hasSpacing
-                  ? `<button class="split-button" type="button" data-action="toggle-split" aria-pressed="false" aria-label="Allow this working space to split across pages" title="Allow working space split">
-                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M6 4v16M18 4v16M10 8h4M10 16h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
-                  <path d="m13 11 3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-                </svg>
-              </button>`
-                  : ""
-              }
-              <button class="break-button" type="button" data-action="toggle-break" aria-pressed="false" aria-label="Toggle page break after this item" title="${hasSpacing ? "Toggle page break after working space" : "Toggle page break"}">
+            hasSpacing
+              ? ""
+              : `
+            <div class="tool-row" aria-label="Answer layout and edit controls">
+              ${answerActions}
+              <button class="break-button" type="button" data-action="toggle-break" aria-pressed="false" aria-label="Toggle page break after this item" title="Toggle page break">
                 <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M6 3.5h9l3 3v5M15 3.5v4h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
                   <path d="M5 16h14M9 12l-4 4 4 4M15 12l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -1827,6 +1948,24 @@
             }
 
             const action = button.dataset.action;
+
+            if (action === "edit-content") {
+              const target = button.closest(".editable-text-target");
+              openEditDialog(
+                target,
+                button.dataset.editLabel || "Edit content",
+              );
+              return;
+            }
+
+            if (action === "delete-content") {
+              const target = button.closest(".editable-text-target");
+              deleteStandaloneEditableText(
+                target,
+                button.dataset.deleteLabel || "Delete worksheet element",
+              );
+              return;
+            }
 
             if (
               action === "marks-up" ||
@@ -1863,7 +2002,12 @@
             } else if (action === "toggle-break") {
               toggleBreak(block);
             } else if (action === "edit-question") {
-              openEditDialog(block);
+              openEditDialog(
+                getQuestionEditableTarget(block),
+                "Edit question",
+              );
+            } else if (action === "edit-answer") {
+              openEditDialog(getAnswerEditableTarget(block), "Edit answer");
             } else if (action === "delete-question") {
               deleteQuestion(block);
             } else if (action === "move-up") {
