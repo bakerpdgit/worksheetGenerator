@@ -27,8 +27,10 @@
       :root {
         --page-width-px: 794px;
         --page-height-px: 1123px;
-        --page-margin-y-px: 57px;
-        --page-margin-x-px: 57px;
+        --page-margin-top-px: 57px;
+        --page-margin-right-px: 57px;
+        --page-margin-bottom-px: 57px;
+        --page-margin-left-px: 57px;
         --page-gap-px: 30px;
         --printable-height-px: 1009px;
         --printable-width-px: 680px;
@@ -103,6 +105,139 @@
         align-items: center;
         gap: 12px;
         flex-wrap: wrap;
+      }
+
+      .toolbar-right {
+        flex-wrap: nowrap;
+      }
+
+      .margins-field {
+        position: relative;
+      }
+
+      .margins-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 34px;
+        padding: 0 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        color: var(--ink);
+        cursor: pointer;
+        font: inherit;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .margins-trigger:hover,
+      .margins-field.is-open .margins-trigger {
+        border-color: var(--line-strong);
+        background: #f8fafc;
+      }
+
+      .margins-trigger svg {
+        flex: 0 0 auto;
+        color: var(--muted);
+        transition: transform 0.15s ease;
+      }
+
+      .margins-field.is-open .margins-trigger svg {
+        transform: rotate(180deg);
+      }
+
+      .margins-popover {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        display: none;
+        padding: 12px 14px 10px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
+        z-index: 35;
+        white-space: nowrap;
+      }
+
+      .margins-field.is-open .margins-popover {
+        display: block;
+      }
+
+      .margins-grid {
+        display: grid;
+        grid-template-columns: auto auto auto auto;
+        align-items: center;
+        gap: 8px 14px;
+      }
+
+      .margins-grid > label {
+        color: var(--muted);
+        font-size: 0.85rem;
+        white-space: nowrap;
+        justify-self: end;
+      }
+
+      .margins-grid > input {
+        width: 64px;
+        min-width: 0;
+        height: 32px;
+        padding: 0 8px;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        color: var(--ink);
+        background: #fff;
+        font: inherit;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .margins-grid > input:focus {
+        outline: 2px solid var(--focus);
+        outline-offset: 1px;
+      }
+
+      .margins-popover small {
+        display: block;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 0.78rem;
+        text-align: right;
+      }
+
+      .lines-field {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--muted);
+        font-size: 0.9rem;
+        white-space: nowrap;
+      }
+
+      .lines-field input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        accent-color: var(--accent);
+        cursor: pointer;
+      }
+
+      .lines-field input[type="number"] {
+        width: 60px;
+        min-width: 0;
+        height: 32px;
+        padding: 0 8px;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        color: var(--ink);
+        background: #fff;
+        font: inherit;
+        font-variant-numeric: tabular-nums;
+        opacity: 0.5;
+        transition: opacity 0.15s ease;
+      }
+
+      .lines-field input[type="checkbox"]:checked ~ input[type="number"] {
+        opacity: 1;
       }
 
       .toolbar-title {
@@ -245,7 +380,8 @@
         position: relative;
         width: var(--page-width-px);
         min-height: var(--page-height-px);
-        padding: var(--page-margin-y-px) var(--page-margin-x-px);
+        padding: var(--page-margin-top-px) var(--page-margin-right-px)
+          var(--page-margin-bottom-px) var(--page-margin-left-px);
         border: 1px solid #c9d4e3;
         background:
           linear-gradient(
@@ -253,13 +389,13 @@
               rgba(15, 118, 110, 0.1),
               rgba(15, 118, 110, 0.1)
             )
-            left var(--page-margin-x-px) top 0 / 1px 100% no-repeat,
+            left var(--page-margin-left-px) top 0 / 1px 100% no-repeat,
           linear-gradient(
               90deg,
               rgba(15, 118, 110, 0.1),
               rgba(15, 118, 110, 0.1)
             )
-            right var(--page-margin-x-px) top 0 / 1px 100% no-repeat,
+            right var(--page-margin-right-px) top 0 / 1px 100% no-repeat,
           #fff;
         box-shadow: 0 18px 50px rgba(15, 23, 42, 0.18);
       }
@@ -274,12 +410,12 @@
       }
 
       .paper-preview::before {
-        top: var(--page-margin-y-px);
+        top: var(--page-margin-top-px);
         border-top: 1px solid rgba(15, 118, 110, 0.22);
       }
 
       .paper-preview::after {
-        top: calc(var(--page-height-px) - var(--page-margin-y-px));
+        top: calc(var(--page-height-px) - var(--page-margin-bottom-px));
         border-top: 1px solid rgba(15, 118, 110, 0.22);
       }
 
@@ -487,14 +623,17 @@
         margin-left: 12mm;
         border: 1px dashed #c9d4e3;
         border-radius: 6px;
-        background: repeating-linear-gradient(
-          to bottom,
-          transparent 0,
-          transparent calc(var(--rule-gap-px) - 1px),
-          rgba(99, 116, 139, 0.3) calc(var(--rule-gap-px) - 1px),
-          rgba(99, 116, 139, 0.3) var(--rule-gap-px)
-        );
         background-color: #fff;
+        background-image: linear-gradient(
+          to bottom,
+          transparent calc(var(--rule-gap-px) - 1px),
+          #b4bdcb calc(var(--rule-gap-px) - 1px),
+          #b4bdcb var(--rule-gap-px)
+        );
+        background-size: 100% var(--rule-gap-px);
+        background-repeat: repeat-y;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
       }
 
       .working-space-continuation {
@@ -530,7 +669,7 @@
       }
 
       .pagination-tools {
-        right: calc(-1 * var(--page-margin-x-px) + 7px);
+        right: calc(-1 * var(--page-margin-right-px) + 7px);
         top: 0;
         min-height: 30px;
       }
@@ -678,7 +817,7 @@
         height: 0;
         margin: 0;
         width: var(--page-width-px);
-        margin-left: calc(-1 * var(--page-margin-x-px));
+        margin-left: calc(-1 * var(--page-margin-left-px));
         background:
           linear-gradient(
               90deg,
@@ -695,7 +834,7 @@
         position: absolute;
         left: 0;
         right: 0;
-        top: calc(var(--page-fill-px) + var(--page-margin-y-px));
+        top: calc(var(--page-fill-px) + var(--page-margin-bottom-px));
         height: var(--page-gap-px);
         border-top: 1px solid #c6d1df;
         border-bottom: 1px solid #c6d1df;
@@ -709,7 +848,7 @@
         content: "manual page break";
         position: absolute;
         left: 50%;
-        top: calc(var(--page-fill-px) + var(--page-margin-y-px) + 15px);
+        top: calc(var(--page-fill-px) + var(--page-margin-bottom-px) + 15px);
         transform: translate(-50%, -50%);
         padding: 3px 8px;
         border: 1px solid #fda29b;
@@ -737,8 +876,8 @@
       .starts-new-page::before {
         content: "";
         position: absolute;
-        left: calc(-1 * var(--page-margin-x-px));
-        right: calc(-1 * var(--page-margin-x-px));
+        left: calc(-1 * var(--page-margin-left-px));
+        right: calc(-1 * var(--page-margin-right-px));
         top: 0;
         z-index: 4;
         border-top: 1px solid rgba(15, 118, 110, 0.24);
@@ -782,7 +921,7 @@
       }
 
       .content-element-tools {
-        right: calc(-1 * var(--page-margin-x-px) + 7px);
+        right: calc(-1 * var(--page-margin-right-px) + 7px);
         top: 50%;
         transform: translateY(-50%);
         height: 30px;
@@ -803,7 +942,8 @@
       }
 
       #question-edit-dialog,
-      #save-edits-dialog {
+      #save-edits-dialog,
+      #message-dialog {
         width: min(640px, 92vw);
         padding: 0;
         border: 1px solid var(--line);
@@ -814,8 +954,31 @@
       }
 
       #question-edit-dialog::backdrop,
-      #save-edits-dialog::backdrop {
+      #save-edits-dialog::backdrop,
+      #message-dialog::backdrop {
         background: rgba(15, 23, 42, 0.45);
+      }
+
+      #message-dialog {
+        width: min(440px, 92vw);
+      }
+
+      .message-text {
+        margin: 0;
+        color: var(--ink);
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+
+      .edit-dialog-actions button[type="submit"].danger-action {
+        border-color: var(--danger);
+        background: var(--danger);
+        color: #fff;
+      }
+
+      .edit-dialog-actions button[type="submit"].danger-action:hover {
+        background: #921e10;
+        border-color: #921e10;
       }
 
       .save-filename-field {
@@ -1057,10 +1220,6 @@
           background-image: none !important;
         }
 
-        .working-space {
-          print-color-adjust: exact;
-          -webkit-print-color-adjust: exact;
-        }
       }
     </style>
   </head>
@@ -1097,105 +1256,73 @@
         <label class="field" for="page-size">
           Page
           <select id="page-size">
-            <option value="a4" selected>A4</option>
-            <option value="letter">US Letter</option>
-            <option value="legal">US Legal</option>
+            <option value="a4-portrait" selected>A4 portrait</option>
+            <option value="a4-landscape">A4 landscape</option>
+            <option value="letter-portrait">US Letter portrait</option>
+            <option value="letter-landscape">US Letter landscape</option>
+            <option value="legal-portrait">US Legal portrait</option>
+            <option value="legal-landscape">US Legal landscape</option>
           </select>
         </label>
 
-        <div class="field">
-          Layout
-          <div class="segmented" role="group" aria-label="Page orientation">
-            <button
-              type="button"
-              data-orientation="portrait"
-              aria-pressed="true"
-            >
-              Portrait
-            </button>
-            <button
-              type="button"
-              data-orientation="landscape"
-              aria-pressed="false"
-            >
-              Landscape
-            </button>
+        <div class="field margins-field" id="margins-field">
+          <span>Margins</span>
+          <button
+            class="margins-trigger"
+            id="margins-trigger"
+            type="button"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="margins-popover"
+          >
+            <span id="margins-summary">15·15·15·15 mm</span>
+            <svg width="10" height="6" viewBox="0 0 10 6" aria-hidden="true">
+              <path
+                d="m1 1 4 4 4-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              ></path>
+            </svg>
+          </button>
+          <div class="margins-popover" id="margins-popover" role="dialog" aria-label="Page margins">
+            <div class="margins-grid">
+              <label for="margin-top">Top</label>
+              <input id="margin-top" type="number" min="0" max="50" step="1" value="15" />
+              <label for="margin-right">Right</label>
+              <input id="margin-right" type="number" min="0" max="50" step="1" value="15" />
+              <label for="margin-bottom">Bottom</label>
+              <input id="margin-bottom" type="number" min="0" max="50" step="1" value="15" />
+              <label for="margin-left">Left</label>
+              <input id="margin-left" type="number" min="0" max="50" step="1" value="15" />
+            </div>
+            <small>millimetres</small>
           </div>
         </div>
 
-        <label class="field" for="page-margin-y">
-          Top/bottom
+        <div class="lines-field" id="lines-field">
+          <span>Lines</span>
           <input
-            id="page-margin-y"
-            type="range"
-            min="8"
-            max="35"
-            step="1"
-            value="15"
+            type="checkbox"
+            id="lines-enabled"
+            aria-label="Show ruled lines"
           />
           <input
-            id="page-margin-y-number"
             type="number"
-            min="8"
-            max="35"
+            id="line-gap"
+            min="4"
+            max="20"
             step="1"
-            value="15"
-            aria-label="Top and bottom margin in millimetres"
+            value="8"
+            aria-label="Line gap in millimetres"
           />
           mm
-        </label>
-
-        <label class="field" for="page-margin-x">
-          Left/right
-          <input
-            id="page-margin-x"
-            type="range"
-            min="8"
-            max="35"
-            step="1"
-            value="15"
-          />
-          <input
-            id="page-margin-x-number"
-            type="number"
-            min="8"
-            max="35"
-            step="1"
-            value="15"
-            aria-label="Left and right margin in millimetres"
-          />
-          mm
-        </label>
-
-        <label class="field" for="line-gap">
-          Lines
-          <select id="line-gap">
-            <option value="none" selected>None</option>
-            <option value="7">7 mm</option>
-            <option value="8">8 mm</option>
-            <option value="10">10 mm</option>
-          </select>
-        </label>
+        </div>
       </div>
 
       <div class="toolbar-right">
-        <button
-          class="icon-button"
-          id="toggle-guides"
-          type="button"
-          aria-label="Toggle page guides"
-          title="Toggle page guides"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              d="M4 5.5h16M4 12h16M4 18.5h16"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-            ></path>
-          </svg>
-        </button>
         <div class="page-count" id="page-count">1 page</div>
         <button
           class="secondary-button"
@@ -1536,10 +1663,11 @@
         const state = {
           pageSize: "a4",
           orientation: "portrait",
-          marginYMm: 15,
-          marginXMm: 15,
+          marginTopMm: 15,
+          marginBottomMm: 15,
+          marginLeftMm: 15,
+          marginRightMm: 15,
           lineGapMm: 0,
-          hideGuides: false,
           layoutRaf: 0,
           renderedPageCount: 1,
           resizeDrag: null,
@@ -1556,11 +1684,8 @@
           els.paper = document.getElementById("paper-preview");
           els.content = document.getElementById("worksheet-content");
           els.pageSize = document.getElementById("page-size");
-          els.marginY = document.getElementById("page-margin-y");
-          els.marginYNumber = document.getElementById("page-margin-y-number");
-          els.marginX = document.getElementById("page-margin-x");
-          els.marginXNumber = document.getElementById("page-margin-x-number");
           els.lineGap = document.getElementById("line-gap");
+          els.linesEnabled = document.getElementById("lines-enabled");
           els.pageCount = document.getElementById("page-count");
           els.savePdf = document.getElementById("save-pdf");
           els.savePdfLabel = document.getElementById("save-pdf-label");
@@ -1784,18 +1909,89 @@
           scheduleLayout();
         }
 
-        function deleteStandaloneEditableText(target, label) {
+        async function deleteStandaloneEditableText(target, label) {
           if (!target) {
             return;
           }
 
-          const ok = window.confirm(`${label}?`);
+          const ok = await showMessage({
+            title: label,
+            message: "This element will be removed from the worksheet.",
+            confirmLabel: "Delete",
+            cancelLabel: "Cancel",
+            danger: true,
+          });
           if (!ok) {
             return;
           }
 
           target.remove();
           scheduleLayout();
+        }
+
+        function ensureMessageDialog() {
+          let dialog = document.getElementById("message-dialog");
+          if (dialog) {
+            return dialog;
+          }
+          dialog = document.createElement("dialog");
+          dialog.id = "message-dialog";
+          dialog.className = "no-pdf";
+          dialog.innerHTML = `
+            <form method="dialog" class="edit-dialog-form">
+              <h3 class="message-title"></h3>
+              <p class="message-text"></p>
+              <div class="edit-dialog-actions">
+                <button type="button" class="message-cancel" data-action="message-cancel">Cancel</button>
+                <button type="submit" value="ok" class="message-ok" data-action="message-ok">OK</button>
+              </div>
+            </form>
+          `;
+          document.body.appendChild(dialog);
+
+          dialog
+            .querySelector('[data-action="message-cancel"]')
+            .addEventListener("click", () => {
+              dialog.close("cancel");
+            });
+
+          return dialog;
+        }
+
+        function showMessage(options) {
+          const {
+            title = "",
+            message = "",
+            confirmLabel = "OK",
+            cancelLabel = null,
+            danger = false,
+          } = options || {};
+          return new Promise((resolve) => {
+            const dialog = ensureMessageDialog();
+            dialog.querySelector(".message-title").textContent = title;
+            dialog.querySelector(".message-text").textContent = message;
+
+            const okBtn = dialog.querySelector(".message-ok");
+            okBtn.textContent = confirmLabel;
+            okBtn.classList.toggle("danger-action", !!danger);
+
+            const cancelBtn = dialog.querySelector(".message-cancel");
+            if (cancelLabel === null || cancelLabel === false) {
+              cancelBtn.style.display = "none";
+            } else {
+              cancelBtn.style.display = "";
+              cancelBtn.textContent = cancelLabel;
+            }
+
+            dialog.returnValue = "";
+            const onClose = () => {
+              dialog.removeEventListener("close", onClose);
+              resolve(dialog.returnValue === "ok");
+            };
+            dialog.addEventListener("close", onClose);
+            dialog.showModal();
+            requestAnimationFrame(() => okBtn.focus());
+          });
         }
 
         function decorateMarksIn(root) {
@@ -1937,7 +2133,7 @@
           });
         }
 
-        function deleteQuestion(block) {
+        async function deleteQuestion(block) {
           const allQuestions = Array.from(
             els.content.querySelectorAll(".question"),
           );
@@ -1946,9 +2142,14 @@
             return;
           }
 
-          const ok = window.confirm(
-            "Delete this question? Its matching answer (if present) will also be removed.",
-          );
+          const ok = await showMessage({
+            title: "Delete question",
+            message:
+              "Delete this question? Its matching answer (if present) will also be removed.",
+            confirmLabel: "Delete",
+            cancelLabel: "Cancel",
+            danger: true,
+          });
           if (!ok) {
             return;
           }
@@ -2223,70 +2424,30 @@
           });
 
           els.pageSize.addEventListener("change", () => {
-            state.pageSize = els.pageSize.value;
+            applyPageSizeFromSelect();
             applyPageSettings();
           });
 
-          document.querySelectorAll("[data-orientation]").forEach((button) => {
-            button.addEventListener("click", () => {
-              state.orientation = button.dataset.orientation;
-              document
-                .querySelectorAll("[data-orientation]")
-                .forEach((item) => {
-                  item.setAttribute("aria-pressed", String(item === button));
-                });
-              applyPageSettings();
-            });
-          });
+          wireMarginInput("margin-top", "marginTopMm");
+          wireMarginInput("margin-bottom", "marginBottomMm");
+          wireMarginInput("margin-left", "marginLeftMm");
+          wireMarginInput("margin-right", "marginRightMm");
 
-          els.marginY.addEventListener("input", () => {
-            state.marginYMm = Number(els.marginY.value);
-            els.marginYNumber.value = String(state.marginYMm);
-            applyPageSettings();
-          });
+          wireMarginsPopover();
 
-          els.marginYNumber.addEventListener("change", () => {
-            const next = clamp(Number(els.marginYNumber.value) || 15, 8, 35);
-            state.marginYMm = next;
-            els.marginY.value = String(next);
-            els.marginYNumber.value = String(next);
-            applyPageSettings();
-          });
-
-          els.marginX.addEventListener("input", () => {
-            state.marginXMm = Number(els.marginX.value);
-            els.marginXNumber.value = String(state.marginXMm);
-            applyPageSettings();
-          });
-
-          els.marginXNumber.addEventListener("change", () => {
-            const next = clamp(Number(els.marginXNumber.value) || 15, 8, 35);
-            state.marginXMm = next;
-            els.marginX.value = String(next);
-            els.marginXNumber.value = String(next);
-            applyPageSettings();
-          });
-
-          els.lineGap.addEventListener("change", () => {
-            if (els.lineGap.value === "none") {
-              state.lineGapMm = 0;
-              els.body.classList.add("no-ruled-lines");
-            } else {
-              state.lineGapMm = Number(els.lineGap.value);
-              els.body.classList.remove("no-ruled-lines");
+          els.linesEnabled.addEventListener("change", applyLinesState);
+          els.lineGap.addEventListener("input", () => {
+            if (els.linesEnabled.checked) {
+              applyLinesState();
             }
-            els.root.style.setProperty(
-              "--rule-gap-px",
-              `${Math.max(1, state.lineGapMm * MM_TO_PX)}px`,
-            );
           });
-
-          document
-            .getElementById("toggle-guides")
-            .addEventListener("click", () => {
-              state.hideGuides = !state.hideGuides;
-              els.body.classList.toggle("hide-guides", state.hideGuides);
-            });
+          els.lineGap.addEventListener("change", () => {
+            const v = clamp(Number(els.lineGap.value) || 8, 1, 50);
+            els.lineGap.value = String(v);
+            if (els.linesEnabled.checked) {
+              applyLinesState();
+            }
+          });
 
           els.savePdf.addEventListener("click", savePdf);
           if (els.saveEdits) {
@@ -2418,15 +2579,15 @@
 
         function applyPageSettings() {
           const page = getPage();
-          const marginYPx = state.marginYMm * MM_TO_PX;
-          const marginXPx = state.marginXMm * MM_TO_PX;
           const printableWidthPx = Math.max(
             260,
-            (page.width - state.marginXMm * 2) * MM_TO_PX,
+            (page.width - state.marginLeftMm - state.marginRightMm) *
+              MM_TO_PX,
           );
           const printableHeightPx = Math.max(
             260,
-            (page.height - state.marginYMm * 2) * MM_TO_PX,
+            (page.height - state.marginTopMm - state.marginBottomMm) *
+              MM_TO_PX,
           );
 
           els.root.style.setProperty(
@@ -2437,8 +2598,22 @@
             "--page-height-px",
             `${page.height * MM_TO_PX}px`,
           );
-          els.root.style.setProperty("--page-margin-y-px", `${marginYPx}px`);
-          els.root.style.setProperty("--page-margin-x-px", `${marginXPx}px`);
+          els.root.style.setProperty(
+            "--page-margin-top-px",
+            `${state.marginTopMm * MM_TO_PX}px`,
+          );
+          els.root.style.setProperty(
+            "--page-margin-bottom-px",
+            `${state.marginBottomMm * MM_TO_PX}px`,
+          );
+          els.root.style.setProperty(
+            "--page-margin-left-px",
+            `${state.marginLeftMm * MM_TO_PX}px`,
+          );
+          els.root.style.setProperty(
+            "--page-margin-right-px",
+            `${state.marginRightMm * MM_TO_PX}px`,
+          );
           els.root.style.setProperty(
             "--page-gap-px",
             `${SCREEN_PAGE_GAP_PX}px`,
@@ -2456,8 +2631,130 @@
             `${Math.max(1, state.lineGapMm * MM_TO_PX)}px`,
           );
 
-          els.printStyle.textContent = `@page { size: ${page.width}mm ${page.height}mm; margin: ${state.marginYMm}mm ${state.marginXMm}mm; }`;
+          els.printStyle.textContent = `@page { size: ${page.width}mm ${page.height}mm; margin: ${state.marginTopMm}mm ${state.marginRightMm}mm ${state.marginBottomMm}mm ${state.marginLeftMm}mm; }`;
 
+          updateMarginsSummary();
+          scheduleLayout();
+        }
+
+        function updateMarginsSummary() {
+          const summary = document.getElementById("margins-summary");
+          if (!summary) return;
+          summary.textContent = `${state.marginTopMm}·${state.marginRightMm}·${state.marginBottomMm}·${state.marginLeftMm} mm`;
+        }
+
+        function applyPageSizeFromSelect() {
+          const raw = els.pageSize.value || "a4-portrait";
+          const idx = raw.lastIndexOf("-");
+          const size = idx > 0 ? raw.slice(0, idx) : raw;
+          const orient = idx > 0 ? raw.slice(idx + 1) : "portrait";
+          if (PAGE_SIZES[size]) {
+            state.pageSize = size;
+          }
+          if (orient === "portrait" || orient === "landscape") {
+            state.orientation = orient;
+          }
+        }
+
+        function syncPageSizeSelect() {
+          if (!els.pageSize) return;
+          const target = `${state.pageSize}-${state.orientation}`;
+          if (
+            Array.from(els.pageSize.options).some(
+              (opt) => opt.value === target,
+            )
+          ) {
+            els.pageSize.value = target;
+          }
+        }
+
+        function wireMarginInput(inputId, stateKey) {
+          const input = document.getElementById(inputId);
+          if (!input) return;
+          const apply = () => {
+            const v = clamp(Number(input.value) || 0, 0, 50);
+            state[stateKey] = v;
+            input.value = String(v);
+            applyPageSettings();
+          };
+          input.addEventListener("input", () => {
+            const v = clamp(Number(input.value) || 0, 0, 50);
+            state[stateKey] = v;
+            applyPageSettings();
+          });
+          input.addEventListener("change", apply);
+          input.addEventListener("blur", apply);
+        }
+
+        function wireMarginsPopover() {
+          const field = document.getElementById("margins-field");
+          const trigger = document.getElementById("margins-trigger");
+          const popover = document.getElementById("margins-popover");
+          if (!field || !trigger || !popover) return;
+
+          let hideTimer = 0;
+          const cancelHide = () => {
+            if (hideTimer) {
+              clearTimeout(hideTimer);
+              hideTimer = 0;
+            }
+          };
+          const open = () => {
+            cancelHide();
+            field.classList.add("is-open");
+            trigger.setAttribute("aria-expanded", "true");
+          };
+          const scheduleClose = () => {
+            cancelHide();
+            hideTimer = setTimeout(() => {
+              field.classList.remove("is-open");
+              trigger.setAttribute("aria-expanded", "false");
+              hideTimer = 0;
+            }, 1000);
+          };
+
+          [trigger, popover].forEach((el) => {
+            el.addEventListener("pointerenter", open);
+            el.addEventListener("pointerleave", scheduleClose);
+          });
+          trigger.addEventListener("focus", open);
+          popover.addEventListener("focusin", open);
+          popover.addEventListener("focusout", scheduleClose);
+          trigger.addEventListener("click", () => {
+            if (field.classList.contains("is-open")) {
+              cancelHide();
+              field.classList.remove("is-open");
+              trigger.setAttribute("aria-expanded", "false");
+            } else {
+              open();
+            }
+          });
+        }
+
+        function syncMarginInputs() {
+          const set = (id, value) => {
+            const input = document.getElementById(id);
+            if (input) input.value = String(value);
+          };
+          set("margin-top", state.marginTopMm);
+          set("margin-bottom", state.marginBottomMm);
+          set("margin-left", state.marginLeftMm);
+          set("margin-right", state.marginRightMm);
+        }
+
+        function applyLinesState() {
+          if (els.linesEnabled.checked) {
+            const v = clamp(Number(els.lineGap.value) || 8, 1, 50);
+            state.lineGapMm = v;
+            els.body.classList.remove("no-ruled-lines");
+          } else {
+            state.lineGapMm = 0;
+            els.body.classList.add("no-ruled-lines");
+          }
+          els.root.style.setProperty(
+            "--rule-gap-px",
+            `${Math.max(1, state.lineGapMm * MM_TO_PX)}px`,
+          );
           scheduleLayout();
         }
 
@@ -2703,7 +3000,9 @@
           }
           const fill = Math.max(0, fillPx);
           const total =
-            fill + state.marginYMm * MM_TO_PX * 2 + SCREEN_PAGE_GAP_PX;
+            fill +
+            (state.marginTopMm + state.marginBottomMm) * MM_TO_PX +
+            SCREEN_PAGE_GAP_PX;
           spacer.style.setProperty("--page-fill-px", `${fill}px`);
           spacer.style.height = `${total}px`;
         }
@@ -2780,7 +3079,11 @@
 
         function getPrintableHeightPx() {
           const page = getPage();
-          return Math.max(260, (page.height - state.marginYMm * 2) * MM_TO_PX);
+          return Math.max(
+            260,
+            (page.height - state.marginTopMm - state.marginBottomMm) *
+              MM_TO_PX,
+          );
         }
 
         async function savePdf() {
@@ -2800,13 +3103,13 @@
               .html2pdf()
               .set({
                 margin: [
-                  state.marginYMm,
-                  state.marginXMm,
-                  state.marginYMm,
-                  state.marginXMm,
+                  state.marginTopMm,
+                  state.marginRightMm,
+                  state.marginBottomMm,
+                  state.marginLeftMm,
                 ],
                 filename,
-                image: { type: "jpeg", quality: 0.98 },
+                image: { type: "png", quality: 1 },
                 html2canvas: {
                   scale: 2,
                   useCORS: true,
@@ -2837,9 +3140,12 @@
               .save();
           } catch (error) {
             console.error(error);
-            window.alert(
-              "PDF export failed because the PDF library did not finish correctly. No browser print fallback was used, so headers and footers will not be added by this button.",
-            );
+            showMessage({
+              title: "PDF export failed",
+              message:
+                "The PDF library did not finish correctly. No browser print fallback was used, so headers and footers will not be added by this button.",
+              confirmLabel: "OK",
+            });
           } finally {
             els.body.classList.remove("exporting");
             els.savePdf.disabled = false;
@@ -2912,24 +3218,34 @@
           }
           const parseMargin = (raw) => {
             const v = Number(raw);
-            return Number.isFinite(v) ? clamp(v, 8, 35) : null;
+            return Number.isFinite(v) ? clamp(v, 0, 50) : null;
           };
-          const yMm = parseMargin(data.savedMarginYMm);
-          if (yMm !== null) state.marginYMm = yMm;
-          const xMm = parseMargin(data.savedMarginXMm);
-          if (xMm !== null) state.marginXMm = xMm;
+          const legacyY = parseMargin(data.savedMarginYMm);
+          const legacyX = parseMargin(data.savedMarginXMm);
+          const top = parseMargin(data.savedMarginTopMm) ?? legacyY;
+          const bottom = parseMargin(data.savedMarginBottomMm) ?? legacyY;
+          const left = parseMargin(data.savedMarginLeftMm) ?? legacyX;
+          const right = parseMargin(data.savedMarginRightMm) ?? legacyX;
+          if (top !== null) state.marginTopMm = top;
+          if (bottom !== null) state.marginBottomMm = bottom;
+          if (left !== null) state.marginLeftMm = left;
+          if (right !== null) state.marginRightMm = right;
           if (data.savedLineGapMm !== undefined) {
             const g = Number(data.savedLineGapMm);
             if (Number.isFinite(g) && g >= 0) state.lineGapMm = g;
           }
+          const preferredRaw = Number(data.savedLinePreferredMm);
+          const preferredLine = Number.isFinite(preferredRaw)
+            ? clamp(preferredRaw, 1, 50)
+            : state.lineGapMm > 0
+              ? state.lineGapMm
+              : 8;
 
-          els.pageSize.value = state.pageSize;
-          els.marginY.value = String(state.marginYMm);
-          els.marginYNumber.value = String(state.marginYMm);
-          els.marginX.value = String(state.marginXMm);
-          els.marginXNumber.value = String(state.marginXMm);
-          els.lineGap.value =
-            state.lineGapMm === 0 ? "none" : String(state.lineGapMm);
+          syncPageSizeSelect();
+          syncMarginInputs();
+
+          els.linesEnabled.checked = state.lineGapMm > 0;
+          els.lineGap.value = String(preferredLine);
 
           if (state.lineGapMm === 0) {
             els.body.classList.add("no-ruled-lines");
@@ -2937,14 +3253,7 @@
             els.body.classList.remove("no-ruled-lines");
           }
 
-          document
-            .querySelectorAll("[data-orientation]")
-            .forEach((button) => {
-              button.setAttribute(
-                "aria-pressed",
-                String(button.dataset.orientation === state.orientation),
-              );
-            });
+          updateMarginsSummary();
         }
 
         function ensureSaveDialog() {
@@ -3085,9 +3394,20 @@
           const body = clone.querySelector("body");
           body.dataset.savedPageSize = state.pageSize;
           body.dataset.savedOrientation = state.orientation;
-          body.dataset.savedMarginYMm = String(state.marginYMm);
-          body.dataset.savedMarginXMm = String(state.marginXMm);
+          body.dataset.savedMarginTopMm = String(state.marginTopMm);
+          body.dataset.savedMarginBottomMm = String(state.marginBottomMm);
+          body.dataset.savedMarginLeftMm = String(state.marginLeftMm);
+          body.dataset.savedMarginRightMm = String(state.marginRightMm);
           body.dataset.savedLineGapMm = String(state.lineGapMm);
+          const preferredLineRaw = clamp(
+            Number(els.lineGap.value) ||
+              (state.lineGapMm > 0 ? state.lineGapMm : 8),
+            1,
+            50,
+          );
+          body.dataset.savedLinePreferredMm = String(preferredLineRaw);
+          delete body.dataset.savedMarginYMm;
+          delete body.dataset.savedMarginXMm;
           body.classList.remove("exporting");
           body.classList.remove("hide-guides");
           if (state.lineGapMm === 0) {
@@ -3107,27 +3427,37 @@
             });
           };
 
-          setSelected(clone.querySelector("#page-size"), state.pageSize);
           setSelected(
-            clone.querySelector("#line-gap"),
-            state.lineGapMm === 0 ? "none" : String(state.lineGapMm),
+            clone.querySelector("#page-size"),
+            `${state.pageSize}-${state.orientation}`,
           );
 
-          ["#page-margin-y", "#page-margin-y-number"].forEach((sel) => {
-            const el = clone.querySelector(sel);
-            if (el) el.setAttribute("value", String(state.marginYMm));
-          });
-          ["#page-margin-x", "#page-margin-x-number"].forEach((sel) => {
-            const el = clone.querySelector(sel);
-            if (el) el.setAttribute("value", String(state.marginXMm));
-          });
+          const lineGapInput = clone.querySelector("#line-gap");
+          if (lineGapInput) {
+            lineGapInput.setAttribute("value", String(preferredLineRaw));
+          }
+          const linesEnabled = clone.querySelector("#lines-enabled");
+          if (linesEnabled) {
+            if (state.lineGapMm > 0) {
+              linesEnabled.setAttribute("checked", "");
+            } else {
+              linesEnabled.removeAttribute("checked");
+            }
+          }
 
-          clone.querySelectorAll("[data-orientation]").forEach((btn) => {
-            btn.setAttribute(
-              "aria-pressed",
-              String(btn.dataset.orientation === state.orientation),
-            );
-          });
+          const setMarginValue = (id, value) => {
+            const el = clone.querySelector(id);
+            if (el) el.setAttribute("value", String(value));
+          };
+          setMarginValue("#margin-top", state.marginTopMm);
+          setMarginValue("#margin-bottom", state.marginBottomMm);
+          setMarginValue("#margin-left", state.marginLeftMm);
+          setMarginValue("#margin-right", state.marginRightMm);
+
+          const summary = clone.querySelector("#margins-summary");
+          if (summary) {
+            summary.textContent = `${state.marginTopMm}·${state.marginRightMm}·${state.marginBottomMm}·${state.marginLeftMm} mm`;
+          }
 
           return "<!doctype html>\n" + clone.outerHTML;
         }
