@@ -1,0 +1,3467 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Worksheet Pagination Tools Demo</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+    />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"
+    ></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    ></script>
+    <script
+      defer
+      src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.12.1/html2pdf.bundle.min.js"
+    ></script>
+
+    <style id="dynamic-print-style"></style>
+    <style>
+      :root {
+        --page-width-px: 794px;
+        --page-height-px: 1123px;
+        --page-margin-top-px: 57px;
+        --page-margin-right-px: 57px;
+        --page-margin-bottom-px: 57px;
+        --page-margin-left-px: 57px;
+        --page-gap-px: 30px;
+        --printable-height-px: 1009px;
+        --printable-width-px: 680px;
+        --rule-gap-px: 30px;
+        --ink: #17202a;
+        --muted: #5b6673;
+        --panel: #ffffff;
+        --surface: #f4f7fb;
+        --line: #d5dde8;
+        --line-strong: #95a3b6;
+        --accent: #0f766e;
+        --accent-dark: #115e59;
+        --danger: #b42318;
+        --danger-soft: #fee4e2;
+        --focus: #e0f2fe;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        min-height: 100%;
+        background: var(--surface);
+        color: var(--ink);
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        line-height: 1.5;
+      }
+
+      body {
+        min-height: 100%;
+        margin: 0;
+        background:
+          linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.9),
+            rgba(255, 255, 255, 0) 220px
+          ),
+          var(--surface);
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      .app-toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 12px 18px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(12px);
+      }
+
+      .toolbar-left,
+      .toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .toolbar-right {
+        flex-wrap: nowrap;
+      }
+
+      .margins-field {
+        position: relative;
+      }
+
+      .margins-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 34px;
+        padding: 0 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        color: var(--ink);
+        cursor: pointer;
+        font: inherit;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .margins-trigger:hover,
+      .margins-field.is-open .margins-trigger {
+        border-color: var(--line-strong);
+        background: #f8fafc;
+      }
+
+      .margins-trigger svg {
+        flex: 0 0 auto;
+        color: var(--muted);
+        transition: transform 0.15s ease;
+      }
+
+      .margins-field.is-open .margins-trigger svg {
+        transform: rotate(180deg);
+      }
+
+      .margins-popover {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        display: none;
+        padding: 12px 14px 10px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
+        z-index: 35;
+        white-space: nowrap;
+      }
+
+      .margins-field.is-open .margins-popover {
+        display: block;
+      }
+
+      .margins-grid {
+        display: grid;
+        grid-template-columns: auto auto auto auto;
+        align-items: center;
+        gap: 8px 14px;
+      }
+
+      .margins-grid > label {
+        color: var(--muted);
+        font-size: 0.85rem;
+        white-space: nowrap;
+        justify-self: end;
+      }
+
+      .margins-grid > input {
+        width: 64px;
+        min-width: 0;
+        height: 32px;
+        padding: 0 8px;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        color: var(--ink);
+        background: #fff;
+        font: inherit;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .margins-grid > input:focus {
+        outline: 2px solid var(--focus);
+        outline-offset: 1px;
+      }
+
+      .margins-popover small {
+        display: block;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 0.78rem;
+        text-align: right;
+      }
+
+      .lines-field {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--muted);
+        font-size: 0.9rem;
+        white-space: nowrap;
+      }
+
+      .lines-field input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        accent-color: var(--accent);
+        cursor: pointer;
+      }
+
+      .lines-field input[type="number"] {
+        width: 60px;
+        min-width: 0;
+        height: 32px;
+        padding: 0 8px;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        color: var(--ink);
+        background: #fff;
+        font: inherit;
+        font-variant-numeric: tabular-nums;
+        opacity: 0.5;
+        transition: opacity 0.15s ease;
+      }
+
+      .lines-field input[type="checkbox"]:checked ~ input[type="number"] {
+        opacity: 1;
+      }
+
+      .toolbar-title {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-weight: 700;
+        color: #111827;
+        margin-right: 6px;
+        white-space: nowrap;
+      }
+
+      .toolbar-title svg {
+        color: var(--accent);
+        flex: 0 0 auto;
+      }
+
+      .field {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--muted);
+        font-size: 0.9rem;
+        white-space: nowrap;
+      }
+
+      .field select,
+      .field input[type="number"] {
+        height: 34px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        color: var(--ink);
+        padding: 0 10px;
+        min-width: 96px;
+      }
+
+      .field input[type="range"] {
+        width: 112px;
+        accent-color: var(--accent);
+      }
+
+      .segmented {
+        display: inline-flex;
+        align-items: center;
+        height: 34px;
+        padding: 2px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: #eef3f8;
+      }
+
+      .segmented button {
+        height: 28px;
+        padding: 0 10px;
+        border: 0;
+        border-radius: 5px;
+        color: #425066;
+        background: transparent;
+        cursor: pointer;
+      }
+
+      .segmented button[aria-pressed="true"] {
+        color: #0f172a;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
+      }
+
+      .icon-button,
+      .pdf-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 36px;
+        min-width: 36px;
+        border-radius: 7px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+        cursor: pointer;
+      }
+
+      .icon-button:hover,
+      .pdf-button:hover,
+      .secondary-button:hover {
+        border-color: var(--line-strong);
+        background: #f8fafc;
+      }
+
+      .secondary-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        height: 36px;
+        padding: 0 13px;
+        border-radius: 7px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      .pdf-button {
+        gap: 8px;
+        padding: 0 13px;
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #fff;
+        font-weight: 700;
+      }
+
+      .pdf-button:hover {
+        border-color: var(--accent-dark);
+        background: var(--accent-dark);
+      }
+
+      .pdf-button[disabled] {
+        opacity: 0.65;
+        cursor: wait;
+      }
+
+      .page-count {
+        color: var(--muted);
+        font-size: 0.9rem;
+        min-width: 86px;
+        text-align: right;
+      }
+
+      .stage {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 30px 20px 52px;
+        overflow-x: auto;
+      }
+
+      .paper-preview {
+        position: relative;
+        width: var(--page-width-px);
+        min-height: var(--page-height-px);
+        padding: var(--page-margin-top-px) var(--page-margin-right-px)
+          var(--page-margin-bottom-px) var(--page-margin-left-px);
+        border: 1px solid #c9d4e3;
+        background:
+          linear-gradient(
+              90deg,
+              rgba(15, 118, 110, 0.1),
+              rgba(15, 118, 110, 0.1)
+            )
+            left var(--page-margin-left-px) top 0 / 1px 100% no-repeat,
+          linear-gradient(
+              90deg,
+              rgba(15, 118, 110, 0.1),
+              rgba(15, 118, 110, 0.1)
+            )
+            right var(--page-margin-right-px) top 0 / 1px 100% no-repeat,
+          #fff;
+        box-shadow: 0 18px 50px rgba(15, 23, 42, 0.18);
+      }
+
+      .paper-preview::before,
+      .paper-preview::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        pointer-events: none;
+      }
+
+      .paper-preview::before {
+        top: var(--page-margin-top-px);
+        border-top: 1px solid rgba(15, 118, 110, 0.22);
+      }
+
+      .paper-preview::after {
+        top: calc(var(--page-height-px) - var(--page-margin-bottom-px));
+        border-top: 1px solid rgba(15, 118, 110, 0.22);
+      }
+
+      .worksheet-content {
+        position: relative;
+        width: var(--printable-width-px);
+        min-height: var(--printable-height-px);
+        padding-bottom: 0.1px;
+        background-image: none;
+        color: #1f2937;
+        counter-reset: question answer;
+      }
+
+      body.hide-guides .paper-preview {
+        background: #fff;
+      }
+
+      body.hide-guides .paper-preview::before,
+      body.hide-guides .paper-preview::after,
+      body.hide-guides .worksheet-content {
+        background-image: none;
+        border-color: transparent;
+      }
+
+      .worksheet-header {
+        text-align: center;
+        padding-bottom: 6mm;
+        border-bottom: 1px solid #d9e2ee;
+        margin-bottom: 5mm;
+      }
+
+      .worksheet-header h1 {
+        margin: 0;
+        color: #111827;
+        font-size: 26pt;
+        line-height: 1.12;
+        font-weight: 780;
+      }
+
+      .worksheet-header p {
+        margin: 3mm 0 0;
+        color: var(--muted);
+        font-size: 12pt;
+      }
+
+      .worksheet-section {
+        margin: 0 0 7mm;
+      }
+
+      .worksheet-section h2 {
+        margin: 0 0 3mm;
+        color: #0f766e;
+        font-size: 14.5pt;
+        line-height: 1.25;
+      }
+
+      .worksheet-section p {
+        margin: 0;
+        color: #4b5563;
+        font-size: 10.5pt;
+      }
+
+      .question,
+      .answer {
+        position: relative;
+        margin: 0 0 8mm;
+        padding: 0;
+        break-inside: auto;
+        page-break-inside: auto;
+      }
+
+      .question {
+        counter-increment: question;
+      }
+
+      .answer {
+        counter-increment: answer;
+        margin-bottom: 6mm;
+      }
+
+      .question-prompt,
+      .answer-body {
+        position: relative;
+        display: grid;
+        grid-template-columns: 9mm minmax(0, 1fr);
+        column-gap: 3mm;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .question-prompt::before,
+      .answer-body::before {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 7mm;
+        height: 7mm;
+        border-radius: 50%;
+        color: #fff;
+        background: #1f2937;
+        font-size: 9pt;
+        font-weight: 700;
+        line-height: 1;
+      }
+
+      .question-prompt::before {
+        content: counter(question);
+      }
+
+      .answer-body::before {
+        content: counter(answer);
+        background: #0f766e;
+      }
+
+      .question-prompt p,
+      .answer-body p {
+        margin: 0 0 3mm;
+        font-size: 11pt;
+      }
+
+      .question-prompt p:last-child,
+      .answer-body p:last-child {
+        margin-bottom: 0;
+      }
+
+      .marks {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        float: right;
+        min-height: 22px;
+        margin-left: 8px;
+        padding: 0 8px;
+        border: 1px solid #cfd8e6;
+        border-radius: 999px;
+        color: #425066;
+        font-size: 9pt;
+        font-weight: 700;
+        background: #f8fafc;
+        transition: opacity 0.15s ease;
+      }
+
+      .marks:hover {
+        border-color: var(--line-strong);
+      }
+
+      .marks.marks-hidden {
+        opacity: 0.28;
+      }
+
+      .marks-actions {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        display: none;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 5px;
+        background: rgba(255, 255, 255, 0.98);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+        z-index: 9;
+        color: #1f2937;
+        font-weight: 500;
+        white-space: nowrap;
+      }
+
+      .marks:hover > .marks-actions,
+      .marks-actions:hover {
+        display: inline-flex;
+      }
+
+      .marks-actions button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 4px;
+        border: 1px solid #d1dae7;
+        border-radius: 5px;
+        background: #fff;
+        color: #1f2937;
+        cursor: pointer;
+        font-size: 13px;
+        line-height: 1;
+      }
+
+      .marks-actions button:hover {
+        background: var(--focus);
+        border-color: #93c5fd;
+      }
+
+      .marks-actions .marks-toggle[aria-pressed="true"] {
+        background: var(--danger-soft);
+        border-color: #fda29b;
+        color: var(--danger);
+      }
+
+      .working-space {
+        width: calc(100% - 12mm);
+        height: 34mm;
+        margin-top: 4mm;
+        margin-left: 12mm;
+        border: 1px dashed #c9d4e3;
+        border-radius: 6px;
+        background-color: #fff;
+        background-image: linear-gradient(
+          to bottom,
+          transparent calc(var(--rule-gap-px) - 1px),
+          #b4bdcb calc(var(--rule-gap-px) - 1px),
+          #b4bdcb var(--rule-gap-px)
+        );
+        background-size: 100% var(--rule-gap-px);
+        background-repeat: repeat-y;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+
+      .working-space-continuation {
+        margin-top: 0;
+      }
+
+      body.no-ruled-lines .working-space {
+        background-image: none;
+        border-color: transparent;
+      }
+
+      body.no-ruled-lines .working-space-continuation {
+        border-color: transparent;
+      }
+
+      .question.page-break-after,
+      .answer.page-break-after {
+        margin-bottom: 0;
+      }
+
+      .page-break-after {
+        break-after: page;
+        page-break-after: always;
+      }
+
+      .pagination-tools,
+      .content-element-tools {
+        position: absolute;
+        width: 14px;
+        color: #334155;
+        font-size: 0.78rem;
+        z-index: 5;
+      }
+
+      .pagination-tools {
+        right: calc(-1 * var(--page-margin-right-px) + 7px);
+        top: 0;
+        min-height: 30px;
+      }
+
+      .pagination-tools[data-row-count="2"] {
+        min-height: 64px;
+      }
+
+      .question > .pagination-tools {
+        top: var(--question-tools-top, 0px);
+      }
+
+      .hover-trigger {
+        position: absolute;
+        inset: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 1px solid #c9d4e3;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.92);
+        color: #94a3b8;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+        transition:
+          background 0.15s ease,
+          color 0.15s ease,
+          border-color 0.15s ease,
+          box-shadow 0.15s ease;
+      }
+
+      .hover-trigger svg {
+        pointer-events: none;
+      }
+
+      .hover-trigger:hover,
+      .pagination-tools.is-open > .hover-trigger,
+      .content-element-tools.is-open > .hover-trigger {
+        background: var(--focus);
+        color: #0f172a;
+        border-color: #93c5fd;
+        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.14);
+      }
+
+      .tool-rows-stack {
+        position: absolute;
+        top: 0;
+        right: 100%;
+        padding-right: 8px;
+        display: none;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+        width: max-content;
+        max-width: 220px;
+      }
+
+      .pagination-tools.is-open > .tool-rows-stack,
+      .content-element-tools.is-open > .tool-rows-stack {
+        display: flex;
+        animation: hover-tools-in 0.16s ease-out;
+      }
+
+      @keyframes hover-tools-in {
+        from {
+          opacity: 0;
+          transform: translateX(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      .tool-row {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px;
+        padding: 3px;
+        border: 1px solid #d8e0eb;
+        border-radius: 7px;
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.11);
+      }
+
+      .tool-row .space-value {
+        min-width: 38px;
+        text-align: center;
+        color: #475569;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .tool-row .resize-handle {
+        cursor: ns-resize;
+        color: #64748b;
+      }
+
+      .tool-row .resize-handle svg {
+        pointer-events: none;
+      }
+
+      .tool-row button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border: 1px solid #d1dae7;
+        border-radius: 5px;
+        background: #fff;
+        color: #1f2937;
+        cursor: pointer;
+        line-height: 1;
+      }
+
+      .tool-row button:hover {
+        background: var(--focus);
+        border-color: #93c5fd;
+      }
+
+      .tool-row button[disabled] {
+        opacity: 0.38;
+        cursor: not-allowed;
+      }
+
+      .break-button[aria-pressed="true"] {
+        border-color: #fda29b;
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+
+      .split-button[aria-pressed="true"] {
+        border-color: #7dd3fc;
+        background: #e0f2fe;
+        color: #0369a1;
+      }
+
+      .screen-page-spacer,
+      .manual-break-spacer {
+        --page-fill-px: 0px;
+        position: relative;
+        display: none;
+        height: 0;
+        margin: 0;
+        width: var(--page-width-px);
+        margin-left: calc(-1 * var(--page-margin-left-px));
+        background:
+          linear-gradient(
+              90deg,
+              rgba(15, 118, 110, 0.24),
+              rgba(15, 118, 110, 0.24)
+            )
+            left 0 top var(--page-fill-px) / 100% 1px no-repeat,
+          #fff;
+      }
+
+      .screen-page-spacer::after,
+      .manual-break-spacer::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(var(--page-fill-px) + var(--page-margin-bottom-px));
+        height: var(--page-gap-px);
+        border-top: 1px solid #c6d1df;
+        border-bottom: 1px solid #c6d1df;
+        background: var(--surface);
+        box-shadow:
+          inset 0 10px 14px -16px rgba(15, 23, 42, 0.75),
+          inset 0 -10px 14px -16px rgba(15, 23, 42, 0.75);
+      }
+
+      .manual-break-spacer::before {
+        content: "manual page break";
+        position: absolute;
+        left: 50%;
+        top: calc(var(--page-fill-px) + var(--page-margin-bottom-px) + 15px);
+        transform: translate(-50%, -50%);
+        padding: 3px 8px;
+        border: 1px solid #fda29b;
+        border-radius: 999px;
+        color: #9f1b12;
+        background: #fff;
+        font-size: 8.5pt;
+        font-weight: 700;
+        text-transform: uppercase;
+        z-index: 1;
+      }
+
+      .natural-page-spacer {
+        display: block;
+      }
+
+      .page-break-after > .manual-break-spacer {
+        display: block;
+      }
+
+      .starts-new-page {
+        position: relative;
+      }
+
+      .starts-new-page::before {
+        content: "";
+        position: absolute;
+        left: calc(-1 * var(--page-margin-left-px));
+        right: calc(-1 * var(--page-margin-right-px));
+        top: 0;
+        z-index: 4;
+        border-top: 1px solid rgba(15, 118, 110, 0.24);
+        pointer-events: none;
+      }
+
+      body.hide-guides .screen-page-spacer,
+      body.hide-guides .manual-break-spacer {
+        background: #fff;
+      }
+
+      body.hide-guides .starts-new-page::before {
+        display: none;
+      }
+
+      .answers-title {
+        margin: 12mm 0 7mm;
+        padding-top: 5mm;
+        border-top: 2px solid #1f2937;
+      }
+
+      .answers-title h2 {
+        margin: 0 0 2mm;
+        color: #111827;
+        font-size: 16pt;
+        line-height: 1.2;
+      }
+
+      .answers-title p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 10.5pt;
+      }
+
+      .katex-display {
+        margin: 2mm 0;
+      }
+
+      .editable-text-target {
+        position: relative;
+      }
+
+      .content-element-tools {
+        right: calc(-1 * var(--page-margin-right-px) + 7px);
+        top: 50%;
+        transform: translateY(-50%);
+        height: 30px;
+        z-index: 6;
+      }
+
+      .tool-row .action-divider {
+        width: 1px;
+        height: 16px;
+        margin: 0 1px;
+        background: #d8e0eb;
+      }
+
+      .tool-row .delete-button:hover {
+        background: var(--danger-soft);
+        border-color: #fda29b;
+        color: var(--danger);
+      }
+
+      #question-edit-dialog,
+      #save-edits-dialog,
+      #message-dialog {
+        width: min(640px, 92vw);
+        padding: 0;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        color: var(--ink);
+        box-shadow: 0 30px 60px rgba(15, 23, 42, 0.28);
+      }
+
+      #question-edit-dialog::backdrop,
+      #save-edits-dialog::backdrop,
+      #message-dialog::backdrop {
+        background: rgba(15, 23, 42, 0.45);
+      }
+
+      #message-dialog {
+        width: min(440px, 92vw);
+      }
+
+      .message-text {
+        margin: 0;
+        color: var(--ink);
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+
+      .edit-dialog-actions button[type="submit"].danger-action {
+        border-color: var(--danger);
+        background: var(--danger);
+        color: #fff;
+      }
+
+      .edit-dialog-actions button[type="submit"].danger-action:hover {
+        background: #921e10;
+        border-color: #921e10;
+      }
+
+      .save-filename-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .save-filename-row {
+        display: inline-flex;
+        align-items: stretch;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        overflow: hidden;
+      }
+
+      .save-filename-row input {
+        flex: 1;
+        min-width: 0;
+        height: 34px;
+        padding: 0 10px;
+        border: 0;
+        background: transparent;
+        color: var(--ink);
+        font: inherit;
+      }
+
+      .save-filename-row input:focus {
+        outline: none;
+      }
+
+      .save-filename-row .save-extension {
+        display: inline-flex;
+        align-items: center;
+        padding: 0 10px;
+        background: #eef3f8;
+        color: var(--muted);
+        font:
+          13px/1 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          Consolas,
+          monospace;
+        border-left: 1px solid var(--line);
+      }
+
+      .edit-dialog-form {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 20px 22px;
+        margin: 0;
+      }
+
+      .edit-dialog-form h3 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .edit-dialog-hint {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .edit-dialog-hint code {
+        padding: 1px 5px;
+        border-radius: 4px;
+        background: #eef3f8;
+        font-size: 0.82rem;
+      }
+
+      #edit-dialog-text {
+        width: 100%;
+        min-height: 200px;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        font:
+          13px/1.5 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          Consolas,
+          monospace;
+        resize: vertical;
+        box-sizing: border-box;
+      }
+
+      .edit-dialog-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .edit-dialog-actions button {
+        height: 34px;
+        padding: 0 16px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+        cursor: pointer;
+      }
+
+      .edit-dialog-actions button[type="submit"] {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #fff;
+        font-weight: 700;
+      }
+
+      .edit-dialog-actions button[type="submit"]:hover {
+        background: var(--accent-dark);
+        border-color: var(--accent-dark);
+      }
+
+      @media (max-width: 900px) {
+        .pagination-tools,
+        .content-element-tools {
+          position: static;
+          transform: none;
+          width: auto;
+          height: auto;
+          margin: 4mm 0 0 12mm;
+        }
+
+        .pagination-tools > .hover-trigger,
+        .content-element-tools > .hover-trigger {
+          display: none;
+        }
+
+        .pagination-tools > .tool-rows-stack,
+        .content-element-tools > .tool-rows-stack {
+          position: static;
+          padding-right: 0;
+          display: flex;
+          flex-direction: row;
+          flex-wrap: wrap;
+          align-items: center;
+          max-width: none;
+        }
+      }
+
+      body.exporting .no-pdf {
+        display: none !important;
+      }
+
+      body.exporting .marks.marks-hidden {
+        display: none !important;
+      }
+
+      body.exporting .starts-new-page {
+        break-before: page;
+        page-break-before: always;
+        padding-top: 2mm;
+      }
+
+      body.exporting .natural-page-spacer::before,
+      body.exporting .natural-page-spacer::after,
+      body.exporting .manual-break-spacer::before,
+      body.exporting .manual-break-spacer::after,
+      body.exporting .starts-new-page::before {
+        display: none !important;
+      }
+
+      body.exporting .page-break-after {
+        break-after: auto !important;
+        page-break-after: auto !important;
+      }
+
+      body.exporting .worksheet-content {
+        background-image: none !important;
+      }
+
+      body.exporting .paper-preview {
+        box-shadow: none;
+        border: 0;
+        padding: 0;
+        width: var(--printable-width-px);
+        background: #fff;
+      }
+
+      @media (max-width: 900px) {
+        .app-toolbar {
+          align-items: flex-start;
+        }
+
+        .toolbar-title {
+          width: 100%;
+        }
+
+        .toolbar-left,
+        .toolbar-right {
+          width: 100%;
+        }
+
+        .toolbar-right {
+          justify-content: space-between;
+        }
+      }
+
+      @media print {
+        html,
+        body {
+          background: #fff !important;
+        }
+
+        .app-toolbar,
+        .no-pdf {
+          display: none !important;
+        }
+
+        .stage {
+          display: block;
+          padding: 0;
+          overflow: visible;
+        }
+
+        .paper-preview {
+          width: auto !important;
+          min-height: 0 !important;
+          padding: 0 !important;
+          border: 0 !important;
+          box-shadow: none !important;
+          background: #fff !important;
+        }
+
+        .paper-preview::before,
+        .paper-preview::after {
+          display: none !important;
+        }
+
+        .worksheet-content {
+          width: auto !important;
+          min-height: 0 !important;
+          background-image: none !important;
+        }
+
+      }
+    </style>
+  </head>
+  <body class="no-ruled-lines">
+    <header class="app-toolbar no-pdf">
+      <div class="toolbar-left">
+        <div class="toolbar-title">
+          <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M6 2.75h8.2L19 7.55V21.25H6z"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linejoin="round"
+            ></path>
+            <path
+              d="M14 3v5h5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linejoin="round"
+            ></path>
+            <path
+              d="M8.8 12.2h6.4M8.8 15.2h4.8"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+            ></path>
+          </svg>
+          Worksheet PDF Preview
+        </div>
+
+        <label class="field" for="page-size">
+          Page
+          <select id="page-size">
+            <option value="a4-portrait" selected>A4 portrait</option>
+            <option value="a4-landscape">A4 landscape</option>
+            <option value="letter-portrait">US Letter portrait</option>
+            <option value="letter-landscape">US Letter landscape</option>
+            <option value="legal-portrait">US Legal portrait</option>
+            <option value="legal-landscape">US Legal landscape</option>
+          </select>
+        </label>
+
+        <div class="field margins-field" id="margins-field">
+          <span>Margins</span>
+          <button
+            class="margins-trigger"
+            id="margins-trigger"
+            type="button"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="margins-popover"
+          >
+            <span id="margins-summary">15·15·15·15 mm</span>
+            <svg width="10" height="6" viewBox="0 0 10 6" aria-hidden="true">
+              <path
+                d="m1 1 4 4 4-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              ></path>
+            </svg>
+          </button>
+          <div class="margins-popover" id="margins-popover" role="dialog" aria-label="Page margins">
+            <div class="margins-grid">
+              <label for="margin-top">Top</label>
+              <input id="margin-top" type="number" min="0" max="50" step="1" value="15" />
+              <label for="margin-right">Right</label>
+              <input id="margin-right" type="number" min="0" max="50" step="1" value="15" />
+              <label for="margin-bottom">Bottom</label>
+              <input id="margin-bottom" type="number" min="0" max="50" step="1" value="15" />
+              <label for="margin-left">Left</label>
+              <input id="margin-left" type="number" min="0" max="50" step="1" value="15" />
+            </div>
+            <small>millimetres</small>
+          </div>
+        </div>
+
+        <div class="lines-field" id="lines-field">
+          <span>Lines</span>
+          <input
+            type="checkbox"
+            id="lines-enabled"
+            aria-label="Show ruled lines"
+          />
+          <input
+            type="number"
+            id="line-gap"
+            min="4"
+            max="20"
+            step="1"
+            value="8"
+            aria-label="Line gap in millimetres"
+          />
+          mm
+        </div>
+      </div>
+
+      <div class="toolbar-right">
+        <div class="page-count" id="page-count">1 page</div>
+        <button
+          class="secondary-button"
+          id="save-edits"
+          type="button"
+          title="Save your current edits as a standalone HTML file"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M5 4h11l3 3v13H5z"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linejoin="round"
+            ></path>
+            <path
+              d="M8 4v5h7V4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linejoin="round"
+            ></path>
+            <path
+              d="M8 14h8v6H8z"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linejoin="round"
+            ></path>
+          </svg>
+          <span>Save Edits</span>
+        </button>
+        <button class="pdf-button" id="save-pdf" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M12 3v10.5m0 0 4-4m-4 4-4-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.9"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+            <path
+              d="M5 15.5v3.75h14V15.5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.9"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+          </svg>
+          <span id="save-pdf-label">Save PDF</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="stage">
+      <div class="paper-preview" id="paper-preview">
+        <!-- WORKSHEET CONTENT START
+        An AI generating a worksheet should edit this article only.
+        Keep .question for questions that need adjustable working space.
+        Keep .answer for worked solutions that only need optional page breaks.
+        The script below injects all controls and PDF behavior.
+      -->
+        <article class="worksheet-content" id="worksheet-content">
+          <section class="worksheet-header">
+            <h1>Integration by Recognition</h1>
+            <p>A-Level Mathematics Worksheet: Reverse Chain Rule</p>
+          </section>
+
+          <section class="worksheet-section">
+            <h2>Warm-Up</h2>
+            <p>
+              Evaluate each integral. Show enough working to identify the inner
+              function and its derivative.
+            </p>
+          </section>
+
+          <div class="question" data-working-space-mm="30">
+            <div class="question-prompt">
+              <div>
+                <p>
+                  Evaluate \( \displaystyle \int 2x(x^2+5)^4 \, dx \).
+                  <span class="marks">2 marks</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="question" data-working-space-mm="34">
+            <div class="question-prompt">
+              <div>
+                <p>
+                  Find \( \displaystyle \int 3x^2e^{x^3-1} \, dx \).
+                  <span class="marks">2 marks</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="question" data-working-space-mm="36">
+            <div class="question-prompt">
+              <div>
+                <p>
+                  Evaluate \( \displaystyle \int \frac{6x}{3x^2+7} \, dx \).
+                  <span class="marks">2 marks</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <section class="worksheet-section">
+            <h2>Core Practice</h2>
+            <p>
+              Use the reverse chain rule. Include the constant of integration
+              where appropriate.
+            </p>
+          </section>
+
+          <div class="question" data-working-space-mm="42">
+            <div class="question-prompt">
+              <div>
+                <p>
+                  Find \( \displaystyle \int (x+2)(x^2+4x+9)^5 \, dx \).
+                  <span class="marks">3 marks</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="question" data-working-space-mm="42">
+            <div class="question-prompt">
+              <div>
+                <p>
+                  Find \( \displaystyle \int \cos x \sqrt{4+\sin x} \, dx \).
+                  <span class="marks">3 marks</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="question" data-working-space-mm="48">
+            <div class="question-prompt">
+              <div>
+                <p>
+                  Find \( \displaystyle \int \frac{\sin x}{2+\cos x} \, dx \).
+                  <span class="marks">3 marks</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <section class="worksheet-section">
+            <h2>Definite Integrals</h2>
+            <p>Give exact answers, simplifying logarithms where possible.</p>
+          </section>
+
+          <div class="question" data-working-space-mm="52">
+            <div class="question-prompt">
+              <div>
+                <p>
+                  Calculate \( \displaystyle \int_0^2 4x(x^2+1)^3 \, dx \).
+                  <span class="marks">4 marks</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="question" data-working-space-mm="58">
+            <div class="question-prompt">
+              <div>
+                <p>
+                  Calculate \( \displaystyle \int_0^{\pi/4} 6\sec^2 x\, e^{3\tan
+                  x} \, dx \). <span class="marks">4 marks</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="question" data-working-space-mm="60">
+            <div class="question-prompt">
+              <div>
+                <p>
+                  Show that \( \displaystyle \int_{\pi/6}^{\pi/3} \frac{2\sin
+                  x}{1+\cos x}\,dx = 2\ln(1+\sqrt{3}/2)-2\ln(3/2) \).
+                  <span class="marks">5 marks</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <section class="answers-title">
+            <h2>Worked Answers</h2>
+            <p>
+              These solutions are included after the questions and can also
+              receive page breaks.
+            </p>
+          </section>
+
+          <div class="answer">
+            <div class="answer-body">
+              <div>
+                <p>Let \(u=x^2+5\), so \(du=2x\,dx\).</p>
+                <p>
+                  \(\displaystyle \int 2x(x^2+5)^4\,dx=\int
+                  u^4\,du=\frac{1}{5}(x^2+5)^5+c\).
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="answer">
+            <div class="answer-body">
+              <div>
+                <p>Let \(u=x^3-1\), so \(du=3x^2\,dx\).</p>
+                <p>\(\displaystyle \int 3x^2e^{x^3-1}\,dx=e^{x^3-1}+c\).</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="answer">
+            <div class="answer-body">
+              <div>
+                <p>Let \(u=3x^2+7\), so \(du=6x\,dx\).</p>
+                <p>
+                  \(\displaystyle \int \frac{6x}{3x^2+7}\,dx=\ln|3x^2+7|+c\).
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="answer">
+            <div class="answer-body">
+              <div>
+                <p>Let \(u=x^2+4x+9\), so \(du=2(x+2)\,dx\).</p>
+                <p>
+                  \(\displaystyle \int (x+2)(x^2+4x+9)^5\,dx=\frac{1}{2}\int
+                  u^5\,du=\frac{1}{12}(x^2+4x+9)^6+c\).
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="answer">
+            <div class="answer-body">
+              <div>
+                <p>Let \(u=4+\sin x\), so \(du=\cos x\,dx\).</p>
+                <p>
+                  \(\displaystyle \int \cos x\sqrt{4+\sin x}\,dx=\int
+                  u^{1/2}\,du=\frac{2}{3}(4+\sin x)^{3/2}+c\).
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="answer">
+            <div class="answer-body">
+              <div>
+                <p>Let \(u=2+\cos x\), so \(du=-\sin x\,dx\).</p>
+                <p>
+                  \(\displaystyle \int \frac{\sin x}{2+\cos x}\,dx=-\ln|2+\cos
+                  x|+c\).
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="answer">
+            <div class="answer-body">
+              <div>
+                <p>
+                  Let \(u=x^2+1\), so \(du=2x\,dx\). The factor \(4x\,dx\) is
+                  \(2du\).
+                </p>
+                <p>
+                  \(\displaystyle \int_0^2 4x(x^2+1)^3\,dx=2\int_1^5
+                  u^3\,du=\frac{1}{2}(5^4-1^4)=312\).
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="answer">
+            <div class="answer-body">
+              <div>
+                <p>
+                  Let \(u=3\tan x\), so \(du=3\sec^2x\,dx\). The factor
+                  \(6\sec^2x\,dx\) is \(2du\).
+                </p>
+                <p>
+                  \(\displaystyle \int_0^{\pi/4}6\sec^2x e^{3\tan
+                  x}\,dx=2\int_0^3 e^u\,du=2(e^3-1)\).
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="answer">
+            <div class="answer-body">
+              <div>
+                <p>Let \(u=1+\cos x\), so \(du=-\sin x\,dx\).</p>
+                <p>
+                  \(\displaystyle \int \frac{2\sin x}{1+\cos x}\,dx=-2\ln|1+\cos
+                  x|+c\).
+                </p>
+                <p>
+                  Substitute \(x=\pi/3\) and \(x=\pi/6\) to obtain \(
+                  -2\ln(3/2)+2\ln(1+\sqrt{3}/2) \), which is the required
+                  result.
+                </p>
+              </div>
+            </div>
+          </div>
+        </article>
+        <!-- WORKSHEET CONTENT END -->
+      </div>
+    </main>
+
+    <script>
+      (function () {
+        const MM_TO_PX = 96 / 25.4;
+        const SCREEN_PAGE_GAP_PX = 30;
+        const PAGE_BREAK_SAFETY_PX = 12;
+        const MIN_SPLIT_WORKING_PX = 8;
+        const PAGE_SIZES = {
+          a4: { label: "A4", width: 210, height: 297 },
+          letter: { label: "US Letter", width: 215.9, height: 279.4 },
+          legal: { label: "US Legal", width: 215.9, height: 355.6 },
+        };
+
+        const KATEX_DELIMITERS = [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\(", right: "\\)", display: false },
+          { left: "\\[", right: "\\]", display: true },
+          { left: "$", right: "$", display: false },
+        ];
+
+        const state = {
+          pageSize: "a4",
+          orientation: "portrait",
+          marginTopMm: 15,
+          marginBottomMm: 15,
+          marginLeftMm: 15,
+          marginRightMm: 15,
+          lineGapMm: 0,
+          layoutRaf: 0,
+          renderedPageCount: 1,
+          resizeDrag: null,
+          activeEditTarget: null,
+        };
+
+        const els = {};
+
+        document.addEventListener("DOMContentLoaded", init);
+
+        function init() {
+          els.root = document.documentElement;
+          els.body = document.body;
+          els.paper = document.getElementById("paper-preview");
+          els.content = document.getElementById("worksheet-content");
+          els.pageSize = document.getElementById("page-size");
+          els.lineGap = document.getElementById("line-gap");
+          els.linesEnabled = document.getElementById("lines-enabled");
+          els.pageCount = document.getElementById("page-count");
+          els.savePdf = document.getElementById("save-pdf");
+          els.savePdfLabel = document.getElementById("save-pdf-label");
+          els.saveEdits = document.getElementById("save-edits");
+          els.printStyle = document.getElementById("dynamic-print-style");
+
+          loadStateFromBody();
+          ensureEditDialog();
+          decorateWorksheet();
+          wireControls();
+          applyPageSettings();
+          renderMath();
+
+          if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(scheduleLayout);
+          }
+          window.addEventListener("resize", scheduleLayout);
+        }
+
+        function decorateWorksheet() {
+          decorateStandaloneEditableText();
+
+          els.content.querySelectorAll(".question").forEach((block) => {
+            block
+              .querySelectorAll(
+                ":scope > .question-number-trigger, :scope > .question-actions",
+              )
+              .forEach((item) => item.remove());
+
+            if (!block.querySelector(":scope > .working-space")) {
+              const work = document.createElement("div");
+              work.className = "working-space";
+              work.setAttribute("aria-hidden", "true");
+              block.appendChild(work);
+            }
+            preserveEditableSource(getQuestionEditableTarget(block));
+            decorateMarksIn(block);
+            appendTools(block, true);
+            syncQuestionSpace(block);
+          });
+
+          els.content.querySelectorAll(".answer").forEach((block) => {
+            preserveEditableSource(getAnswerEditableTarget(block));
+            decorateMarksIn(block);
+            appendTools(block, false);
+          });
+        }
+
+        function decorateStandaloneEditableText() {
+          const editableSelectors = [
+            ".worksheet-header > h1",
+            ".worksheet-header > p",
+            ".worksheet-section > h2",
+            ".worksheet-section > p",
+            ".answers-title > h2",
+            ".answers-title > p",
+          ];
+
+          els.content
+            .querySelectorAll(editableSelectors.join(", "))
+            .forEach((target) => {
+              preserveEditableSource(target);
+              target.classList.add("editable-text-target");
+
+              if (target.querySelector(":scope > .content-element-tools")) {
+                return;
+              }
+
+              const editLabel = getStandaloneEditLabel(target);
+              const deleteLabel = getStandaloneDeleteLabel(target);
+              const triggerLabel =
+                editLabel.replace(/^Edit /, "Show ") + " controls";
+
+              const tools = document.createElement("span");
+              tools.className = "content-element-tools no-pdf";
+              tools.dataset.rowCount = "1";
+              tools.innerHTML = `
+                <span class="tool-rows-stack">
+                  <span class="tool-row" aria-label="Element controls">
+                    <button class="edit-button" type="button" data-action="edit-content" data-edit-label="${editLabel}" aria-label="${editLabel}" title="${editLabel}">
+                      <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 20h4l10.5-10.5-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+                        <path d="m13.5 6.5 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                      </svg>
+                    </button>
+                    <button class="delete-button" type="button" data-action="delete-content" data-delete-label="${deleteLabel}" aria-label="${deleteLabel}" title="${deleteLabel}">
+                      <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                      </svg>
+                    </button>
+                  </span>
+                </span>
+                ${hoverTriggerHtml(triggerLabel)}
+              `;
+              target.appendChild(tools);
+              wireToolbarHover(tools);
+            });
+        }
+
+        function getStandaloneEditLabel(target) {
+          if (target.closest(".worksheet-header")) {
+            return target.matches("h1")
+              ? "Edit worksheet title"
+              : "Edit worksheet subtitle";
+          }
+          if (target.closest(".answers-title")) {
+            return target.matches("h2")
+              ? "Edit answers heading"
+              : "Edit answers instructions";
+          }
+          if (target.matches("h2")) {
+            return "Edit section heading";
+          }
+          return "Edit section instructions";
+        }
+
+        function getStandaloneDeleteLabel(target) {
+          return getStandaloneEditLabel(target).replace(/^Edit /, "Delete ");
+        }
+
+        function preserveEditableSource(target) {
+          if (target && !("originalLatex" in target.dataset)) {
+            target.dataset.originalLatex = target.innerHTML;
+          }
+        }
+
+        function getQuestionEditableTarget(block) {
+          return block.querySelector(
+            ":scope > .question-prompt > div",
+          );
+        }
+
+        function getAnswerEditableTarget(block) {
+          return block.querySelector(":scope > .answer-body > div");
+        }
+
+        function ensureEditDialog() {
+          if (document.getElementById("question-edit-dialog")) {
+            return;
+          }
+
+          const dialog = document.createElement("dialog");
+          dialog.id = "question-edit-dialog";
+          dialog.className = "no-pdf";
+          dialog.innerHTML = `
+            <form method="dialog" class="edit-dialog-form">
+              <h3>Edit question</h3>
+              <p class="edit-dialog-hint">LaTeX delimiters like <code>\\(...\\)</code> and <code>$$...$$</code> are preserved. Edit the source markup below.</p>
+              <textarea id="edit-dialog-text" spellcheck="false" rows="12"></textarea>
+              <div class="edit-dialog-actions">
+                <button type="button" data-action="edit-dialog-cancel">Cancel</button>
+                <button type="submit" value="ok" data-action="edit-dialog-ok">OK</button>
+              </div>
+            </form>
+          `;
+          document.body.appendChild(dialog);
+
+          dialog
+            .querySelector('[data-action="edit-dialog-cancel"]')
+            .addEventListener("click", () => {
+              dialog.close("cancel");
+            });
+
+          dialog.addEventListener("close", () => {
+            if (dialog.returnValue === "ok") {
+              commitEditDialog();
+            }
+            state.activeEditTarget = null;
+          });
+        }
+
+        function openEditDialog(target, label) {
+          if (!target) {
+            return;
+          }
+          preserveEditableSource(target);
+
+          const source = (
+            target.dataset.originalLatex ?? target.innerHTML
+          ).trim();
+
+          const dialog = document.getElementById("question-edit-dialog");
+          const heading = dialog.querySelector("h3");
+          const textarea = document.getElementById("edit-dialog-text");
+          if (heading) {
+            heading.textContent = label || "Edit content";
+          }
+          textarea.value = source;
+          state.activeEditTarget = target;
+          dialog.returnValue = "";
+          dialog.showModal();
+          requestAnimationFrame(() => {
+            textarea.focus();
+            textarea.setSelectionRange(
+              textarea.value.length,
+              textarea.value.length,
+            );
+          });
+        }
+
+        function commitEditDialog() {
+          const target = state.activeEditTarget;
+          if (!target) {
+            return;
+          }
+
+          const newSource = document.getElementById("edit-dialog-text").value;
+          target.innerHTML = newSource;
+          target.dataset.originalLatex = newSource;
+
+          if (typeof window.renderMathInElement === "function") {
+            window.renderMathInElement(target, {
+              delimiters: KATEX_DELIMITERS,
+              output: "html",
+              throwOnError: false,
+            });
+          }
+
+          decorateMarksIn(target);
+          decorateStandaloneEditableText();
+          scheduleLayout();
+        }
+
+        async function deleteStandaloneEditableText(target, label) {
+          if (!target) {
+            return;
+          }
+
+          const ok = await showMessage({
+            title: label,
+            message: "This element will be removed from the worksheet.",
+            confirmLabel: "Delete",
+            cancelLabel: "Cancel",
+            danger: true,
+          });
+          if (!ok) {
+            return;
+          }
+
+          target.remove();
+          scheduleLayout();
+        }
+
+        function ensureMessageDialog() {
+          let dialog = document.getElementById("message-dialog");
+          if (dialog) {
+            return dialog;
+          }
+          dialog = document.createElement("dialog");
+          dialog.id = "message-dialog";
+          dialog.className = "no-pdf";
+          dialog.innerHTML = `
+            <form method="dialog" class="edit-dialog-form">
+              <h3 class="message-title"></h3>
+              <p class="message-text"></p>
+              <div class="edit-dialog-actions">
+                <button type="button" class="message-cancel" data-action="message-cancel">Cancel</button>
+                <button type="submit" value="ok" class="message-ok" data-action="message-ok">OK</button>
+              </div>
+            </form>
+          `;
+          document.body.appendChild(dialog);
+
+          dialog
+            .querySelector('[data-action="message-cancel"]')
+            .addEventListener("click", () => {
+              dialog.close("cancel");
+            });
+
+          return dialog;
+        }
+
+        function showMessage(options) {
+          const {
+            title = "",
+            message = "",
+            confirmLabel = "OK",
+            cancelLabel = null,
+            danger = false,
+          } = options || {};
+          return new Promise((resolve) => {
+            const dialog = ensureMessageDialog();
+            dialog.querySelector(".message-title").textContent = title;
+            dialog.querySelector(".message-text").textContent = message;
+
+            const okBtn = dialog.querySelector(".message-ok");
+            okBtn.textContent = confirmLabel;
+            okBtn.classList.toggle("danger-action", !!danger);
+
+            const cancelBtn = dialog.querySelector(".message-cancel");
+            if (cancelLabel === null || cancelLabel === false) {
+              cancelBtn.style.display = "none";
+            } else {
+              cancelBtn.style.display = "";
+              cancelBtn.textContent = cancelLabel;
+            }
+
+            dialog.returnValue = "";
+            const onClose = () => {
+              dialog.removeEventListener("close", onClose);
+              resolve(dialog.returnValue === "ok");
+            };
+            dialog.addEventListener("close", onClose);
+            dialog.showModal();
+            requestAnimationFrame(() => okBtn.focus());
+          });
+        }
+
+        function decorateMarksIn(root) {
+          root.querySelectorAll(".marks").forEach(decorateMarks);
+        }
+
+        function decorateMarks(marks) {
+          if (marks.dataset.marksDecorated === "true") {
+            return;
+          }
+
+          const initialValue = readMarksValue(marks);
+          marks.dataset.marksDecorated = "true";
+          marks.dataset.marksValue = String(initialValue);
+
+          while (marks.firstChild) {
+            marks.removeChild(marks.firstChild);
+          }
+
+          const text = document.createElement("span");
+          text.className = "marks-text";
+          text.textContent = formatMarksText(initialValue);
+          marks.appendChild(text);
+
+          const initiallyHidden = marks.classList.contains("marks-hidden");
+          const panel = document.createElement("span");
+          panel.className = "marks-actions no-pdf";
+          panel.innerHTML = `
+            <button type="button" data-action="marks-down" aria-label="Decrease marks" title="Decrease marks">−</button>
+            <button type="button" data-action="marks-up" aria-label="Increase marks" title="Increase marks">+</button>
+            <button class="marks-toggle" type="button" data-action="marks-toggle" aria-pressed="${initiallyHidden}" aria-label="Show or hide marks" title="Show or hide marks (faint when hidden, excluded from PDF)">
+              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"></path>
+                <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"></circle>
+              </svg>
+            </button>
+          `;
+          marks.appendChild(panel);
+        }
+
+        function readMarksValue(marks) {
+          if (marks.dataset.marksValue !== undefined) {
+            const stored = Number(marks.dataset.marksValue);
+            if (Number.isFinite(stored) && stored >= 1) {
+              return Math.round(stored);
+            }
+          }
+          const match = (marks.textContent || "").match(/(\d+)/);
+          return match ? Math.max(1, parseInt(match[1], 10)) : 1;
+        }
+
+        function formatMarksText(value) {
+          const v = Math.max(1, Math.round(value));
+          return `${v} ${v === 1 ? "mark" : "marks"}`;
+        }
+
+        function adjustMarks(marks, delta) {
+          const current = readMarksValue(marks);
+          const next = Math.max(1, current + delta);
+          if (next === current) {
+            return;
+          }
+          marks.dataset.marksValue = String(next);
+          const text = marks.querySelector(":scope > .marks-text");
+          if (text) {
+            text.textContent = formatMarksText(next);
+          }
+          scheduleLayout();
+        }
+
+        function toggleMarksHidden(marks) {
+          const nowHidden = !marks.classList.contains("marks-hidden");
+          marks.classList.toggle("marks-hidden", nowHidden);
+          const toggle = marks.querySelector(
+            ':scope > .marks-actions [data-action="marks-toggle"]',
+          );
+          if (toggle) {
+            toggle.setAttribute("aria-pressed", String(nowHidden));
+          }
+          scheduleLayout();
+        }
+
+        function moveQuestion(block, direction) {
+          const questions = Array.from(
+            els.content.querySelectorAll(".question"),
+          );
+          const idx = questions.indexOf(block);
+          if (idx < 0) {
+            return;
+          }
+
+          const targetIdx = idx + direction;
+          const target = questions[targetIdx];
+          if (!target) {
+            return;
+          }
+
+          const answers = Array.from(
+            els.content.querySelectorAll(".answer"),
+          );
+          const blockAnswer = answers[idx];
+          const targetAnswer = answers[targetIdx];
+
+          if (direction < 0) {
+            target.parentNode.insertBefore(block, target);
+            if (blockAnswer && targetAnswer) {
+              targetAnswer.parentNode.insertBefore(blockAnswer, targetAnswer);
+            }
+          } else {
+            target.parentNode.insertBefore(block, target.nextSibling);
+            if (blockAnswer && targetAnswer) {
+              targetAnswer.parentNode.insertBefore(
+                blockAnswer,
+                targetAnswer.nextSibling,
+              );
+            }
+          }
+
+          scheduleLayout();
+        }
+
+        function updateMoveButtonStates() {
+          const questions = Array.from(
+            els.content.querySelectorAll(".question"),
+          );
+          questions.forEach((q, idx) => {
+            const up = q.querySelector(
+              ':scope > .pagination-tools [data-action="move-up"]',
+            );
+            const down = q.querySelector(
+              ':scope > .pagination-tools [data-action="move-down"]',
+            );
+            if (up) {
+              up.disabled = idx === 0;
+            }
+            if (down) {
+              down.disabled = idx === questions.length - 1;
+            }
+          });
+        }
+
+        async function deleteQuestion(block) {
+          const allQuestions = Array.from(
+            els.content.querySelectorAll(".question"),
+          );
+          const index = allQuestions.indexOf(block);
+          if (index < 0) {
+            return;
+          }
+
+          const ok = await showMessage({
+            title: "Delete question",
+            message:
+              "Delete this question? Its matching answer (if present) will also be removed.",
+            confirmLabel: "Delete",
+            cancelLabel: "Cancel",
+            danger: true,
+          });
+          if (!ok) {
+            return;
+          }
+
+          const allAnswers = Array.from(
+            els.content.querySelectorAll(".answer"),
+          );
+          const matchingAnswer = allAnswers[index];
+
+          block.remove();
+          if (matchingAnswer) {
+            matchingAnswer.remove();
+          }
+
+          scheduleLayout();
+        }
+
+        function appendTools(block, hasSpacing) {
+          if (block.querySelector(":scope > .pagination-tools")) {
+            return;
+          }
+
+          const spacer = document.createElement("div");
+          spacer.className = "manual-break-spacer no-pdf";
+          spacer.setAttribute("aria-hidden", "true");
+          block.appendChild(spacer);
+
+          const tools = document.createElement("div");
+          tools.className = "pagination-tools no-pdf";
+          const breakPressed = block.classList.contains("page-break-after");
+          const splitPressed = block.classList.contains("split-across-pages");
+          const editIcon = `
+            <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 20h4l10.5-10.5-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+              <path d="m13.5 6.5 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+            </svg>
+          `;
+          const questionActions = `
+            <button type="button" data-action="move-up" aria-label="Move question up" title="Move question up (also moves matching answer)">
+              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </button>
+            <button type="button" data-action="move-down" aria-label="Move question down" title="Move question down (also moves matching answer)">
+              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 5v14M19 12l-7 7-7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </button>
+            <button class="edit-button" type="button" data-action="edit-question" aria-label="Edit question" title="Edit question">
+              ${editIcon}
+            </button>
+            <button class="delete-button" type="button" data-action="delete-question" aria-label="Delete question" title="Delete question (also removes matching answer)">
+              <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </button>
+          `;
+          const answerActions = `
+            <button class="edit-button" type="button" data-action="edit-answer" aria-label="Edit answer" title="Edit answer">
+              ${editIcon}
+            </button>
+            <span class="action-divider" aria-hidden="true"></span>
+          `;
+          const splitButton = hasSpacing
+            ? `
+              <button class="split-button" type="button" data-action="toggle-split" aria-pressed="${splitPressed}" aria-label="Allow this working space to split across pages" title="Allow working space split">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 4v16M18 4v16M10 8h4M10 16h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                  <path d="m13 11 3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </button>
+            `
+            : "";
+          const rowsHtml = [
+            hasSpacing
+              ? `
+            <div class="tool-row" aria-label="Question edit and ordering controls">
+              ${questionActions}
+            </div>
+          `
+              : "",
+            hasSpacing
+              ? `
+            <div class="tool-row" aria-label="Working space and page break controls">
+              <button class="resize-handle" type="button" data-action="space-drag" aria-label="Drag to resize working space" title="Drag to resize working space">
+                <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m8 7 4-4 4 4M8 17l4 4 4-4M12 4v16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </button>
+              <button type="button" data-action="space-down" aria-label="Decrease working space" title="Decrease working space">-</button>
+              <span class="space-value" data-space-value></span>
+              <button type="button" data-action="space-up" aria-label="Increase working space" title="Increase working space">+</button>
+              ${splitButton}
+              <button class="break-button" type="button" data-action="toggle-break" aria-pressed="${breakPressed}" aria-label="Toggle page break after this item" title="Toggle page break after working space">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 3.5h9l3 3v5M15 3.5v4h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+                  <path d="M5 16h14M9 12l-4 4 4 4M15 12l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </button>
+            </div>
+          `
+              : "",
+            hasSpacing
+              ? ""
+              : `
+            <div class="tool-row" aria-label="Answer layout and edit controls">
+              ${answerActions}
+              <button class="break-button" type="button" data-action="toggle-break" aria-pressed="${breakPressed}" aria-label="Toggle page break after this item" title="Toggle page break">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 3.5h9l3 3v5M15 3.5v4h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+                  <path d="M5 16h14M9 12l-4 4 4 4M15 12l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </button>
+            </div>
+          `,
+          ].join("");
+
+          const rowCount = hasSpacing ? 2 : 1;
+          tools.dataset.rowCount = String(rowCount);
+          tools.innerHTML = `
+            <div class="tool-rows-stack">${rowsHtml}</div>
+            ${hoverTriggerHtml(hasSpacing ? "Show question controls" : "Show answer controls")}
+          `;
+          block.appendChild(tools);
+          wireToolbarHover(tools);
+        }
+
+        function hoverTriggerHtml(label) {
+          return `
+            <button class="hover-trigger" type="button" aria-label="${label}" aria-expanded="false" title="${label}">
+              <svg width="10" height="14" viewBox="0 0 10 14" aria-hidden="true">
+                <circle cx="5" cy="2.5" r="1.2" fill="currentColor"></circle>
+                <circle cx="5" cy="7" r="1.2" fill="currentColor"></circle>
+                <circle cx="5" cy="11.5" r="1.2" fill="currentColor"></circle>
+              </svg>
+            </button>
+          `;
+        }
+
+        function wireToolbarHover(container) {
+          if (container.dataset.hoverWired === "true") {
+            return;
+          }
+          container.dataset.hoverWired = "true";
+
+          let hideTimer = 0;
+          const cancelHide = () => {
+            if (hideTimer) {
+              clearTimeout(hideTimer);
+              hideTimer = 0;
+            }
+          };
+          const open = () => {
+            cancelHide();
+            container.classList.add("is-open");
+            const trigger = container.querySelector(":scope > .hover-trigger");
+            if (trigger) {
+              trigger.setAttribute("aria-expanded", "true");
+            }
+          };
+          const scheduleClose = () => {
+            cancelHide();
+            hideTimer = setTimeout(() => {
+              container.classList.remove("is-open");
+              const trigger = container.querySelector(
+                ":scope > .hover-trigger",
+              );
+              if (trigger) {
+                trigger.setAttribute("aria-expanded", "false");
+              }
+              hideTimer = 0;
+            }, 1000);
+          };
+
+          const trigger = container.querySelector(":scope > .hover-trigger");
+          const stack = container.querySelector(":scope > .tool-rows-stack");
+          [trigger, stack].forEach((el) => {
+            if (!el) {
+              return;
+            }
+            el.addEventListener("pointerenter", open);
+            el.addEventListener("pointerleave", scheduleClose);
+            el.addEventListener("focusin", open);
+            el.addEventListener("focusout", scheduleClose);
+          });
+        }
+
+        function wireControls() {
+          els.content.addEventListener("pointerdown", (event) => {
+            const handle = event.target.closest('[data-action="space-drag"]');
+            if (!handle) {
+              return;
+            }
+
+            startSpaceDrag(event, handle);
+          });
+
+          els.content.addEventListener("click", (event) => {
+            const button = event.target.closest("button[data-action]");
+            if (!button) {
+              return;
+            }
+
+            const action = button.dataset.action;
+
+            if (action === "edit-content") {
+              const target = button.closest(".editable-text-target");
+              openEditDialog(
+                target,
+                button.dataset.editLabel || "Edit content",
+              );
+              return;
+            }
+
+            if (action === "delete-content") {
+              const target = button.closest(".editable-text-target");
+              deleteStandaloneEditableText(
+                target,
+                button.dataset.deleteLabel || "Delete worksheet element",
+              );
+              return;
+            }
+
+            if (
+              action === "marks-up" ||
+              action === "marks-down" ||
+              action === "marks-toggle"
+            ) {
+              const marks = button.closest(".marks");
+              if (!marks) {
+                return;
+              }
+              if (action === "marks-up") {
+                adjustMarks(marks, 1);
+              } else if (action === "marks-down") {
+                adjustMarks(marks, -1);
+              } else {
+                toggleMarksHidden(marks);
+              }
+              return;
+            }
+
+            const block = button.closest(".question, .answer");
+            if (!block) {
+              return;
+            }
+
+            if (action === "space-up") {
+              adjustWorkingSpace(block, 8);
+            } else if (action === "space-down") {
+              adjustWorkingSpace(block, -8);
+            } else if (action === "space-drag") {
+              return;
+            } else if (action === "toggle-split") {
+              toggleSplit(block);
+            } else if (action === "toggle-break") {
+              toggleBreak(block);
+            } else if (action === "edit-question") {
+              openEditDialog(
+                getQuestionEditableTarget(block),
+                "Edit question",
+              );
+            } else if (action === "edit-answer") {
+              openEditDialog(getAnswerEditableTarget(block), "Edit answer");
+            } else if (action === "delete-question") {
+              deleteQuestion(block);
+            } else if (action === "move-up") {
+              moveQuestion(block, -1);
+            } else if (action === "move-down") {
+              moveQuestion(block, 1);
+            }
+          });
+
+          els.pageSize.addEventListener("change", () => {
+            applyPageSizeFromSelect();
+            applyPageSettings();
+          });
+
+          wireMarginInput("margin-top", "marginTopMm");
+          wireMarginInput("margin-bottom", "marginBottomMm");
+          wireMarginInput("margin-left", "marginLeftMm");
+          wireMarginInput("margin-right", "marginRightMm");
+
+          wireMarginsPopover();
+
+          els.linesEnabled.addEventListener("change", applyLinesState);
+          els.lineGap.addEventListener("input", () => {
+            if (els.linesEnabled.checked) {
+              applyLinesState();
+            }
+          });
+          els.lineGap.addEventListener("change", () => {
+            const v = clamp(Number(els.lineGap.value) || 8, 1, 50);
+            els.lineGap.value = String(v);
+            if (els.linesEnabled.checked) {
+              applyLinesState();
+            }
+          });
+
+          els.savePdf.addEventListener("click", savePdf);
+          if (els.saveEdits) {
+            els.saveEdits.addEventListener("click", openSaveEditsDialog);
+          }
+          window.addEventListener("pointermove", updateSpaceDrag);
+          window.addEventListener("pointerup", endSpaceDrag);
+          window.addEventListener("pointercancel", endSpaceDrag);
+        }
+
+        function startSpaceDrag(event, handle) {
+          const block = handle.closest(".question");
+          if (!block) {
+            return;
+          }
+
+          event.preventDefault();
+          state.resizeDrag = {
+            block,
+            handle,
+            pointerId: event.pointerId,
+            startY: event.clientY,
+            startMm: readSpaceMm(block),
+          };
+          try {
+            handle.setPointerCapture?.(event.pointerId);
+          } catch {
+            // Some synthetic pointer events cannot be captured.
+          }
+          handle.classList.add("is-dragging");
+        }
+
+        function updateSpaceDrag(event) {
+          if (
+            !state.resizeDrag ||
+            event.pointerId !== state.resizeDrag.pointerId
+          ) {
+            return;
+          }
+
+          const deltaMm = (event.clientY - state.resizeDrag.startY) / MM_TO_PX;
+          const next = clamp(state.resizeDrag.startMm + deltaMm, 0, 130);
+          setWorkingSpace(state.resizeDrag.block, next);
+        }
+
+        function endSpaceDrag(event) {
+          if (
+            !state.resizeDrag ||
+            event.pointerId !== state.resizeDrag.pointerId
+          ) {
+            return;
+          }
+
+          state.resizeDrag.handle.classList.remove("is-dragging");
+          try {
+            state.resizeDrag.handle.releasePointerCapture?.(event.pointerId);
+          } catch {
+            // Ignore release errors from already-ended pointer captures.
+          }
+          state.resizeDrag = null;
+          scheduleLayout();
+        }
+
+        function adjustWorkingSpace(block, deltaMm) {
+          if (block.classList.contains("page-break-after")) {
+            return;
+          }
+          const current = readSpaceMm(block);
+          setWorkingSpace(block, current + deltaMm);
+        }
+
+        function setWorkingSpace(block, nextMm) {
+          block.dataset.workingSpaceMm = String(clamp(nextMm, 0, 130));
+          syncQuestionSpace(block);
+          scheduleLayout();
+        }
+
+        function toggleBreak(block) {
+          const next = !block.classList.contains("page-break-after");
+          block.classList.toggle("page-break-after", next);
+          block.dataset.pageBreakAfter = next ? "true" : "false";
+
+          const breakButton = block.querySelector(
+            '[data-action="toggle-break"]',
+          );
+          if (breakButton) {
+            breakButton.setAttribute("aria-pressed", String(next));
+          }
+
+          scheduleLayout();
+        }
+
+        function toggleSplit(block) {
+          if (!block.classList.contains("question")) {
+            return;
+          }
+
+          const next = !block.classList.contains("split-across-pages");
+          block.classList.toggle("split-across-pages", next);
+          block.dataset.allowWorkingSplit = next ? "true" : "false";
+
+          const splitButton = block.querySelector(
+            '[data-action="toggle-split"]',
+          );
+          if (splitButton) {
+            splitButton.setAttribute("aria-pressed", String(next));
+          }
+
+          scheduleLayout();
+        }
+
+        function syncQuestionSpace(block) {
+          const mm = readSpaceMm(block);
+          const work = getPrimaryWorkingSpace(block);
+          if (work) {
+            work.style.height = `${mm}mm`;
+          }
+          const value = block.querySelector("[data-space-value]");
+          if (value) {
+            value.textContent = `${Math.round(mm)} mm`;
+          }
+          positionQuestionTools(block);
+        }
+
+        function readSpaceMm(block) {
+          const raw = Number(block.dataset.workingSpaceMm);
+          return Number.isFinite(raw) ? raw : 34;
+        }
+
+        function applyPageSettings() {
+          const page = getPage();
+          const printableWidthPx = Math.max(
+            260,
+            (page.width - state.marginLeftMm - state.marginRightMm) *
+              MM_TO_PX,
+          );
+          const printableHeightPx = Math.max(
+            260,
+            (page.height - state.marginTopMm - state.marginBottomMm) *
+              MM_TO_PX,
+          );
+
+          els.root.style.setProperty(
+            "--page-width-px",
+            `${page.width * MM_TO_PX}px`,
+          );
+          els.root.style.setProperty(
+            "--page-height-px",
+            `${page.height * MM_TO_PX}px`,
+          );
+          els.root.style.setProperty(
+            "--page-margin-top-px",
+            `${state.marginTopMm * MM_TO_PX}px`,
+          );
+          els.root.style.setProperty(
+            "--page-margin-bottom-px",
+            `${state.marginBottomMm * MM_TO_PX}px`,
+          );
+          els.root.style.setProperty(
+            "--page-margin-left-px",
+            `${state.marginLeftMm * MM_TO_PX}px`,
+          );
+          els.root.style.setProperty(
+            "--page-margin-right-px",
+            `${state.marginRightMm * MM_TO_PX}px`,
+          );
+          els.root.style.setProperty(
+            "--page-gap-px",
+            `${SCREEN_PAGE_GAP_PX}px`,
+          );
+          els.root.style.setProperty(
+            "--printable-width-px",
+            `${printableWidthPx}px`,
+          );
+          els.root.style.setProperty(
+            "--printable-height-px",
+            `${printableHeightPx}px`,
+          );
+          els.root.style.setProperty(
+            "--rule-gap-px",
+            `${Math.max(1, state.lineGapMm * MM_TO_PX)}px`,
+          );
+
+          els.printStyle.textContent = `@page { size: ${page.width}mm ${page.height}mm; margin: ${state.marginTopMm}mm ${state.marginRightMm}mm ${state.marginBottomMm}mm ${state.marginLeftMm}mm; }`;
+
+          updateMarginsSummary();
+          scheduleLayout();
+        }
+
+        function updateMarginsSummary() {
+          const summary = document.getElementById("margins-summary");
+          if (!summary) return;
+          summary.textContent = `${state.marginTopMm}·${state.marginRightMm}·${state.marginBottomMm}·${state.marginLeftMm} mm`;
+        }
+
+        function applyPageSizeFromSelect() {
+          const raw = els.pageSize.value || "a4-portrait";
+          const idx = raw.lastIndexOf("-");
+          const size = idx > 0 ? raw.slice(0, idx) : raw;
+          const orient = idx > 0 ? raw.slice(idx + 1) : "portrait";
+          if (PAGE_SIZES[size]) {
+            state.pageSize = size;
+          }
+          if (orient === "portrait" || orient === "landscape") {
+            state.orientation = orient;
+          }
+        }
+
+        function syncPageSizeSelect() {
+          if (!els.pageSize) return;
+          const target = `${state.pageSize}-${state.orientation}`;
+          if (
+            Array.from(els.pageSize.options).some(
+              (opt) => opt.value === target,
+            )
+          ) {
+            els.pageSize.value = target;
+          }
+        }
+
+        function wireMarginInput(inputId, stateKey) {
+          const input = document.getElementById(inputId);
+          if (!input) return;
+          const apply = () => {
+            const v = clamp(Number(input.value) || 0, 0, 50);
+            state[stateKey] = v;
+            input.value = String(v);
+            applyPageSettings();
+          };
+          input.addEventListener("input", () => {
+            const v = clamp(Number(input.value) || 0, 0, 50);
+            state[stateKey] = v;
+            applyPageSettings();
+          });
+          input.addEventListener("change", apply);
+          input.addEventListener("blur", apply);
+        }
+
+        function wireMarginsPopover() {
+          const field = document.getElementById("margins-field");
+          const trigger = document.getElementById("margins-trigger");
+          const popover = document.getElementById("margins-popover");
+          if (!field || !trigger || !popover) return;
+
+          let hideTimer = 0;
+          const cancelHide = () => {
+            if (hideTimer) {
+              clearTimeout(hideTimer);
+              hideTimer = 0;
+            }
+          };
+          const open = () => {
+            cancelHide();
+            field.classList.add("is-open");
+            trigger.setAttribute("aria-expanded", "true");
+          };
+          const scheduleClose = () => {
+            cancelHide();
+            hideTimer = setTimeout(() => {
+              field.classList.remove("is-open");
+              trigger.setAttribute("aria-expanded", "false");
+              hideTimer = 0;
+            }, 1000);
+          };
+
+          [trigger, popover].forEach((el) => {
+            el.addEventListener("pointerenter", open);
+            el.addEventListener("pointerleave", scheduleClose);
+          });
+          trigger.addEventListener("focus", open);
+          popover.addEventListener("focusin", open);
+          popover.addEventListener("focusout", scheduleClose);
+          trigger.addEventListener("click", () => {
+            if (field.classList.contains("is-open")) {
+              cancelHide();
+              field.classList.remove("is-open");
+              trigger.setAttribute("aria-expanded", "false");
+            } else {
+              open();
+            }
+          });
+        }
+
+        function syncMarginInputs() {
+          const set = (id, value) => {
+            const input = document.getElementById(id);
+            if (input) input.value = String(value);
+          };
+          set("margin-top", state.marginTopMm);
+          set("margin-bottom", state.marginBottomMm);
+          set("margin-left", state.marginLeftMm);
+          set("margin-right", state.marginRightMm);
+        }
+
+        function applyLinesState() {
+          if (els.linesEnabled.checked) {
+            const v = clamp(Number(els.lineGap.value) || 8, 1, 50);
+            state.lineGapMm = v;
+            els.body.classList.remove("no-ruled-lines");
+          } else {
+            state.lineGapMm = 0;
+            els.body.classList.add("no-ruled-lines");
+          }
+          els.root.style.setProperty(
+            "--rule-gap-px",
+            `${Math.max(1, state.lineGapMm * MM_TO_PX)}px`,
+          );
+          scheduleLayout();
+        }
+
+        function getPage() {
+          const base = PAGE_SIZES[state.pageSize];
+          const portrait = state.orientation === "portrait";
+          const width = portrait ? base.width : base.height;
+          const height = portrait ? base.height : base.width;
+          return {
+            width,
+            height,
+            label: base.label,
+            orientation: state.orientation,
+          };
+        }
+
+        function scheduleLayout() {
+          cancelAnimationFrame(state.layoutRaf);
+          state.layoutRaf = requestAnimationFrame(updateScreenPagination);
+        }
+
+        function updateScreenPagination() {
+          const printableHeight = getLayoutHeightPx();
+          const blocks = Array.from(
+            els.content.querySelectorAll(".question, .answer"),
+          );
+
+          els.content.querySelectorAll(".starts-new-page").forEach((item) => {
+            item.classList.remove("starts-new-page");
+          });
+          els.content
+            .querySelectorAll(".natural-page-spacer")
+            .forEach((spacer) => spacer.remove());
+          els.content
+            .querySelectorAll(".working-space-continuation")
+            .forEach((space) => space.remove());
+          els.content.querySelectorAll(".question").forEach((block) => {
+            syncQuestionSpace(block);
+          });
+          blocks.forEach((block) => {
+            const spacer = block.querySelector(":scope > .manual-break-spacer");
+            if (spacer) {
+              spacer.style.setProperty("--page-fill-px", "0px");
+              spacer.style.height = "0px";
+            }
+          });
+
+          void els.content.offsetHeight;
+          positionQuestionTools();
+
+          let pageY = 0;
+          let pages = 1;
+          let nextStartsNewPage = false;
+          const items = Array.from(els.content.children).filter((item) => {
+            return !item.classList.contains("natural-page-spacer");
+          });
+
+          items.forEach((item, index) => {
+            if (item.classList.contains("manual-break-spacer")) {
+              return;
+            }
+
+            if (nextStartsNewPage) {
+              item.classList.add("starts-new-page");
+              nextStartsNewPage = false;
+            }
+
+            const itemHeight = getOuterHeight(item);
+            const itemContentHeight = getBoxHeight(item);
+            const nextItem = items[index + 1];
+            const keepWithNextHeight = shouldKeepWithNext(item, nextItem)
+              ? getOuterHeight(nextItem)
+              : 0;
+            const fitHeight = itemHeight + keepWithNextHeight;
+            const canTrySplit = isSplittableQuestion(item);
+            const fitsCurrentPage =
+              pageY + fitHeight <= printableHeight ||
+              (pageY === 0 && !canTrySplit);
+            const canMoveWholeItem = fitHeight < printableHeight * 0.98;
+
+            if (!fitsCurrentPage) {
+              if (canTrySplit && pageY + itemContentHeight <= printableHeight) {
+                pageY += itemContentHeight;
+
+                if (item.classList.contains("page-break-after")) {
+                  const spacer = item.querySelector(
+                    ":scope > .manual-break-spacer",
+                  );
+                  setPageSpacerHeight(
+                    spacer,
+                    Math.max(
+                      0,
+                      printableHeight - Math.min(pageY, printableHeight),
+                    ),
+                  );
+                  pages += 1;
+                  pageY = 0;
+                  nextStartsNewPage = true;
+                }
+                return;
+              }
+
+              const split = splitQuestionWorkingSpace(
+                item,
+                pageY,
+                printableHeight,
+              );
+              if (split) {
+                pages += 1;
+                pageY = split.pageY;
+
+                if (item.classList.contains("page-break-after")) {
+                  const spacer = item.querySelector(
+                    ":scope > .manual-break-spacer",
+                  );
+                  setPageSpacerHeight(
+                    spacer,
+                    Math.max(
+                      0,
+                      printableHeight - Math.min(pageY, printableHeight),
+                    ),
+                  );
+                  pages += 1;
+                  pageY = 0;
+                  nextStartsNewPage = true;
+                } else if (pageY > printableHeight) {
+                  const overflowPages = Math.floor(pageY / printableHeight);
+                  pages += overflowPages;
+                  pageY = pageY % printableHeight;
+                }
+                return;
+              }
+
+              if (!canMoveWholeItem) {
+                pageY += itemHeight;
+                if (pageY > printableHeight) {
+                  const overflowPages = Math.floor(pageY / printableHeight);
+                  pages += overflowPages;
+                  pageY = pageY % printableHeight;
+                }
+                return;
+              }
+
+              const naturalSpacer = createPageSpacer(printableHeight - pageY);
+              els.content.insertBefore(naturalSpacer, item);
+              item.classList.add("starts-new-page");
+              pages += 1;
+              pageY = 0;
+            }
+
+            pageY += itemHeight;
+
+            if (item.classList.contains("page-break-after")) {
+              const spacer = item.querySelector(
+                ":scope > .manual-break-spacer",
+              );
+              setPageSpacerHeight(
+                spacer,
+                Math.max(0, printableHeight - Math.min(pageY, printableHeight)),
+              );
+              pages += 1;
+              pageY = 0;
+              nextStartsNewPage = true;
+              return;
+            }
+
+            if (pageY > printableHeight) {
+              const overflowPages = Math.floor(pageY / printableHeight);
+              pages += overflowPages;
+              pageY = pageY % printableHeight;
+            }
+          });
+
+          state.renderedPageCount = pages;
+          positionQuestionTools();
+          updateMoveButtonStates();
+          updatePageCount();
+        }
+
+        function createPageSpacer(fillPx) {
+          const spacer = document.createElement("div");
+          spacer.className = "screen-page-spacer natural-page-spacer no-pdf";
+          spacer.setAttribute("aria-hidden", "true");
+          setPageSpacerHeight(spacer, fillPx);
+          return spacer;
+        }
+
+        function splitQuestionWorkingSpace(item, pageY, printableHeight) {
+          if (!isSplittableQuestion(item)) {
+            return null;
+          }
+
+          const work = getPrimaryWorkingSpace(item);
+          if (!work) {
+            return null;
+          }
+
+          const promptAndGapHeight = work.offsetTop;
+          const workingHeight = work.getBoundingClientRect().height;
+          const available = printableHeight - pageY;
+
+          if (
+            available <= promptAndGapHeight + MIN_SPLIT_WORKING_PX ||
+            available >= promptAndGapHeight + workingHeight - 1
+          ) {
+            return null;
+          }
+
+          const firstWorkingHeight = Math.max(
+            MIN_SPLIT_WORKING_PX,
+            available - promptAndGapHeight,
+          );
+          const remainingWorkingHeight = Math.max(
+            MIN_SPLIT_WORKING_PX,
+            workingHeight - firstWorkingHeight,
+          );
+
+          work.style.height = `${firstWorkingHeight}px`;
+
+          const spacer = createPageSpacer(0);
+          const continuation = document.createElement("div");
+          continuation.className =
+            "working-space working-space-continuation starts-new-page";
+          continuation.setAttribute("aria-hidden", "true");
+          continuation.style.height = `${remainingWorkingHeight}px`;
+
+          work.insertAdjacentElement("afterend", spacer);
+          spacer.insertAdjacentElement("afterend", continuation);
+
+          void item.offsetHeight;
+          positionQuestionTools(item);
+
+          const style = window.getComputedStyle(item);
+          const itemMarginBottom = parseFloat(style.marginBottom) || 0;
+          return {
+            pageY: getOuterHeight(continuation) + itemMarginBottom,
+          };
+        }
+
+        function setPageSpacerHeight(spacer, fillPx) {
+          if (!spacer) {
+            return;
+          }
+          const fill = Math.max(0, fillPx);
+          const total =
+            fill +
+            (state.marginTopMm + state.marginBottomMm) * MM_TO_PX +
+            SCREEN_PAGE_GAP_PX;
+          spacer.style.setProperty("--page-fill-px", `${fill}px`);
+          spacer.style.height = `${total}px`;
+        }
+
+        function getOuterHeight(element) {
+          const rect = element.getBoundingClientRect();
+          const style = window.getComputedStyle(element);
+          const marginTop = parseFloat(style.marginTop) || 0;
+          const marginBottom = parseFloat(style.marginBottom) || 0;
+          return rect.height + marginTop + marginBottom;
+        }
+
+        function getBoxHeight(element) {
+          return element.getBoundingClientRect().height;
+        }
+
+        function getPrimaryWorkingSpace(block) {
+          return block.querySelector(
+            ":scope > .working-space:not(.working-space-continuation)",
+          );
+        }
+
+        function isSplittableQuestion(item) {
+          return (
+            item.classList.contains("question") &&
+            item.classList.contains("split-across-pages")
+          );
+        }
+
+        function positionQuestionTools(block) {
+          const questions = block
+            ? [block]
+            : Array.from(els.content.querySelectorAll(".question"));
+
+          questions.forEach((question) => {
+            const tools = question.querySelector(":scope > .pagination-tools");
+            const spaces = Array.from(
+              question.querySelectorAll(":scope > .working-space"),
+            );
+            const target = spaces[spaces.length - 1];
+            if (!tools || !target) {
+              return;
+            }
+
+            const top = Math.max(
+              0,
+              target.offsetTop + target.offsetHeight - tools.offsetHeight,
+            );
+            question.style.setProperty("--question-tools-top", `${top}px`);
+          });
+        }
+
+        function shouldKeepWithNext(item, nextItem) {
+          if (!nextItem) {
+            return false;
+          }
+          const isHeadingBlock =
+            item.classList.contains("worksheet-section") ||
+            item.classList.contains("answers-title");
+          const isContentBlock =
+            nextItem.classList.contains("question") ||
+            nextItem.classList.contains("answer");
+          return isHeadingBlock && isContentBlock;
+        }
+
+        function updatePageCount() {
+          const pages = Math.max(1, state.renderedPageCount || 1);
+          els.pageCount.textContent = `${pages} ${pages === 1 ? "page" : "pages"}`;
+        }
+
+        function getLayoutHeightPx() {
+          return Math.max(1, getPrintableHeightPx() - PAGE_BREAK_SAFETY_PX);
+        }
+
+        function getPrintableHeightPx() {
+          const page = getPage();
+          return Math.max(
+            260,
+            (page.height - state.marginTopMm - state.marginBottomMm) *
+              MM_TO_PX,
+          );
+        }
+
+        async function savePdf() {
+          const page = getPage();
+          const filename = makeFilename();
+
+          els.savePdf.disabled = true;
+          els.savePdfLabel.textContent = "Saving";
+
+          try {
+            updateScreenPagination();
+            els.body.classList.add("exporting");
+            await nextFrame();
+            await waitForPdfLibrary();
+
+            await window
+              .html2pdf()
+              .set({
+                margin: [
+                  state.marginTopMm,
+                  state.marginRightMm,
+                  state.marginBottomMm,
+                  state.marginLeftMm,
+                ],
+                filename,
+                image: { type: "png", quality: 1 },
+                html2canvas: {
+                  scale: 2,
+                  useCORS: true,
+                  backgroundColor: "#ffffff",
+                  scrollX: 0,
+                  scrollY: 0,
+                  windowWidth: document.documentElement.clientWidth,
+                },
+                jsPDF: {
+                  unit: "mm",
+                  format: [page.width, page.height],
+                  orientation: page.orientation,
+                },
+                pagebreak: {
+                  mode: ["css", "legacy"],
+                  before: [".starts-new-page"],
+                  avoid: [
+                    ".question:not(.split-across-pages)",
+                    ".answer",
+                    ".worksheet-section",
+                    ".answers-title",
+                    ".question-prompt",
+                    ".answer-body",
+                  ],
+                },
+              })
+              .from(els.content)
+              .save();
+          } catch (error) {
+            console.error(error);
+            showMessage({
+              title: "PDF export failed",
+              message:
+                "The PDF library did not finish correctly. No browser print fallback was used, so headers and footers will not be added by this button.",
+              confirmLabel: "OK",
+            });
+          } finally {
+            els.body.classList.remove("exporting");
+            els.savePdf.disabled = false;
+            els.savePdfLabel.textContent = "Save PDF";
+            scheduleLayout();
+          }
+        }
+
+        function renderMath() {
+          const run = () => {
+            if (typeof window.renderMathInElement === "function") {
+              window.renderMathInElement(els.content, {
+                delimiters: KATEX_DELIMITERS,
+                output: "html",
+                throwOnError: false,
+              });
+              scheduleLayout();
+            }
+          };
+
+          if (document.readyState === "complete") {
+            run();
+          } else {
+            window.addEventListener("load", run, { once: true });
+          }
+        }
+
+        function makeFilename() {
+          const title = els.content.querySelector("h1");
+          const raw = title ? title.textContent : "worksheet";
+          const slug = raw
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "");
+          return `${slug || "worksheet"}-pagination-demo.pdf`;
+        }
+
+        function nextFrame() {
+          return new Promise((resolve) =>
+            requestAnimationFrame(() => resolve()),
+          );
+        }
+
+        async function waitForPdfLibrary() {
+          for (let attempt = 0; attempt < 50; attempt += 1) {
+            if (typeof window.html2pdf === "function") {
+              return;
+            }
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          }
+          throw new Error("html2pdf did not load");
+        }
+
+        function clamp(value, min, max) {
+          return Math.min(max, Math.max(min, value));
+        }
+
+        function loadStateFromBody() {
+          const body = document.body;
+          const data = body.dataset;
+          if (data.savedPageSize && PAGE_SIZES[data.savedPageSize]) {
+            state.pageSize = data.savedPageSize;
+          }
+          if (
+            data.savedOrientation === "portrait" ||
+            data.savedOrientation === "landscape"
+          ) {
+            state.orientation = data.savedOrientation;
+          }
+          const parseMargin = (raw) => {
+            const v = Number(raw);
+            return Number.isFinite(v) ? clamp(v, 0, 50) : null;
+          };
+          const legacyY = parseMargin(data.savedMarginYMm);
+          const legacyX = parseMargin(data.savedMarginXMm);
+          const top = parseMargin(data.savedMarginTopMm) ?? legacyY;
+          const bottom = parseMargin(data.savedMarginBottomMm) ?? legacyY;
+          const left = parseMargin(data.savedMarginLeftMm) ?? legacyX;
+          const right = parseMargin(data.savedMarginRightMm) ?? legacyX;
+          if (top !== null) state.marginTopMm = top;
+          if (bottom !== null) state.marginBottomMm = bottom;
+          if (left !== null) state.marginLeftMm = left;
+          if (right !== null) state.marginRightMm = right;
+          if (data.savedLineGapMm !== undefined) {
+            const g = Number(data.savedLineGapMm);
+            if (Number.isFinite(g) && g >= 0) state.lineGapMm = g;
+          }
+          const preferredRaw = Number(data.savedLinePreferredMm);
+          const preferredLine = Number.isFinite(preferredRaw)
+            ? clamp(preferredRaw, 1, 50)
+            : state.lineGapMm > 0
+              ? state.lineGapMm
+              : 8;
+
+          syncPageSizeSelect();
+          syncMarginInputs();
+
+          els.linesEnabled.checked = state.lineGapMm > 0;
+          els.lineGap.value = String(preferredLine);
+
+          if (state.lineGapMm === 0) {
+            els.body.classList.add("no-ruled-lines");
+          } else {
+            els.body.classList.remove("no-ruled-lines");
+          }
+
+          updateMarginsSummary();
+        }
+
+        function ensureSaveDialog() {
+          let dialog = document.getElementById("save-edits-dialog");
+          if (dialog) {
+            return dialog;
+          }
+          dialog = document.createElement("dialog");
+          dialog.id = "save-edits-dialog";
+          dialog.className = "no-pdf";
+          dialog.innerHTML = `
+            <form method="dialog" class="edit-dialog-form">
+              <h3>Save edited worksheet</h3>
+              <p class="edit-dialog-hint">A standalone HTML copy will be downloaded with your current margins, breaks, marks, and edits baked in. Reopen it in any browser to keep going.</p>
+              <label class="save-filename-field" for="save-edits-filename">
+                Filename
+                <span class="save-filename-row">
+                  <input id="save-edits-filename" type="text" autocomplete="off" spellcheck="false" />
+                  <span class="save-extension">.html</span>
+                </span>
+              </label>
+              <div class="edit-dialog-actions">
+                <button type="button" data-action="save-dialog-cancel">Cancel</button>
+                <button type="submit" value="ok" data-action="save-dialog-ok">Download</button>
+              </div>
+            </form>
+          `;
+          document.body.appendChild(dialog);
+
+          dialog
+            .querySelector('[data-action="save-dialog-cancel"]')
+            .addEventListener("click", () => {
+              dialog.close("cancel");
+            });
+
+          dialog.addEventListener("close", () => {
+            if (dialog.returnValue !== "ok") {
+              return;
+            }
+            const input = dialog.querySelector("#save-edits-filename");
+            const raw = (input.value || "worksheet").trim();
+            const cleaned = raw
+              .replace(/\.html?$/i, "")
+              .replace(/[<>:"/\\|?*]+/g, "-")
+              .replace(/\s+/g, "-")
+              .replace(/-+/g, "-")
+              .replace(/^-|-$/g, "");
+            const filename = (cleaned || "worksheet") + ".html";
+            downloadEditedHtml(filename);
+          });
+
+          return dialog;
+        }
+
+        function openSaveEditsDialog() {
+          const dialog = ensureSaveDialog();
+          const input = dialog.querySelector("#save-edits-filename");
+          const base = makeFilename()
+            .replace(/\.pdf$/i, "")
+            .replace(/-pagination-demo$/i, "");
+          input.value = base || "worksheet";
+          dialog.returnValue = "";
+          dialog.showModal();
+          requestAnimationFrame(() => {
+            input.focus();
+            input.select();
+          });
+        }
+
+        function downloadEditedHtml(filename) {
+          const html = serializeForSave();
+          const blob = new Blob([html], {
+            type: "text/html;charset=utf-8",
+          });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = filename;
+          a.style.display = "none";
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }, 0);
+        }
+
+        function serializeForSave() {
+          const clone = document.documentElement.cloneNode(true);
+
+          const ephemeralSelectors = [
+            "#question-edit-dialog",
+            "#save-edits-dialog",
+            ".screen-page-spacer",
+            ".manual-break-spacer",
+            ".working-space",
+            ".pagination-tools",
+            ".content-element-tools",
+          ];
+          ephemeralSelectors.forEach((sel) => {
+            clone.querySelectorAll(sel).forEach((n) => n.remove());
+          });
+
+          clone.querySelectorAll(".starts-new-page").forEach((n) => {
+            n.classList.remove("starts-new-page");
+            if (n.classList.length === 0) {
+              n.removeAttribute("class");
+            }
+          });
+
+          clone.querySelectorAll(".editable-text-target").forEach((n) => {
+            n.classList.remove("editable-text-target");
+            if (n.classList.length === 0) {
+              n.removeAttribute("class");
+            }
+          });
+
+          clone.querySelectorAll(".question").forEach((n) => {
+            n.style.removeProperty("--question-tools-top");
+            if (n.getAttribute("style") === "") {
+              n.removeAttribute("style");
+            }
+          });
+
+          clone.querySelectorAll(".marks").forEach((marks) => {
+            let value = Number(marks.getAttribute("data-marks-value"));
+            if (!Number.isFinite(value) || value < 1) {
+              const m = (marks.textContent || "").match(/(\d+)/);
+              value = m ? Math.max(1, parseInt(m[1], 10)) : 1;
+            }
+            const hidden = marks.classList.contains("marks-hidden");
+            marks.removeAttribute("data-marks-decorated");
+            marks.removeAttribute("data-marks-value");
+            marks.className = hidden ? "marks marks-hidden" : "marks";
+            marks.textContent = `${value} ${value === 1 ? "mark" : "marks"}`;
+          });
+
+          const body = clone.querySelector("body");
+          body.dataset.savedPageSize = state.pageSize;
+          body.dataset.savedOrientation = state.orientation;
+          body.dataset.savedMarginTopMm = String(state.marginTopMm);
+          body.dataset.savedMarginBottomMm = String(state.marginBottomMm);
+          body.dataset.savedMarginLeftMm = String(state.marginLeftMm);
+          body.dataset.savedMarginRightMm = String(state.marginRightMm);
+          body.dataset.savedLineGapMm = String(state.lineGapMm);
+          const preferredLineRaw = clamp(
+            Number(els.lineGap.value) ||
+              (state.lineGapMm > 0 ? state.lineGapMm : 8),
+            1,
+            50,
+          );
+          body.dataset.savedLinePreferredMm = String(preferredLineRaw);
+          delete body.dataset.savedMarginYMm;
+          delete body.dataset.savedMarginXMm;
+          body.classList.remove("exporting");
+          body.classList.remove("hide-guides");
+          if (state.lineGapMm === 0) {
+            body.classList.add("no-ruled-lines");
+          } else {
+            body.classList.remove("no-ruled-lines");
+          }
+
+          const setSelected = (selectEl, value) => {
+            if (!selectEl) return;
+            selectEl.querySelectorAll("option").forEach((opt) => {
+              if (opt.value === value) {
+                opt.setAttribute("selected", "");
+              } else {
+                opt.removeAttribute("selected");
+              }
+            });
+          };
+
+          setSelected(
+            clone.querySelector("#page-size"),
+            `${state.pageSize}-${state.orientation}`,
+          );
+
+          const lineGapInput = clone.querySelector("#line-gap");
+          if (lineGapInput) {
+            lineGapInput.setAttribute("value", String(preferredLineRaw));
+          }
+          const linesEnabled = clone.querySelector("#lines-enabled");
+          if (linesEnabled) {
+            if (state.lineGapMm > 0) {
+              linesEnabled.setAttribute("checked", "");
+            } else {
+              linesEnabled.removeAttribute("checked");
+            }
+          }
+
+          const setMarginValue = (id, value) => {
+            const el = clone.querySelector(id);
+            if (el) el.setAttribute("value", String(value));
+          };
+          setMarginValue("#margin-top", state.marginTopMm);
+          setMarginValue("#margin-bottom", state.marginBottomMm);
+          setMarginValue("#margin-left", state.marginLeftMm);
+          setMarginValue("#margin-right", state.marginRightMm);
+
+          const summary = clone.querySelector("#margins-summary");
+          if (summary) {
+            summary.textContent = `${state.marginTopMm}·${state.marginRightMm}·${state.marginBottomMm}·${state.marginLeftMm} mm`;
+          }
+
+          return "<!doctype html>\n" + clone.outerHTML;
+        }
+      })();
+    </script>
+  </body>
+</html>
