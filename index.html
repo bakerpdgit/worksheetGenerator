@@ -186,9 +186,25 @@
       }
 
       .icon-button:hover,
-      .pdf-button:hover {
+      .pdf-button:hover,
+      .secondary-button:hover {
         border-color: var(--line-strong);
         background: #f8fafc;
+      }
+
+      .secondary-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        height: 36px;
+        padding: 0 13px;
+        border-radius: 7px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+        cursor: pointer;
+        font-weight: 700;
       }
 
       .pdf-button {
@@ -504,22 +520,90 @@
         page-break-after: always;
       }
 
-      .pagination-tools {
+      .pagination-tools,
+      .content-element-tools {
         position: absolute;
-        right: calc(-1 * var(--page-margin-x-px) + 7px);
-        top: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        width: max-content;
-        max-width: 190px;
+        width: 14px;
         color: #334155;
         font-size: 0.78rem;
         z-index: 5;
       }
 
+      .pagination-tools {
+        right: calc(-1 * var(--page-margin-x-px) + 7px);
+        top: 0;
+        min-height: 30px;
+      }
+
+      .pagination-tools[data-row-count="2"] {
+        min-height: 64px;
+      }
+
       .question > .pagination-tools {
         top: var(--question-tools-top, 0px);
+      }
+
+      .hover-trigger {
+        position: absolute;
+        inset: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 1px solid #c9d4e3;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.92);
+        color: #94a3b8;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+        transition:
+          background 0.15s ease,
+          color 0.15s ease,
+          border-color 0.15s ease,
+          box-shadow 0.15s ease;
+      }
+
+      .hover-trigger svg {
+        pointer-events: none;
+      }
+
+      .hover-trigger:hover,
+      .pagination-tools.is-open > .hover-trigger,
+      .content-element-tools.is-open > .hover-trigger {
+        background: var(--focus);
+        color: #0f172a;
+        border-color: #93c5fd;
+        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.14);
+      }
+
+      .tool-rows-stack {
+        position: absolute;
+        top: 0;
+        right: 100%;
+        padding-right: 8px;
+        display: none;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+        width: max-content;
+        max-width: 220px;
+      }
+
+      .pagination-tools.is-open > .tool-rows-stack,
+      .content-element-tools.is-open > .tool-rows-stack {
+        display: flex;
+        animation: hover-tools-in 0.16s ease-out;
+      }
+
+      @keyframes hover-tools-in {
+        from {
+          opacity: 0;
+          transform: translateX(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
       }
 
       .tool-row {
@@ -698,46 +782,11 @@
       }
 
       .content-element-tools {
-        position: absolute;
         right: calc(-1 * var(--page-margin-x-px) + 7px);
         top: 50%;
         transform: translateY(-50%);
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
+        height: 30px;
         z-index: 6;
-      }
-
-      .content-edit-button,
-      .content-delete-button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 26px;
-        height: 26px;
-        padding: 0;
-        border: 1px solid #d1dae7;
-        border-radius: 6px;
-        background: rgba(255, 255, 255, 0.96);
-        color: #1f2937;
-        cursor: pointer;
-        line-height: 1;
-        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.11);
-      }
-
-      .content-edit-button:hover {
-        background: var(--focus);
-        border-color: #93c5fd;
-      }
-
-      .content-delete-button:hover {
-        background: var(--danger-soft);
-        border-color: #fda29b;
-        color: var(--danger);
-      }
-
-      .content-element-tools svg {
-        pointer-events: none;
       }
 
       .tool-row .action-divider {
@@ -753,7 +802,8 @@
         color: var(--danger);
       }
 
-      #question-edit-dialog {
+      #question-edit-dialog,
+      #save-edits-dialog {
         width: min(640px, 92vw);
         padding: 0;
         border: 1px solid var(--line);
@@ -763,8 +813,56 @@
         box-shadow: 0 30px 60px rgba(15, 23, 42, 0.28);
       }
 
-      #question-edit-dialog::backdrop {
+      #question-edit-dialog::backdrop,
+      #save-edits-dialog::backdrop {
         background: rgba(15, 23, 42, 0.45);
+      }
+
+      .save-filename-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .save-filename-row {
+        display: inline-flex;
+        align-items: stretch;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        overflow: hidden;
+      }
+
+      .save-filename-row input {
+        flex: 1;
+        min-width: 0;
+        height: 34px;
+        padding: 0 10px;
+        border: 0;
+        background: transparent;
+        color: var(--ink);
+        font: inherit;
+      }
+
+      .save-filename-row input:focus {
+        outline: none;
+      }
+
+      .save-filename-row .save-extension {
+        display: inline-flex;
+        align-items: center;
+        padding: 0 10px;
+        background: #eef3f8;
+        color: var(--muted);
+        font:
+          13px/1 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          Consolas,
+          monospace;
+        border-left: 1px solid var(--line);
       }
 
       .edit-dialog-form {
@@ -838,11 +936,29 @@
       }
 
       @media (max-width: 900px) {
+        .pagination-tools,
         .content-element-tools {
           position: static;
           transform: none;
-          margin-left: 6px;
-          vertical-align: middle;
+          width: auto;
+          height: auto;
+          margin: 4mm 0 0 12mm;
+        }
+
+        .pagination-tools > .hover-trigger,
+        .content-element-tools > .hover-trigger {
+          display: none;
+        }
+
+        .pagination-tools > .tool-rows-stack,
+        .content-element-tools > .tool-rows-stack {
+          position: static;
+          padding-right: 0;
+          display: flex;
+          flex-direction: row;
+          flex-wrap: wrap;
+          align-items: center;
+          max-width: none;
         }
       }
 
@@ -901,14 +1017,6 @@
 
         .toolbar-right {
           justify-content: space-between;
-        }
-
-        .pagination-tools {
-          position: static;
-          flex-direction: row;
-          flex-wrap: wrap;
-          margin: 4mm 0 0 12mm;
-          max-width: none;
         }
       }
 
@@ -1089,6 +1197,37 @@
           </svg>
         </button>
         <div class="page-count" id="page-count">1 page</div>
+        <button
+          class="secondary-button"
+          id="save-edits"
+          type="button"
+          title="Save your current edits as a standalone HTML file"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M5 4h11l3 3v13H5z"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linejoin="round"
+            ></path>
+            <path
+              d="M8 4v5h7V4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linejoin="round"
+            ></path>
+            <path
+              d="M8 14h8v6H8z"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linejoin="round"
+            ></path>
+          </svg>
+          <span>Save Edits</span>
+        </button>
         <button class="pdf-button" id="save-pdf" type="button">
           <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
             <path
@@ -1425,8 +1564,10 @@
           els.pageCount = document.getElementById("page-count");
           els.savePdf = document.getElementById("save-pdf");
           els.savePdfLabel = document.getElementById("save-pdf-label");
+          els.saveEdits = document.getElementById("save-edits");
           els.printStyle = document.getElementById("dynamic-print-style");
 
+          loadStateFromBody();
           ensureEditDialog();
           decorateWorksheet();
           wireControls();
@@ -1488,41 +1629,34 @@
                 return;
               }
 
+              const editLabel = getStandaloneEditLabel(target);
+              const deleteLabel = getStandaloneDeleteLabel(target);
+              const triggerLabel =
+                editLabel.replace(/^Edit /, "Show ") + " controls";
+
               const tools = document.createElement("span");
               tools.className = "content-element-tools no-pdf";
-
-              const editButton = document.createElement("button");
-              editButton.className = "content-edit-button";
-              editButton.type = "button";
-              editButton.dataset.action = "edit-content";
-              editButton.dataset.editLabel = getStandaloneEditLabel(target);
-              editButton.setAttribute("aria-label", editButton.dataset.editLabel);
-              editButton.title = editButton.dataset.editLabel;
-              editButton.innerHTML = `
-                <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M4 20h4l10.5-10.5-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
-                  <path d="m13.5 6.5 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
-                </svg>
+              tools.dataset.rowCount = "1";
+              tools.innerHTML = `
+                <span class="tool-rows-stack">
+                  <span class="tool-row" aria-label="Element controls">
+                    <button class="edit-button" type="button" data-action="edit-content" data-edit-label="${editLabel}" aria-label="${editLabel}" title="${editLabel}">
+                      <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 20h4l10.5-10.5-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+                        <path d="m13.5 6.5 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                      </svg>
+                    </button>
+                    <button class="delete-button" type="button" data-action="delete-content" data-delete-label="${deleteLabel}" aria-label="${deleteLabel}" title="${deleteLabel}">
+                      <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                      </svg>
+                    </button>
+                  </span>
+                </span>
+                ${hoverTriggerHtml(triggerLabel)}
               `;
-
-              const deleteButton = document.createElement("button");
-              deleteButton.className = "content-delete-button";
-              deleteButton.type = "button";
-              deleteButton.dataset.action = "delete-content";
-              deleteButton.dataset.deleteLabel = getStandaloneDeleteLabel(target);
-              deleteButton.setAttribute(
-                "aria-label",
-                deleteButton.dataset.deleteLabel,
-              );
-              deleteButton.title = deleteButton.dataset.deleteLabel;
-              deleteButton.innerHTML = `
-                <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-                </svg>
-              `;
-
-              tools.append(editButton, deleteButton);
               target.appendChild(tools);
+              wireToolbarHover(tools);
             });
         }
 
@@ -1686,12 +1820,13 @@
           text.textContent = formatMarksText(initialValue);
           marks.appendChild(text);
 
+          const initiallyHidden = marks.classList.contains("marks-hidden");
           const panel = document.createElement("span");
           panel.className = "marks-actions no-pdf";
           panel.innerHTML = `
             <button type="button" data-action="marks-down" aria-label="Decrease marks" title="Decrease marks">−</button>
             <button type="button" data-action="marks-up" aria-label="Increase marks" title="Increase marks">+</button>
-            <button class="marks-toggle" type="button" data-action="marks-toggle" aria-pressed="false" aria-label="Show or hide marks" title="Show or hide marks (faint when hidden, excluded from PDF)">
+            <button class="marks-toggle" type="button" data-action="marks-toggle" aria-pressed="${initiallyHidden}" aria-label="Show or hide marks" title="Show or hide marks (faint when hidden, excluded from PDF)">
               <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"></path>
                 <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"></circle>
@@ -1843,6 +1978,8 @@
 
           const tools = document.createElement("div");
           tools.className = "pagination-tools no-pdf";
+          const breakPressed = block.classList.contains("page-break-after");
+          const splitPressed = block.classList.contains("split-across-pages");
           const editIcon = `
             <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M4 20h4l10.5-10.5-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
@@ -1877,7 +2014,7 @@
           `;
           const splitButton = hasSpacing
             ? `
-              <button class="split-button" type="button" data-action="toggle-split" aria-pressed="false" aria-label="Allow this working space to split across pages" title="Allow working space split">
+              <button class="split-button" type="button" data-action="toggle-split" aria-pressed="${splitPressed}" aria-label="Allow this working space to split across pages" title="Allow working space split">
                 <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M6 4v16M18 4v16M10 8h4M10 16h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
                   <path d="m13 11 3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -1885,7 +2022,7 @@
               </button>
             `
             : "";
-          tools.innerHTML = [
+          const rowsHtml = [
             hasSpacing
               ? `
             <div class="tool-row" aria-label="Question edit and ordering controls">
@@ -1905,7 +2042,7 @@
               <span class="space-value" data-space-value></span>
               <button type="button" data-action="space-up" aria-label="Increase working space" title="Increase working space">+</button>
               ${splitButton}
-              <button class="break-button" type="button" data-action="toggle-break" aria-pressed="false" aria-label="Toggle page break after this item" title="${hasSpacing ? "Toggle page break after working space" : "Toggle page break"}">
+              <button class="break-button" type="button" data-action="toggle-break" aria-pressed="${breakPressed}" aria-label="Toggle page break after this item" title="Toggle page break after working space">
                 <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M6 3.5h9l3 3v5M15 3.5v4h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
                   <path d="M5 16h14M9 12l-4 4 4 4M15 12l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -1919,7 +2056,7 @@
               : `
             <div class="tool-row" aria-label="Answer layout and edit controls">
               ${answerActions}
-              <button class="break-button" type="button" data-action="toggle-break" aria-pressed="false" aria-label="Toggle page break after this item" title="Toggle page break">
+              <button class="break-button" type="button" data-action="toggle-break" aria-pressed="${breakPressed}" aria-label="Toggle page break after this item" title="Toggle page break">
                 <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M6 3.5h9l3 3v5M15 3.5v4h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
                   <path d="M5 16h14M9 12l-4 4 4 4M15 12l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -1928,7 +2065,75 @@
             </div>
           `,
           ].join("");
+
+          const rowCount = hasSpacing ? 2 : 1;
+          tools.dataset.rowCount = String(rowCount);
+          tools.innerHTML = `
+            <div class="tool-rows-stack">${rowsHtml}</div>
+            ${hoverTriggerHtml(hasSpacing ? "Show question controls" : "Show answer controls")}
+          `;
           block.appendChild(tools);
+          wireToolbarHover(tools);
+        }
+
+        function hoverTriggerHtml(label) {
+          return `
+            <button class="hover-trigger" type="button" aria-label="${label}" aria-expanded="false" title="${label}">
+              <svg width="10" height="14" viewBox="0 0 10 14" aria-hidden="true">
+                <circle cx="5" cy="2.5" r="1.2" fill="currentColor"></circle>
+                <circle cx="5" cy="7" r="1.2" fill="currentColor"></circle>
+                <circle cx="5" cy="11.5" r="1.2" fill="currentColor"></circle>
+              </svg>
+            </button>
+          `;
+        }
+
+        function wireToolbarHover(container) {
+          if (container.dataset.hoverWired === "true") {
+            return;
+          }
+          container.dataset.hoverWired = "true";
+
+          let hideTimer = 0;
+          const cancelHide = () => {
+            if (hideTimer) {
+              clearTimeout(hideTimer);
+              hideTimer = 0;
+            }
+          };
+          const open = () => {
+            cancelHide();
+            container.classList.add("is-open");
+            const trigger = container.querySelector(":scope > .hover-trigger");
+            if (trigger) {
+              trigger.setAttribute("aria-expanded", "true");
+            }
+          };
+          const scheduleClose = () => {
+            cancelHide();
+            hideTimer = setTimeout(() => {
+              container.classList.remove("is-open");
+              const trigger = container.querySelector(
+                ":scope > .hover-trigger",
+              );
+              if (trigger) {
+                trigger.setAttribute("aria-expanded", "false");
+              }
+              hideTimer = 0;
+            }, 1000);
+          };
+
+          const trigger = container.querySelector(":scope > .hover-trigger");
+          const stack = container.querySelector(":scope > .tool-rows-stack");
+          [trigger, stack].forEach((el) => {
+            if (!el) {
+              return;
+            }
+            el.addEventListener("pointerenter", open);
+            el.addEventListener("pointerleave", scheduleClose);
+            el.addEventListener("focusin", open);
+            el.addEventListener("focusout", scheduleClose);
+          });
         }
 
         function wireControls() {
@@ -2084,6 +2289,9 @@
             });
 
           els.savePdf.addEventListener("click", savePdf);
+          if (els.saveEdits) {
+            els.saveEdits.addEventListener("click", openSaveEditsDialog);
+          }
           window.addEventListener("pointermove", updateSpaceDrag);
           window.addEventListener("pointerup", endSpaceDrag);
           window.addEventListener("pointercancel", endSpaceDrag);
@@ -2688,6 +2896,240 @@
 
         function clamp(value, min, max) {
           return Math.min(max, Math.max(min, value));
+        }
+
+        function loadStateFromBody() {
+          const body = document.body;
+          const data = body.dataset;
+          if (data.savedPageSize && PAGE_SIZES[data.savedPageSize]) {
+            state.pageSize = data.savedPageSize;
+          }
+          if (
+            data.savedOrientation === "portrait" ||
+            data.savedOrientation === "landscape"
+          ) {
+            state.orientation = data.savedOrientation;
+          }
+          const parseMargin = (raw) => {
+            const v = Number(raw);
+            return Number.isFinite(v) ? clamp(v, 8, 35) : null;
+          };
+          const yMm = parseMargin(data.savedMarginYMm);
+          if (yMm !== null) state.marginYMm = yMm;
+          const xMm = parseMargin(data.savedMarginXMm);
+          if (xMm !== null) state.marginXMm = xMm;
+          if (data.savedLineGapMm !== undefined) {
+            const g = Number(data.savedLineGapMm);
+            if (Number.isFinite(g) && g >= 0) state.lineGapMm = g;
+          }
+
+          els.pageSize.value = state.pageSize;
+          els.marginY.value = String(state.marginYMm);
+          els.marginYNumber.value = String(state.marginYMm);
+          els.marginX.value = String(state.marginXMm);
+          els.marginXNumber.value = String(state.marginXMm);
+          els.lineGap.value =
+            state.lineGapMm === 0 ? "none" : String(state.lineGapMm);
+
+          if (state.lineGapMm === 0) {
+            els.body.classList.add("no-ruled-lines");
+          } else {
+            els.body.classList.remove("no-ruled-lines");
+          }
+
+          document
+            .querySelectorAll("[data-orientation]")
+            .forEach((button) => {
+              button.setAttribute(
+                "aria-pressed",
+                String(button.dataset.orientation === state.orientation),
+              );
+            });
+        }
+
+        function ensureSaveDialog() {
+          let dialog = document.getElementById("save-edits-dialog");
+          if (dialog) {
+            return dialog;
+          }
+          dialog = document.createElement("dialog");
+          dialog.id = "save-edits-dialog";
+          dialog.className = "no-pdf";
+          dialog.innerHTML = `
+            <form method="dialog" class="edit-dialog-form">
+              <h3>Save edited worksheet</h3>
+              <p class="edit-dialog-hint">A standalone HTML copy will be downloaded with your current margins, breaks, marks, and edits baked in. Reopen it in any browser to keep going.</p>
+              <label class="save-filename-field" for="save-edits-filename">
+                Filename
+                <span class="save-filename-row">
+                  <input id="save-edits-filename" type="text" autocomplete="off" spellcheck="false" />
+                  <span class="save-extension">.html</span>
+                </span>
+              </label>
+              <div class="edit-dialog-actions">
+                <button type="button" data-action="save-dialog-cancel">Cancel</button>
+                <button type="submit" value="ok" data-action="save-dialog-ok">Download</button>
+              </div>
+            </form>
+          `;
+          document.body.appendChild(dialog);
+
+          dialog
+            .querySelector('[data-action="save-dialog-cancel"]')
+            .addEventListener("click", () => {
+              dialog.close("cancel");
+            });
+
+          dialog.addEventListener("close", () => {
+            if (dialog.returnValue !== "ok") {
+              return;
+            }
+            const input = dialog.querySelector("#save-edits-filename");
+            const raw = (input.value || "worksheet").trim();
+            const cleaned = raw
+              .replace(/\.html?$/i, "")
+              .replace(/[<>:"/\\|?*]+/g, "-")
+              .replace(/\s+/g, "-")
+              .replace(/-+/g, "-")
+              .replace(/^-|-$/g, "");
+            const filename = (cleaned || "worksheet") + ".html";
+            downloadEditedHtml(filename);
+          });
+
+          return dialog;
+        }
+
+        function openSaveEditsDialog() {
+          const dialog = ensureSaveDialog();
+          const input = dialog.querySelector("#save-edits-filename");
+          const base = makeFilename()
+            .replace(/\.pdf$/i, "")
+            .replace(/-pagination-demo$/i, "");
+          input.value = base || "worksheet";
+          dialog.returnValue = "";
+          dialog.showModal();
+          requestAnimationFrame(() => {
+            input.focus();
+            input.select();
+          });
+        }
+
+        function downloadEditedHtml(filename) {
+          const html = serializeForSave();
+          const blob = new Blob([html], {
+            type: "text/html;charset=utf-8",
+          });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = filename;
+          a.style.display = "none";
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }, 0);
+        }
+
+        function serializeForSave() {
+          const clone = document.documentElement.cloneNode(true);
+
+          const ephemeralSelectors = [
+            "#question-edit-dialog",
+            "#save-edits-dialog",
+            ".screen-page-spacer",
+            ".manual-break-spacer",
+            ".working-space",
+            ".pagination-tools",
+            ".content-element-tools",
+          ];
+          ephemeralSelectors.forEach((sel) => {
+            clone.querySelectorAll(sel).forEach((n) => n.remove());
+          });
+
+          clone.querySelectorAll(".starts-new-page").forEach((n) => {
+            n.classList.remove("starts-new-page");
+            if (n.classList.length === 0) {
+              n.removeAttribute("class");
+            }
+          });
+
+          clone.querySelectorAll(".editable-text-target").forEach((n) => {
+            n.classList.remove("editable-text-target");
+            if (n.classList.length === 0) {
+              n.removeAttribute("class");
+            }
+          });
+
+          clone.querySelectorAll(".question").forEach((n) => {
+            n.style.removeProperty("--question-tools-top");
+            if (n.getAttribute("style") === "") {
+              n.removeAttribute("style");
+            }
+          });
+
+          clone.querySelectorAll(".marks").forEach((marks) => {
+            let value = Number(marks.getAttribute("data-marks-value"));
+            if (!Number.isFinite(value) || value < 1) {
+              const m = (marks.textContent || "").match(/(\d+)/);
+              value = m ? Math.max(1, parseInt(m[1], 10)) : 1;
+            }
+            const hidden = marks.classList.contains("marks-hidden");
+            marks.removeAttribute("data-marks-decorated");
+            marks.removeAttribute("data-marks-value");
+            marks.className = hidden ? "marks marks-hidden" : "marks";
+            marks.textContent = `${value} ${value === 1 ? "mark" : "marks"}`;
+          });
+
+          const body = clone.querySelector("body");
+          body.dataset.savedPageSize = state.pageSize;
+          body.dataset.savedOrientation = state.orientation;
+          body.dataset.savedMarginYMm = String(state.marginYMm);
+          body.dataset.savedMarginXMm = String(state.marginXMm);
+          body.dataset.savedLineGapMm = String(state.lineGapMm);
+          body.classList.remove("exporting");
+          body.classList.remove("hide-guides");
+          if (state.lineGapMm === 0) {
+            body.classList.add("no-ruled-lines");
+          } else {
+            body.classList.remove("no-ruled-lines");
+          }
+
+          const setSelected = (selectEl, value) => {
+            if (!selectEl) return;
+            selectEl.querySelectorAll("option").forEach((opt) => {
+              if (opt.value === value) {
+                opt.setAttribute("selected", "");
+              } else {
+                opt.removeAttribute("selected");
+              }
+            });
+          };
+
+          setSelected(clone.querySelector("#page-size"), state.pageSize);
+          setSelected(
+            clone.querySelector("#line-gap"),
+            state.lineGapMm === 0 ? "none" : String(state.lineGapMm),
+          );
+
+          ["#page-margin-y", "#page-margin-y-number"].forEach((sel) => {
+            const el = clone.querySelector(sel);
+            if (el) el.setAttribute("value", String(state.marginYMm));
+          });
+          ["#page-margin-x", "#page-margin-x-number"].forEach((sel) => {
+            const el = clone.querySelector(sel);
+            if (el) el.setAttribute("value", String(state.marginXMm));
+          });
+
+          clone.querySelectorAll("[data-orientation]").forEach((btn) => {
+            btn.setAttribute(
+              "aria-pressed",
+              String(btn.dataset.orientation === state.orientation),
+            );
+          });
+
+          return "<!doctype html>\n" + clone.outerHTML;
         }
       })();
     </script>
