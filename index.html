@@ -1459,18 +1459,27 @@
         color: #b45309;
       }
 
-      #svgedit-frame {
+      #svgedit-host {
+        position: relative;
         display: block;
         width: 100%;
         height: min(560px, 62vh);
+        overflow: auto;
         border: 1px solid #e5e7eb;
         border-radius: 6px;
         background: #fff;
       }
 
+      #svgedit-host #svg_editor {
+        position: relative;
+      }
+
       #diagram-svg-source {
+        width: 100%;
+        box-sizing: border-box;
         min-height: 220px;
         max-height: 40vh;
+        resize: vertical;
         font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
       }
 
@@ -2427,12 +2436,14 @@
           { left: "$", right: "$", display: false },
         ];
 
-        // Pinned exact version: the editor is a multi-file app, so a floating
-        // tag could mix files from different releases mid-session. Served
-        // from unpkg because jsdelivr delivers npm .html files as text/plain,
-        // which renders the editor as raw text instead of running it.
-        const SVGEDIT_EDITOR_URL =
-          "https://unpkg.com/svgedit@7.3.2/dist/editor/index.html?storagePrompt=false";
+        // SVG-edit is loaded in-page (same origin as the worksheet) and
+        // mounted into a div, rather than in a cross-origin iframe: the iframe
+        // approach trips the browser's same-origin policy (the editor's
+        // startup reaches back into our frame). In-page we can also drive the
+        // canvas API directly instead of postMessage. Pinned exact version so
+        // the editor's many sub-modules stay internally consistent.
+        const SVGEDIT_MODULE_URL =
+          "https://unpkg.com/svgedit@7.3.2/dist/editor/Editor.js";
 
         const GRAPH_COLOR_CYCLE = [
           "#0f766e",
@@ -2473,6 +2484,8 @@
           diagramEditContext: null,
           diagramEditTab: "visual",
           svgEditReady: false,
+          svgEditor: null,
+          imageDialogContext: null,
         };
 
         const els = {};
@@ -2503,14 +2516,16 @@
           decorateEmbedMarkers();
           renderAllFunctionGraphs(els.content);
 
-          // Boot the SVG-edit iframe in the background once the page itself
-          // has finished loading, so the diagram editor opens instantly.
+          // Warm the SVG-edit module in the background once the page has
+          // loaded so the diagram editor mounts quickly on first open.
+          // Best-effort: ignore failures (offline falls back to the source tab).
+          const warmSvgEditor = () => {
+            import(SVGEDIT_MODULE_URL).catch(() => {});
+          };
           if (document.readyState === "complete") {
-            ensureSvgEditFrame();
+            warmSvgEditor();
           } else {
-            window.addEventListener("load", () => ensureSvgEditFrame(), {
-              once: true,
-            });
+            window.addEventListener("load", warmSvgEditor, { once: true });
           }
 
           if (document.fonts && document.fonts.ready) {
@@ -2886,6 +2901,20 @@
                 },
               },
             },
+          });
+
+          quill.root.addEventListener("dblclick", (event) => {
+            const img = event.target.closest("img");
+            if (!img || !quill.root.contains(img)) return;
+            event.preventDefault();
+            const blot = window.Quill.find(img);
+            if (!blot) return;
+            const index = quill.getIndex(blot);
+            openImageEditor(img.getAttribute("src"), (dataUrl) => {
+              quill.deleteText(index, 1, "user");
+              quill.insertEmbed(index, "image", dataUrl, "user");
+              quill.setSelection(index + 1, 0, "silent");
+            });
           });
 
           state.quillInstance = quill;
@@ -3730,58 +3759,9 @@
         }
 
         /* --------------------- Diagram editor dialog ---------------------
-         * Visual tab embeds SVG-edit (cross-origin iframe driven over its
-         * postMessage embed API); the SVG source tab always works offline.
+         * Visual tab mounts SVG-edit in-page (same origin) and drives its
+         * canvas API directly; the SVG source tab always works offline.
          * ------------------------------------------------------------------ */
-
-        let svgEditCallId = 0;
-        const svgEditPending = new Map();
-
-        function svgEditHandleMessage(event) {
-          const frame = document.getElementById("svgedit-frame");
-          if (!frame || event.source !== frame.contentWindow) return;
-          let data = event.data;
-          if (typeof data === "string") {
-            try {
-              data = JSON.parse(data);
-            } catch {
-              return;
-            }
-          }
-          if (!data || data.namespace !== "svg-edit") return;
-          const pending = svgEditPending.get(data.id);
-          if (!pending) return;
-          svgEditPending.delete(data.id);
-          clearTimeout(pending.timer);
-          pending.resolve(data.result);
-        }
-
-        function svgEditCall(name, args, timeoutMs) {
-          return new Promise((resolve, reject) => {
-            const frame = document.getElementById("svgedit-frame");
-            if (!frame || !frame.contentWindow) {
-              reject(new Error("SVG editor frame unavailable"));
-              return;
-            }
-            const id = ++svgEditCallId;
-            const timer = setTimeout(() => {
-              svgEditPending.delete(id);
-              reject(new Error(`SVG editor did not respond to ${name}`));
-            }, timeoutMs || 3000);
-            svgEditPending.set(id, { resolve, timer });
-            const payload = {
-              namespace: "svgedit",
-              id,
-              name,
-              args: args || [],
-            };
-            // Different SVG-edit releases expect either a structured-clone
-            // object or a JSON string; send both (the calls we use are
-            // idempotent, and duplicate replies for one id are ignored).
-            frame.contentWindow.postMessage(payload, "*");
-            frame.contentWindow.postMessage(JSON.stringify(payload), "*");
-          });
-        }
 
         function ensureDiagramEditorDialog() {
           let dialog = document.getElementById("diagram-editor-dialog");
@@ -3798,7 +3778,7 @@
               </div>
               <div class="edit-tab-panel" data-panel="visual">
                 <p id="svgedit-status" hidden></p>
-                <div id="svgedit-frame-wrap"></div>
+                <div id="svgedit-host"></div>
               </div>
               <div class="edit-tab-panel" data-panel="source" hidden>
                 <p class="edit-dialog-hint">Edit the SVG markup directly. A single <code>&lt;svg&gt;</code> element is expected.</p>
@@ -3817,8 +3797,6 @@
             </form>
           `;
           document.body.appendChild(dialog);
-
-          window.addEventListener("message", svgEditHandleMessage);
 
           dialog
             .querySelector('[data-action="diagram-cancel"]')
@@ -3839,9 +3817,11 @@
             const ctx = state.diagramEditContext;
             state.diagramEditContext = null;
             if (!ctx || dialog.returnValue !== "ok") return;
-            finishDiagramEdit(dialog, ctx).catch((err) =>
-              console.error("Diagram edit failed:", err),
-            );
+            try {
+              finishDiagramEdit(dialog, ctx);
+            } catch (err) {
+              console.error("Diagram edit failed:", err);
+            }
           });
 
           return dialog;
@@ -3866,17 +3846,13 @@
           const sourceArea = dialog.querySelector("#diagram-svg-source");
 
           if (previous === "visual" && target === "source" && state.svgEditReady) {
-            try {
-              const current = await svgEditCall("getSvgString", [], 4000);
-              if (typeof current === "string" && current.trim()) {
-                sourceArea.value = formatHtmlSource(current);
-              }
-            } catch {}
+            const current = svgEditorGetSvg();
+            if (typeof current === "string" && current.trim()) {
+              sourceArea.value = formatHtmlSource(current);
+            }
           } else if (previous === "source" && target === "visual") {
             if (state.svgEditReady) {
-              try {
-                await svgEditCall("setSvgString", [sourceArea.value], 4000);
-              } catch {}
+              svgEditorSetSvg(sourceArea.value);
             }
           }
 
@@ -3919,60 +3895,115 @@
           return svg.outerHTML;
         }
 
-        // The iframe lives permanently inside the (closed) dialog so it can
-        // boot in the background after page load; reparenting an iframe
-        // would reload it, losing the preload benefit.
-        function ensureSvgEditFrame() {
-          let frame = document.getElementById("svgedit-frame");
-          if (frame) return frame;
-          const dialog = ensureDiagramEditorDialog();
-          const wrap = dialog.querySelector("#svgedit-frame-wrap");
-          frame = document.createElement("iframe");
-          frame.id = "svgedit-frame";
-          frame.title = "SVG-edit visual editor";
-          frame.src = SVGEDIT_EDITOR_URL;
-          wrap.appendChild(frame);
-          return frame;
+        // Mount SVG-edit once (in-page, same origin) and reuse it across opens.
+        // Resolves to the editor instance, or rejects if the module/mount
+        // fails (e.g. offline) — callers then fall back to the source tab.
+        let svgEditorPromise = null;
+
+        function loadSvgEditor() {
+          if (svgEditorPromise) return svgEditorPromise;
+          svgEditorPromise = (async () => {
+            const dialog = ensureDiagramEditorDialog();
+            const host = dialog.querySelector("#svgedit-host");
+            const mod = await import(SVGEDIT_MODULE_URL);
+            const Editor = mod.default || mod.Editor;
+            if (typeof Editor !== "function") {
+              throw new Error("SVG-edit Editor export not found");
+            }
+            const editor = new Editor(host);
+            try {
+              if (typeof editor.setConfig === "function") {
+                editor.setConfig({
+                  allowInitialUserOverride: false,
+                  noStorageOnLoad: true,
+                  showRulers: false,
+                  dimensions: [640, 480],
+                });
+              }
+            } catch (err) {
+              console.warn("SVG-edit setConfig rejected an option:", err);
+            }
+            editor.init();
+            await waitForCondition(
+              () =>
+                editor.svgCanvas &&
+                typeof editor.svgCanvas.setSvgString === "function",
+              15000,
+            );
+            state.svgEditor = editor;
+            return editor;
+          })();
+          svgEditorPromise.catch(() => {
+            // Allow a later retry if the first attempt failed.
+            svgEditorPromise = null;
+          });
+          return svgEditorPromise;
         }
 
-        async function prepareSvgEditFrame(dialog, svgString) {
-          const statusEl = dialog.querySelector("#svgedit-status");
-          ensureSvgEditFrame();
+        function waitForCondition(test, timeoutMs) {
+          return new Promise((resolve, reject) => {
+            if (test()) return resolve();
+            const deadline = Date.now() + (timeoutMs || 8000);
+            const timer = setInterval(() => {
+              if (test()) {
+                clearInterval(timer);
+                resolve();
+              } else if (Date.now() > deadline) {
+                clearInterval(timer);
+                reject(new Error("SVG editor did not become ready"));
+              }
+            }, 100);
+          });
+        }
 
+        function svgEditorSetSvg(svgString) {
+          try {
+            state.svgEditor.svgCanvas.setSvgString(svgString);
+            return true;
+          } catch (err) {
+            console.error("setSvgString failed:", err);
+            return false;
+          }
+        }
+
+        function svgEditorGetSvg() {
+          try {
+            return state.svgEditor.svgCanvas.getSvgString();
+          } catch (err) {
+            console.error("getSvgString failed:", err);
+            return null;
+          }
+        }
+
+        async function prepareSvgEditor(dialog, svgString) {
+          const statusEl = dialog.querySelector("#svgedit-status");
           state.svgEditReady = false;
           statusEl.hidden = false;
           statusEl.textContent = "Loading visual editor…";
 
-          const deadline = Date.now() + 12000;
-          while (Date.now() < deadline) {
+          try {
+            await loadSvgEditor();
             if (!state.diagramEditContext) return false;
-            try {
-              await svgEditCall("setSvgString", [svgString], 1500);
-              state.svgEditReady = true;
-              statusEl.hidden = true;
-              return true;
-            } catch {
-              /* editor still booting; retry */
+            svgEditorSetSvg(svgString);
+            state.svgEditReady = true;
+            statusEl.hidden = true;
+            return true;
+          } catch (err) {
+            console.error("SVG editor failed to load:", err);
+            statusEl.textContent =
+              "Visual editor unavailable (offline or blocked) — use the SVG source tab instead.";
+            if (state.diagramEditContext && state.diagramEditTab === "visual") {
+              setDiagramTabUi(dialog, "source");
+              renderDiagramSourcePreview(dialog);
             }
+            return false;
           }
-
-          statusEl.textContent =
-            "Visual editor unavailable (offline or CDN blocked) — use the SVG source tab instead.";
-          if (state.diagramEditContext && state.diagramEditTab === "visual") {
-            setDiagramTabUi(dialog, "source");
-            renderDiagramSourcePreview(dialog);
-          }
-          return false;
         }
 
-        async function finishDiagramEdit(dialog, ctx) {
+        function finishDiagramEdit(dialog, ctx) {
           let svgString = null;
           if (state.diagramEditTab === "visual" && state.svgEditReady) {
-            try {
-              svgString = await svgEditCall("getSvgString", [], 4000);
-            } catch {
-              svgString = null;
-            }
+            svgString = svgEditorGetSvg();
           }
           if (typeof svgString !== "string" || !svgString.trim()) {
             svgString = dialog.querySelector("#diagram-svg-source").value;
@@ -4037,20 +4068,28 @@
           setDiagramTabUi(dialog, "visual");
           renderDiagramSourcePreview(dialog);
           showAsNonModal(dialog);
-          prepareSvgEditFrame(dialog, initial).catch((err) =>
+          prepareSvgEditor(dialog, initial).catch((err) =>
             console.error("SVG editor failed to start:", err),
           );
         }
 
         /* ----------- In-place embed editing from the worksheet ------------ */
 
+        function embedKind(el) {
+          if (el.classList && el.classList.contains("fn-graph")) {
+            return "fn-graph";
+          }
+          if (el.tagName && el.tagName.toLowerCase() === "img") return "img";
+          return "svg";
+        }
+
         function updateCachedEmbedSource(embedEl, kind, mutate) {
           const target = embedEl.closest("[data-original-latex]");
           if (!target) return;
-          const isGraph = kind === "fn-graph";
-          const selector = isGraph ? ".fn-graph" : "svg";
+          const selector =
+            kind === "fn-graph" ? ".fn-graph" : kind === "img" ? "img" : "svg";
           const isCandidate = (el) =>
-            isGraph ||
+            kind === "fn-graph" ||
             !el.closest(".fn-graph, .katex, .marks, .no-pdf");
 
           const live = Array.from(target.querySelectorAll(selector)).filter(
@@ -4110,13 +4149,28 @@
           scheduleLayout();
         }
 
+        function applyImageEditInPlace(img, dataUrl) {
+          if (!dataUrl) return;
+          updateCachedEmbedSource(img, "img", (cachedEl) => {
+            cachedEl.setAttribute("src", dataUrl);
+          });
+          img.setAttribute("src", dataUrl);
+          decorateEmbedMarkers();
+          scheduleLayout();
+        }
+
         function openEmbedEditor(embed) {
-          if (embed.classList.contains("fn-graph")) {
+          const kind = embedKind(embed);
+          if (kind === "fn-graph") {
             const spec =
               normalizeGraphSpec(embed.getAttribute("data-graph")) ||
               cloneDefaultGraphSpec();
             openGraphEditorDialog(spec, (newSpec) =>
               applyGraphEditInPlace(embed, newSpec),
+            );
+          } else if (kind === "img") {
+            openImageEditor(embed.getAttribute("src"), (dataUrl) =>
+              applyImageEditInPlace(embed, dataUrl),
             );
           } else {
             openDiagramEditorDialog(embed.outerHTML, (newSvg) =>
@@ -4125,13 +4179,51 @@
           }
         }
 
+        async function deleteEmbed(embed) {
+          const kind = embedKind(embed);
+          const label =
+            kind === "fn-graph"
+              ? "graph"
+              : kind === "img"
+                ? "image"
+                : "diagram";
+          const ok = await showMessage({
+            title: `Delete ${label}`,
+            message: `Delete this ${label} from the worksheet?`,
+            confirmLabel: "Delete",
+            cancelLabel: "Cancel",
+            danger: true,
+          });
+          if (!ok) return;
+          updateCachedEmbedSource(embed, kind, (cachedEl) => cachedEl.remove());
+          embed.remove();
+          decorateEmbedMarkers();
+          scheduleLayout();
+        }
+
         function resizeEmbed(embed, factor) {
-          if (embed.classList.contains("fn-graph")) {
+          const kind = embedKind(embed);
+          if (kind === "fn-graph") {
             const spec = normalizeGraphSpec(embed.getAttribute("data-graph"));
             if (!spec) return;
             spec.width = clamp(Math.round(spec.width * factor), 120, 680);
             spec.height = clamp(Math.round(spec.height * factor), 100, 600);
             applyGraphEditInPlace(embed, spec);
+          } else if (kind === "img") {
+            const current = embed.getBoundingClientRect().width || 100;
+            const next = clamp(Math.round(current * factor), 24, 680);
+            updateCachedEmbedSource(embed, "img", (cachedEl) => {
+              cachedEl.removeAttribute("width");
+              cachedEl.removeAttribute("height");
+              cachedEl.style.width = `${next}px`;
+              cachedEl.style.height = "auto";
+            });
+            embed.removeAttribute("width");
+            embed.removeAttribute("height");
+            embed.style.width = `${next}px`;
+            embed.style.height = "auto";
+            decorateEmbedMarkers();
+            scheduleLayout();
           } else {
             const current = embed.getBoundingClientRect().width || 200;
             const next = clamp(Math.round(current * factor), 40, 680);
@@ -4158,13 +4250,26 @@
             .forEach((marker) => marker.remove());
 
           els.content
-            .querySelectorAll(".fn-graph, svg.worksheet-diagram")
+            .querySelectorAll(".fn-graph, svg.worksheet-diagram, img")
             .forEach((embed) => {
               const block = embed.closest(".question, .answer");
               if (!block) return;
-              const editLabel = embed.classList.contains("fn-graph")
-                ? "Edit graph"
-                : "Edit diagram";
+              if (
+                embed.tagName.toLowerCase() === "img" &&
+                (!embed.closest(".question-prompt, .answer-body") ||
+                  embed.closest(".no-pdf"))
+              ) {
+                return;
+              }
+              const kind = embedKind(embed);
+              const noun =
+                kind === "fn-graph"
+                  ? "graph"
+                  : kind === "img"
+                    ? "image"
+                    : "diagram";
+              const editLabel = `Edit ${noun}`;
+              const deleteLabel = `Delete ${noun}`;
               const marker = document.createElement("span");
               marker.className = "content-element-tools embed-tools no-pdf";
               marker.dataset.rowCount = "1";
@@ -4177,12 +4282,17 @@
                         <path d="m13.5 6.5 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
                       </svg>
                     </button>
+                    <button class="delete-button" type="button" data-action="embed-delete" aria-label="${deleteLabel}" title="${deleteLabel}">
+                      <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                      </svg>
+                    </button>
                     <span class="action-divider"></span>
                     <button type="button" data-action="embed-shrink" aria-label="Reduce display size" title="Reduce display size">−</button>
                     <button type="button" data-action="embed-grow" aria-label="Increase display size" title="Increase display size">+</button>
                   </span>
                 </span>
-                ${hoverTriggerHtml(editLabel.replace(/^Edit /, "Show ") + " controls")}
+                ${hoverTriggerHtml(`Show ${noun} controls`)}
               `;
               marker._embedTarget = embed;
               block.appendChild(marker);
@@ -4584,10 +4694,12 @@
 
           dialog.addEventListener("close", () => {
             if (dialog.returnValue !== "ok") {
+              state.imageDialogContext = null;
               destroyCropper();
               return;
             }
             if (!ctx.originalDataUrl) {
+              state.imageDialogContext = null;
               destroyCropper();
               return;
             }
@@ -4611,18 +4723,10 @@
                 maxDim,
                 quality,
               );
-              if (state.quillInstance) {
-                const range = state.quillInstance.getSelection(true) || {
-                  index: state.quillInstance.getLength(),
-                  length: 0,
-                };
-                state.quillInstance.insertEmbed(
-                  range.index,
-                  "image",
-                  out,
-                  "user",
-                );
-                state.quillInstance.setSelection(range.index + 1, 0, "silent");
+              const context = state.imageDialogContext;
+              state.imageDialogContext = null;
+              if (context && context.onConfirm) {
+                context.onConfirm(out);
               }
               destroyCropper();
             };
@@ -4651,14 +4755,62 @@
             cropToggle.checked = false;
           };
 
+          dialog._loadImage = (dataUrl) => {
+            if (!dataUrl) return;
+            const probe = new Image();
+            probe.onload = () => {
+              ctx.originalDataUrl = dataUrl;
+              ctx.originalWidth = probe.naturalWidth;
+              ctx.originalHeight = probe.naturalHeight;
+              setPreview(dataUrl, probe.naturalWidth, probe.naturalHeight);
+            };
+            probe.src = dataUrl;
+          };
+
           return dialog;
+        }
+
+        function setImageDialogMode(dialog, mode) {
+          const heading = dialog.querySelector("h3");
+          const okButton = dialog.querySelector('[data-action="image-ok"]');
+          if (mode === "edit") {
+            if (heading) heading.textContent = "Edit image";
+            if (okButton) okButton.textContent = "Apply";
+          } else {
+            if (heading) heading.textContent = "Insert image";
+            if (okButton) okButton.textContent = "Insert";
+          }
+        }
+
+        function insertImageIntoQuill(dataUrl) {
+          if (!state.quillInstance || !dataUrl) return;
+          const range = state.quillInstance.getSelection(true) || {
+            index: state.quillInstance.getLength(),
+            length: 0,
+          };
+          state.quillInstance.insertEmbed(range.index, "image", dataUrl, "user");
+          state.quillInstance.setSelection(range.index + 1, 0, "silent");
         }
 
         function openImageInsertDialog() {
           const dialog = ensureImageInsertDialog();
           dialog._reset && dialog._reset();
+          setImageDialogMode(dialog, "insert");
+          state.imageDialogContext = { onConfirm: insertImageIntoQuill };
           dialog.returnValue = "";
           dialog.showModal();
+        }
+
+        function openImageEditor(dataUrl, onConfirm) {
+          const dialog = ensureImageInsertDialog();
+          dialog._reset && dialog._reset();
+          setImageDialogMode(dialog, "edit");
+          state.imageDialogContext = { onConfirm };
+          dialog.returnValue = "";
+          dialog.showModal();
+          if (dataUrl) {
+            dialog._loadImage(dataUrl);
+          }
         }
 
         function downsampleToDataUrl(source, srcW, srcH, maxDim, quality) {
@@ -5127,7 +5279,7 @@
 
           els.content.addEventListener("dblclick", (event) => {
             const embed = event.target.closest(
-              ".fn-graph, svg.worksheet-diagram",
+              ".fn-graph, svg.worksheet-diagram, .question-prompt img, .answer-body img",
             );
             if (!embed || embed.closest(".no-pdf")) {
               return;
@@ -5164,6 +5316,7 @@
 
             if (
               action === "embed-edit" ||
+              action === "embed-delete" ||
               action === "embed-shrink" ||
               action === "embed-grow"
             ) {
@@ -5174,6 +5327,8 @@
               }
               if (action === "embed-edit") {
                 openEmbedEditor(embed);
+              } else if (action === "embed-delete") {
+                deleteEmbed(embed);
               } else {
                 resizeEmbed(embed, action === "embed-grow" ? 1.1 : 1 / 1.1);
               }
