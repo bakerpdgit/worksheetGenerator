@@ -43,6 +43,10 @@
       src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"
     ></script>
     <script defer src="https://cdn.jsdelivr.net/npm/mathlive@0.99.0/dist/mathlive.min.js"></script>
+    <script
+      defer
+      src="https://cdnjs.cloudflare.com/ajax/libs/function-plot/1.25.1/function-plot.min.js"
+    ></script>
 
     <style id="dynamic-print-style"></style>
     <style>
@@ -561,6 +565,61 @@
       .question-prompt p:last-child,
       .answer-body p:last-child {
         margin-bottom: 0;
+      }
+
+      .fn-graph {
+        display: block;
+        margin: 3mm 0;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .fn-graph svg {
+        display: block;
+      }
+
+      .fn-graph[data-graph-error]::before {
+        content: "Graph could not be rendered. Double-click to edit its settings, or check the network connection.";
+        display: block;
+        padding: 4mm;
+        border: 1px dashed #b42318;
+        border-radius: 4px;
+        color: #b42318;
+        font-size: 9.5pt;
+      }
+
+      .fn-graph-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5mm 5mm;
+        margin-top: 1mm;
+        font-size: 9pt;
+        color: #4b5563;
+      }
+
+      .fn-graph-legend .legend-item {
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .fn-graph-legend .legend-swatch {
+        display: inline-block;
+        width: 9px;
+        height: 9px;
+        border-radius: 2px;
+        margin-right: 1.5mm;
+      }
+
+      svg.worksheet-diagram {
+        max-width: 100%;
+        height: auto;
+      }
+
+      .question-prompt .fn-graph,
+      .question-prompt svg.worksheet-diagram,
+      .answer-body .fn-graph,
+      .answer-body svg.worksheet-diagram {
+        cursor: pointer;
       }
 
       .marks {
@@ -1258,6 +1317,224 @@
         display: block;
       }
 
+      .ql-fn-graph {
+        display: block;
+        margin: 6px 0;
+        padding: 10px 12px;
+        background: #ecfeff;
+        border: 1px dashed #67e8f9;
+        border-radius: 6px;
+        position: relative;
+        cursor: pointer;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      .ql-fn-graph-label {
+        display: block;
+        font-size: 0.72rem;
+        color: #0e7490;
+        margin-bottom: 6px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .ql-fn-graph-preview {
+        pointer-events: none;
+        display: block;
+        font-size: 0.85rem;
+        color: #155e75;
+      }
+
+      .ql-insert-graph::before {
+        content: "📈";
+        font-size: 0.95em;
+      }
+
+      .ql-insert-diagram::before {
+        content: "📐";
+        font-size: 0.95em;
+      }
+
+      #graph-editor-dialog {
+        width: min(720px, 94vw);
+      }
+
+      .graph-fn-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+
+      .graph-fn-row .graph-fn-expr {
+        flex: 1.4;
+        min-width: 0;
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      }
+
+      .graph-fn-row .graph-fn-label {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .graph-fn-row .graph-fn-color {
+        flex: 0 0 36px;
+        height: 28px;
+        padding: 1px 2px;
+      }
+
+      .graph-fn-row .graph-fn-remove {
+        flex: 0 0 auto;
+      }
+
+      .graph-add-fn {
+        margin-bottom: 10px;
+      }
+
+      .graph-fieldset {
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        margin: 0 0 10px;
+        padding: 8px 10px;
+      }
+
+      .graph-fieldset legend {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #4b5563;
+        padding: 0 4px;
+      }
+
+      .graph-axes-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        align-items: end;
+      }
+
+      .graph-axes-grid label {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        font-size: 0.8rem;
+        color: #4b5563;
+      }
+
+      .graph-check {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 8px;
+        font-size: 0.85rem;
+        color: #374151;
+      }
+
+      #graph-editor-preview {
+        display: flex;
+        justify-content: center;
+        min-height: 100px;
+        max-height: 46vh;
+        overflow: auto;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 6px;
+        background: #fff;
+      }
+
+      #graph-editor-preview .graph-preview-error {
+        align-self: center;
+        color: #b42318;
+        font-size: 0.85rem;
+      }
+
+      #diagram-editor-dialog {
+        width: min(1000px, 96vw);
+      }
+
+      #svgedit-status {
+        margin: 0 0 6px;
+        font-size: 0.85rem;
+        color: #b45309;
+      }
+
+      #svgedit-frame {
+        display: block;
+        width: 100%;
+        height: min(560px, 62vh);
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        background: #fff;
+      }
+
+      #diagram-svg-source {
+        min-height: 220px;
+        max-height: 40vh;
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      }
+
+      #diagram-source-preview {
+        display: flex;
+        justify-content: center;
+        border: 1px dashed #e5e7eb;
+        border-radius: 6px;
+        padding: 8px;
+        margin-top: 8px;
+        max-height: 30vh;
+        overflow: auto;
+      }
+
+      #diagram-source-preview svg {
+        max-width: 100%;
+        height: auto;
+      }
+
+      .diagram-width-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 10px 0 0;
+        font-size: 0.85rem;
+        color: #374151;
+      }
+
+      .diagram-width-row input {
+        width: 90px;
+      }
+
+      #embed-toolbar {
+        position: absolute;
+        z-index: 30;
+        display: none;
+        gap: 4px;
+        align-items: center;
+        background: #fff;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        padding: 2px 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      }
+
+      #embed-toolbar.is-visible {
+        display: flex;
+      }
+
+      #embed-toolbar button {
+        border: 0;
+        background: transparent;
+        border-radius: 4px;
+        padding: 2px 7px;
+        font-size: 12px;
+        line-height: 1.4;
+        color: #1f2937;
+        cursor: pointer;
+      }
+
+      #embed-toolbar button:hover {
+        background: #eef2f7;
+      }
+
       #edit-dialog-text {
         min-height: 320px;
         max-height: 55vh;
@@ -1744,13 +2021,125 @@
         An AI generating a worksheet should edit this article only.
         Keep .question for questions that need adjustable working space.
         Keep .answer for worked solutions that only need optional page breaks.
+        Questions and answers are paired by position: the Nth .question matches
+        the Nth .answer.
         The script below injects all controls and PDF behavior.
+
+        Rich content allowed inside question/answer bodies:
+        - LaTeX between \( \) or $$ $$ delimiters (rendered with KaTeX).
+        - Inline SVG diagrams: emit a plain <svg> element (a viewBox is
+          recommended). It becomes editable in the built-in diagram editor.
+        - Function graphs: emit <div class="fn-graph" data-graph='{...}'></div>
+          with double-quoted JSON, leaving the div empty (it is rendered on
+          load with the function-plot library). Spec format:
+          {"width":360,"height":280,"grid":true,
+           "xAxis":{"label":"x","domain":[-6,5]},
+           "yAxis":{"label":"y","domain":[-8,12]},
+           "functions":[{"fn":"(x-2)*(x+3)","color":"#0f766e",
+                         "label":"y = (x-2)(x+3)"}]}
+          "fn" uses function-plot expression syntax in x (x^2, sin(x),
+          sqrt(x), abs(x), exp(x), log(x), ...). "domain" on yAxis is optional
+          (omit for an automatic range). Each function may also set
+          "nSamples" (integer) and "closed" (true fills down to the x-axis).
+        - Images: emit <img src="data:image/png;base64,..."> data URLs with an
+          explicit width attribute.
       -->
         <article class="worksheet-content" id="worksheet-content">
           <section class="worksheet-header">
             <h1>Integration by Recognition</h1>
             <p>A-Level Mathematics Worksheet: Reverse Chain Rule</p>
           </section>
+
+          <section class="worksheet-section">
+            <h2>Diagrams, Graphs and Images</h2>
+            <p>
+              These questions use an embedded SVG diagram, a plotted graph and
+              an embedded image. Double-click any of them to edit.
+            </p>
+          </section>
+
+          <div class="question" data-working-space-mm="45">
+            <div class="question-prompt">
+              <div>
+                <p>
+                  The diagram shows a circle of radius \( r = 4 \) cm inscribed
+                  in a square. Find the exact area of the region inside the
+                  square but outside the circle, and evaluate it to 1 decimal
+                  place. <span class="marks">3 marks</span>
+                </p>
+                <svg
+                  class="worksheet-diagram"
+                  viewBox="0 0 200 200"
+                  width="180"
+                  role="img"
+                  aria-label="Circle of radius 4 cm inscribed in a square"
+                >
+                  <rect
+                    x="20"
+                    y="20"
+                    width="160"
+                    height="160"
+                    fill="none"
+                    stroke="#17202a"
+                    stroke-width="2"
+                  ></rect>
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="80"
+                    fill="none"
+                    stroke="#0f766e"
+                    stroke-width="2"
+                  ></circle>
+                  <line
+                    x1="100"
+                    y1="100"
+                    x2="180"
+                    y2="100"
+                    stroke="#b42318"
+                    stroke-width="2"
+                  ></line>
+                  <circle cx="100" cy="100" r="2.5" fill="#17202a"></circle>
+                  <text x="118" y="92" font-size="13" fill="#b42318">
+                    r = 4 cm
+                  </text>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="question" data-working-space-mm="55">
+            <div class="question-prompt">
+              <div>
+                <p>
+                  The graph shows the curve \( y=(x-2)(x+3) \) and the line \(
+                  y=3-x \). Find the exact coordinates of their points of
+                  intersection. <span class="marks">4 marks</span>
+                </p>
+                <div
+                  class="fn-graph"
+                  data-graph='{"width":360,"height":280,"grid":true,"xAxis":{"label":"x","domain":[-6,5]},"yAxis":{"label":"y","domain":[-8,12]},"functions":[{"fn":"(x-2)*(x+3)","color":"#0f766e","label":"y = (x-2)(x+3)"},{"fn":"3-x","color":"#b42318","label":"y = 3 - x"}]}'
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="question" data-working-space-mm="30">
+            <div class="question-prompt">
+              <div>
+                <p>
+                  The logo shown is printed 6 cm wide. Its width-to-height
+                  ratio is 4 : 3. Find the printed height and the printed
+                  area. <span class="marks">2 marks</span>
+                </p>
+                <img
+                  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAA2UlEQVR42u3ZMQ6DMBBEUd+ANn3ulzIny/2gSBOBAt717M4YreXKonn609GW92vq2wpQgALsnz7Px+9dlY4HIGVwAnQMfoAIowvw/VTTYACcGIgMG0AwhQcgZXACdObkB4ikGAXQDQAAd04YADEFEkAxgAH5c8IDklNEAdJSBAJyUoQDog0ZgNA5JQHiUqQCIgzZAPicCABsChoAlYIJgKTgAwYNEoCROakA3Cm0AA6DHMA6J0WAKYUuoNMgDeiZkzrgMsUcgBPDNIB/jMkAR0P9Jy5AAW4H2ADtYa/rFOc+jgAAAABJRU5ErkJggg=="
+                  width="96"
+                  alt="Rectangular logo with a diagonal stripe"
+                />
+              </div>
+            </div>
+          </div>
 
           <section class="worksheet-section">
             <h2>Warm-Up</h2>
@@ -1880,6 +2269,48 @@
               receive page breaks.
             </p>
           </section>
+
+          <div class="answer">
+            <div class="answer-body">
+              <div>
+                <p>
+                  The square has side \(2r = 8\) cm, so its area is \(64\)
+                  cm\(^2\); the circle has area \(\pi r^2 = 16\pi\) cm\(^2\).
+                </p>
+                <p>
+                  Shaded area \(= 64 - 16\pi \approx 13.7\) cm\(^2\) (1 d.p.).
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="answer">
+            <div class="answer-body">
+              <div>
+                <p>
+                  At an intersection \((x-2)(x+3) = 3-x\), so
+                  \(x^2+x-6 = 3-x\), giving \(x^2+2x-9 = 0\) and
+                  \(x = -1 \pm \sqrt{10}\).
+                </p>
+                <p>
+                  Using \(y = 3-x\), the points are
+                  \((-1+\sqrt{10},\, 4-\sqrt{10}) \approx (2.16,\, 0.84)\) and
+                  \((-1-\sqrt{10},\, 4+\sqrt{10}) \approx (-4.16,\, 7.16)\).
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="answer">
+            <div class="answer-body">
+              <div>
+                <p>
+                  Height \(= 6 \times \tfrac{3}{4} = 4.5\) cm, so the printed
+                  area is \(6 \times 4.5 = 27\) cm\(^2\).
+                </p>
+              </div>
+            </div>
+          </div>
 
           <div class="answer">
             <div class="answer-body">
@@ -2019,6 +2450,34 @@
           { left: "$", right: "$", display: false },
         ];
 
+        // Pinned exact version: the editor is a multi-file app, so a floating
+        // tag could mix files from different releases mid-session.
+        const SVGEDIT_EDITOR_URL =
+          "https://cdn.jsdelivr.net/npm/svgedit@7.3.2/dist/editor/index.html?storagePrompt=false";
+
+        const GRAPH_COLOR_CYCLE = [
+          "#0f766e",
+          "#b42318",
+          "#1d4ed8",
+          "#a16207",
+          "#7c3aed",
+          "#0e7490",
+        ];
+
+        const DEFAULT_GRAPH_SPEC = {
+          width: 340,
+          height: 260,
+          grid: true,
+          xAxis: { label: "x", domain: [-5, 5] },
+          yAxis: { label: "y", domain: [-5, 5] },
+          functions: [{ fn: "x^2", color: "#0f766e", label: "y = x^2" }],
+        };
+
+        const STARTER_SVG =
+          '<svg viewBox="0 0 200 150" width="200" xmlns="http://www.w3.org/2000/svg">' +
+          '<rect x="30" y="25" width="140" height="100" fill="none" stroke="#17202a" stroke-width="2"></rect>' +
+          "</svg>";
+
         const state = {
           pageSize: "a4",
           orientation: "portrait",
@@ -2031,6 +2490,11 @@
           renderedPageCount: 1,
           resizeDrag: null,
           activeEditTarget: null,
+          graphEditContext: null,
+          diagramEditContext: null,
+          diagramEditTab: "visual",
+          svgEditReady: false,
+          embedToolbarTarget: null,
         };
 
         const els = {};
@@ -2055,8 +2519,11 @@
           ensureEditDialog();
           decorateWorksheet();
           wireControls();
+          ensureEmbedToolbar();
           applyPageSettings();
           renderMath();
+          decorateDiagramSvgs(els.content);
+          renderAllFunctionGraphs(els.content);
 
           if (document.fonts && document.fonts.ready) {
             document.fonts.ready.then(scheduleLayout);
@@ -2299,6 +2766,8 @@
 
           decorateMarksIn(target);
           decorateStandaloneEditableText();
+          decorateDiagramSvgs(target);
+          renderAllFunctionGraphs(target);
           scheduleLayout();
         }
 
@@ -2393,6 +2862,10 @@
                 <button class="ql-eq-block" type="button" title="Insert block equation"></button>
               </span>
               <span class="ql-formats">
+                <button class="ql-insert-graph" type="button" title="Insert function graph"></button>
+                <button class="ql-insert-diagram" type="button" title="Insert SVG diagram"></button>
+              </span>
+              <span class="ql-formats">
                 <button class="ql-clean" type="button"></button>
               </span>
             `;
@@ -2412,6 +2885,14 @@
                   "eq-block": () =>
                     openLatexEditDialog(null, true, (latex) => {
                       insertLatexAtCursor(latex, true);
+                    }),
+                  "insert-graph": () =>
+                    openGraphEditorDialog(cloneDefaultGraphSpec(), (spec) => {
+                      insertEmbedAtCursor("fn-graph", JSON.stringify(spec));
+                    }),
+                  "insert-diagram": () =>
+                    openDiagramEditorDialog(STARTER_SVG, (svg) => {
+                      insertEmbedAtCursor("raw-html", svg);
                     }),
                 },
               },
@@ -2479,14 +2960,42 @@
               const html = typeof value === "string" ? value : "";
               node.setAttribute("data-raw-html", encodeURIComponent(html));
               node.setAttribute("contenteditable", "false");
+              const isSvg = isSingleSvgMarkup(html);
               const label = document.createElement("span");
               label.className = "ql-raw-html-label";
-              label.textContent = "Custom HTML (preserved)";
+              label.textContent = isSvg
+                ? "Diagram (double-click to edit)"
+                : "Custom HTML (preserved)";
               const content = document.createElement("span");
               content.className = "ql-raw-html-content";
               content.innerHTML = html;
               node.appendChild(label);
               node.appendChild(content);
+              if (isSvg) {
+                node.setAttribute("data-raw-type", "svg");
+                node.addEventListener("dblclick", (event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  let current = "";
+                  try {
+                    current = decodeURIComponent(
+                      node.getAttribute("data-raw-html") || "",
+                    );
+                  } catch {}
+                  openDiagramEditorDialog(current, (newSvg) => {
+                    node.setAttribute(
+                      "data-raw-html",
+                      encodeURIComponent(newSvg),
+                    );
+                    const preview = node.querySelector(
+                      ":scope > .ql-raw-html-content",
+                    );
+                    if (preview) {
+                      preview.innerHTML = newSvg;
+                    }
+                  });
+                });
+              }
               return node;
             }
             static value(node) {
@@ -2502,15 +3011,83 @@
           RawHtmlBlot.tagName = "DIV";
           RawHtmlBlot.className = "ql-raw-html";
 
+          class FnGraphBlot extends BlockEmbed {
+            static create(value) {
+              const node = super.create();
+              const json = typeof value === "string" ? value : "";
+              node.setAttribute("data-graph", json);
+              node.setAttribute("contenteditable", "false");
+              buildFnGraphBlotContent(node);
+              node.addEventListener("dblclick", (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const spec =
+                  normalizeGraphSpec(node.getAttribute("data-graph")) ||
+                  cloneDefaultGraphSpec();
+                openGraphEditorDialog(spec, (newSpec) => {
+                  node.setAttribute("data-graph", JSON.stringify(newSpec));
+                  buildFnGraphBlotContent(node);
+                });
+              });
+              return node;
+            }
+            static value(node) {
+              return node.getAttribute("data-graph") || "";
+            }
+          }
+          FnGraphBlot.blotName = "fn-graph";
+          FnGraphBlot.tagName = "DIV";
+          FnGraphBlot.className = "ql-fn-graph";
+
           window.Quill.register(
             {
               "formats/latex-inline": LatexInlineBlot,
               "formats/latex-block": LatexBlockBlot,
               "formats/raw-html": RawHtmlBlot,
+              "formats/fn-graph": FnGraphBlot,
             },
             true,
           );
           window._quillBlotsRegistered = true;
+        }
+
+        function isSingleSvgMarkup(html) {
+          if (!html || !/<svg[\s>]/i.test(html)) return false;
+          const tmp = document.createElement("div");
+          tmp.innerHTML = html;
+          return (
+            tmp.children.length === 1 &&
+            tmp.firstElementChild.tagName.toLowerCase() === "svg" &&
+            !(tmp.textContent || "").trim()
+          );
+        }
+
+        function buildFnGraphBlotContent(node) {
+          node.innerHTML = "";
+          const label = document.createElement("span");
+          label.className = "ql-fn-graph-label";
+          label.textContent = "Function graph (double-click to edit)";
+          const preview = document.createElement("span");
+          preview.className = "ql-fn-graph-preview";
+          node.appendChild(label);
+          node.appendChild(preview);
+
+          const spec = normalizeGraphSpec(node.getAttribute("data-graph"));
+          if (!spec) {
+            preview.textContent = "Invalid graph settings";
+            return;
+          }
+          if (typeof window.functionPlot === "function") {
+            try {
+              window.functionPlot(
+                graphSpecToPlotOptions(spec, preview, 280),
+              );
+              return;
+            } catch {}
+          }
+          preview.textContent = spec.functions
+            .map((f) => f.label || f.fn)
+            .join(" · ");
         }
 
         function renderLatexNode(node, latex, displayMode) {
@@ -2548,6 +3125,15 @@
           );
           const root = doc.getElementById("__root");
           if (!root) return html;
+
+          // Convert graph embeds first so a rendered plot's <svg> is never
+          // mis-wrapped as a raw-html diagram below.
+          root.querySelectorAll(".fn-graph").forEach((el) => {
+            const div = doc.createElement("div");
+            div.className = "ql-fn-graph";
+            div.setAttribute("data-graph", el.getAttribute("data-graph") || "");
+            el.replaceWith(div);
+          });
 
           root.querySelectorAll("svg").forEach((svg) => {
             const wrap = doc.createElement("div");
@@ -2632,6 +3218,12 @@
             const latex = el.getAttribute("data-latex") || "";
             el.replaceWith(document.createTextNode(`$$${latex}$$`));
           });
+          clone.querySelectorAll(".ql-fn-graph").forEach((el) => {
+            const div = document.createElement("div");
+            div.className = "fn-graph";
+            div.setAttribute("data-graph", el.getAttribute("data-graph") || "");
+            el.replaceWith(div);
+          });
           clone.querySelectorAll(".ql-raw-html").forEach((el) => {
             const enc = el.getAttribute("data-raw-html");
             let raw = "";
@@ -2668,17 +3260,19 @@
         }
 
         function insertLatexAtCursor(latex, displayMode) {
-          if (!state.quillInstance || !latex) return;
+          insertEmbedAtCursor(
+            displayMode ? "latex-block" : "latex-inline",
+            latex,
+          );
+        }
+
+        function insertEmbedAtCursor(blotName, value) {
+          if (!state.quillInstance || !value) return;
           const range = state.quillInstance.getSelection(true) || {
             index: state.quillInstance.getLength(),
             length: 0,
           };
-          state.quillInstance.insertEmbed(
-            range.index,
-            displayMode ? "latex-block" : "latex-inline",
-            latex,
-            "user",
-          );
+          state.quillInstance.insertEmbed(range.index, blotName, value, "user");
           state.quillInstance.setSelection(
             range.index + 1,
             0,
@@ -2728,6 +3322,920 @@
             } catch {}
           }
           return html.trim();
+        }
+
+        /* ------------------------------------------------------------------
+         * Function graphs (.fn-graph + data-graph JSON spec, rendered with
+         * the function-plot library) and SVG diagrams (svg.worksheet-diagram)
+         * ------------------------------------------------------------------ */
+
+        function cloneDefaultGraphSpec() {
+          return JSON.parse(JSON.stringify(DEFAULT_GRAPH_SPEC));
+        }
+
+        function normalizeGraphSpec(raw) {
+          let spec = raw;
+          if (typeof raw === "string") {
+            try {
+              spec = JSON.parse(raw);
+            } catch {
+              return null;
+            }
+          }
+          if (!spec || typeof spec !== "object") return null;
+
+          const fns = Array.isArray(spec.functions) ? spec.functions : [];
+          const functions = fns
+            .filter((f) => f && typeof f.fn === "string" && f.fn.trim())
+            .map((f, i) => {
+              const out = {
+                fn: f.fn.trim(),
+                color:
+                  typeof f.color === "string" && f.color.trim()
+                    ? f.color.trim()
+                    : GRAPH_COLOR_CYCLE[i % GRAPH_COLOR_CYCLE.length],
+              };
+              if (typeof f.label === "string" && f.label.trim()) {
+                out.label = f.label.trim();
+              }
+              const samples = Number(f.nSamples);
+              if (Number.isFinite(samples) && samples > 0) {
+                out.nSamples = clamp(Math.round(samples), 50, 2000);
+              }
+              if (f.closed === true) {
+                out.closed = true;
+              }
+              return out;
+            });
+          if (!functions.length) return null;
+
+          const readAxis = (axis, fallbackLabel) => {
+            const out = {
+              label:
+                axis && typeof axis.label === "string"
+                  ? axis.label
+                  : fallbackLabel,
+            };
+            if (
+              axis &&
+              Array.isArray(axis.domain) &&
+              axis.domain.length === 2 &&
+              axis.domain.every((v) => Number.isFinite(v)) &&
+              axis.domain[0] < axis.domain[1]
+            ) {
+              out.domain = [axis.domain[0], axis.domain[1]];
+            }
+            return out;
+          };
+
+          const normalized = {
+            width: clamp(Math.round(Number(spec.width) || 360), 120, 680),
+            height: clamp(Math.round(Number(spec.height) || 280), 100, 600),
+            grid: spec.grid !== false,
+            xAxis: readAxis(spec.xAxis, "x"),
+            yAxis: readAxis(spec.yAxis, "y"),
+            functions,
+          };
+          if (!normalized.xAxis.domain) {
+            normalized.xAxis.domain = [-7, 7];
+          }
+          if (typeof spec.title === "string" && spec.title.trim()) {
+            normalized.title = spec.title.trim();
+          }
+          return normalized;
+        }
+
+        function graphSpecToPlotOptions(spec, target, maxWidth) {
+          const scale =
+            maxWidth && spec.width > maxWidth ? maxWidth / spec.width : 1;
+          const options = {
+            target,
+            width: Math.round(spec.width * scale),
+            height: Math.round(spec.height * scale),
+            grid: spec.grid,
+            disableZoom: true,
+            xAxis: { ...spec.xAxis },
+            yAxis: { ...spec.yAxis },
+            data: spec.functions.map((f) => {
+              const d = { fn: f.fn, color: f.color, graphType: "polyline" };
+              if (f.nSamples) d.nSamples = f.nSamples;
+              if (f.closed) d.closed = true;
+              return d;
+            }),
+          };
+          if (spec.title) options.title = spec.title;
+          return options;
+        }
+
+        function renderFunctionGraph(div) {
+          div.innerHTML = "";
+          div.removeAttribute("data-graph-error");
+          const spec = normalizeGraphSpec(div.getAttribute("data-graph"));
+          if (!spec || typeof window.functionPlot !== "function") {
+            div.setAttribute("data-graph-error", "true");
+            return;
+          }
+          try {
+            window.functionPlot(graphSpecToPlotOptions(spec, div));
+            appendGraphLegend(div, spec);
+          } catch (err) {
+            console.error("Graph render failed:", err);
+            div.innerHTML = "";
+            div.setAttribute("data-graph-error", "true");
+          }
+        }
+
+        function appendGraphLegend(div, spec) {
+          const labeled = spec.functions.filter((f) => f.label);
+          if (!labeled.length) return;
+          const legend = document.createElement("div");
+          legend.className = "fn-graph-legend";
+          labeled.forEach((f) => {
+            const item = document.createElement("span");
+            item.className = "legend-item";
+            const swatch = document.createElement("span");
+            swatch.className = "legend-swatch";
+            swatch.style.background = f.color;
+            item.appendChild(swatch);
+            item.appendChild(document.createTextNode(f.label));
+            legend.appendChild(item);
+          });
+          div.appendChild(legend);
+        }
+
+        function renderAllFunctionGraphs(root) {
+          const scope = root || els.content;
+          const graphs =
+            scope instanceof Element && scope.matches(".fn-graph")
+              ? [scope]
+              : Array.from(scope.querySelectorAll(".fn-graph"));
+          if (!graphs.length) return;
+          waitForGlobal("functionPlot", 8000)
+            .catch(() => null)
+            .then(() => {
+              graphs.forEach(renderFunctionGraph);
+              scheduleLayout();
+            });
+        }
+
+        function decorateDiagramSvgs(root) {
+          const scope = root || els.content;
+          scope.querySelectorAll("svg").forEach((svg) => {
+            if (
+              svg.closest(
+                ".katex, .fn-graph, .marks, .no-pdf, .pagination-tools, .content-element-tools",
+              )
+            ) {
+              return;
+            }
+            if (!svg.closest(".question-prompt, .answer-body")) {
+              return;
+            }
+            svg.classList.add("worksheet-diagram");
+          });
+        }
+
+        function toHexColor(color) {
+          if (/^#[0-9a-fA-F]{6}$/.test(color)) return color;
+          const probe = document.createElement("span");
+          probe.style.color = color;
+          document.body.appendChild(probe);
+          const computed = getComputedStyle(probe).color;
+          probe.remove();
+          const m = computed.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+          if (!m) return "#0f766e";
+          return (
+            "#" +
+            [m[1], m[2], m[3]]
+              .map((v) => Number(v).toString(16).padStart(2, "0"))
+              .join("")
+          );
+        }
+
+        /* ----------------------- Graph editor dialog ---------------------- */
+
+        function ensureGraphEditorDialog() {
+          let dialog = document.getElementById("graph-editor-dialog");
+          if (dialog) return dialog;
+          dialog = document.createElement("dialog");
+          dialog.id = "graph-editor-dialog";
+          dialog.className = "no-pdf";
+          dialog.innerHTML = `
+            <form method="dialog" class="edit-dialog-form">
+              <h3>Edit graph</h3>
+              <div id="graph-fn-rows"></div>
+              <button type="button" class="graph-add-fn" data-action="graph-add-fn">+ Add function</button>
+              <fieldset class="graph-fieldset">
+                <legend>Axes</legend>
+                <div class="graph-axes-grid">
+                  <label>x min <input type="number" id="graph-x-min" step="any"></label>
+                  <label>x max <input type="number" id="graph-x-max" step="any"></label>
+                  <label>x label <input type="text" id="graph-x-label"></label>
+                  <label>y min <input type="number" id="graph-y-min" step="any"></label>
+                  <label>y max <input type="number" id="graph-y-max" step="any"></label>
+                  <label>y label <input type="text" id="graph-y-label"></label>
+                </div>
+                <label class="graph-check"><input type="checkbox" id="graph-y-auto"> Automatic y range</label>
+              </fieldset>
+              <fieldset class="graph-fieldset">
+                <legend>Appearance</legend>
+                <div class="graph-axes-grid">
+                  <label>Width (px) <input type="number" id="graph-width" min="120" max="680" step="10"></label>
+                  <label>Height (px) <input type="number" id="graph-height" min="100" max="600" step="10"></label>
+                  <label class="graph-check"><input type="checkbox" id="graph-grid"> Gridlines</label>
+                </div>
+              </fieldset>
+              <div class="latex-edit-preview-label">Preview</div>
+              <div id="graph-editor-preview"></div>
+              <div class="edit-dialog-actions">
+                <button type="button" data-action="graph-cancel">Cancel</button>
+                <button type="submit" value="ok">OK</button>
+              </div>
+            </form>
+          `;
+          document.body.appendChild(dialog);
+
+          const form = dialog.querySelector("form");
+          const rows = dialog.querySelector("#graph-fn-rows");
+
+          let previewTimer = 0;
+          const schedulePreview = () => {
+            clearTimeout(previewTimer);
+            previewTimer = setTimeout(() => renderGraphEditorPreview(dialog), 250);
+          };
+
+          form.addEventListener("input", schedulePreview);
+          form.addEventListener("change", (event) => {
+            if (event.target && event.target.id === "graph-y-auto") {
+              syncGraphAutoYState(dialog);
+            }
+            schedulePreview();
+          });
+
+          form.addEventListener("click", (event) => {
+            const button = event.target.closest("button[data-action]");
+            if (!button) return;
+            if (button.dataset.action === "graph-add-fn") {
+              if (rows.children.length < 6) {
+                addGraphFnRow(rows, {
+                  fn: "",
+                  color:
+                    GRAPH_COLOR_CYCLE[
+                      rows.children.length % GRAPH_COLOR_CYCLE.length
+                    ],
+                });
+              }
+              schedulePreview();
+            } else if (button.dataset.action === "graph-fn-remove") {
+              const row = button.closest(".graph-fn-row");
+              if (row && rows.children.length > 1) {
+                row.remove();
+              }
+              schedulePreview();
+            } else if (button.dataset.action === "graph-cancel") {
+              dialog.close("cancel");
+            }
+          });
+
+          dialog.addEventListener("close", () => {
+            const ctx = state.graphEditContext;
+            state.graphEditContext = null;
+            if (!ctx || dialog.returnValue !== "ok") return;
+            const spec = collectGraphSpecFromForm(dialog);
+            if (spec && ctx.onConfirm) {
+              ctx.onConfirm(spec);
+            }
+          });
+
+          return dialog;
+        }
+
+        function addGraphFnRow(rows, fn) {
+          const row = document.createElement("div");
+          row.className = "graph-fn-row";
+          row.innerHTML = `
+            <input type="text" class="graph-fn-expr" placeholder="e.g. (x-2)*(x+3)" spellcheck="false">
+            <input type="color" class="graph-fn-color">
+            <input type="text" class="graph-fn-label" placeholder="Legend label (optional)">
+            <button type="button" data-action="graph-fn-remove" title="Remove function" aria-label="Remove function">×</button>
+          `;
+          row.querySelector(".graph-fn-expr").value = fn.fn || "";
+          row.querySelector(".graph-fn-color").value = toHexColor(
+            fn.color || "#0f766e",
+          );
+          row.querySelector(".graph-fn-label").value = fn.label || "";
+          rows.appendChild(row);
+        }
+
+        function populateGraphForm(dialog, spec) {
+          const rows = dialog.querySelector("#graph-fn-rows");
+          rows.innerHTML = "";
+          spec.functions.forEach((fn) => addGraphFnRow(rows, fn));
+
+          const setValue = (id, value) => {
+            dialog.querySelector(`#${id}`).value =
+              value === undefined || value === null ? "" : String(value);
+          };
+          setValue("graph-x-min", spec.xAxis.domain ? spec.xAxis.domain[0] : -5);
+          setValue("graph-x-max", spec.xAxis.domain ? spec.xAxis.domain[1] : 5);
+          setValue("graph-x-label", spec.xAxis.label || "x");
+          setValue(
+            "graph-y-min",
+            spec.yAxis.domain ? spec.yAxis.domain[0] : "",
+          );
+          setValue(
+            "graph-y-max",
+            spec.yAxis.domain ? spec.yAxis.domain[1] : "",
+          );
+          setValue("graph-y-label", spec.yAxis.label || "y");
+          setValue("graph-width", spec.width);
+          setValue("graph-height", spec.height);
+          dialog.querySelector("#graph-y-auto").checked = !spec.yAxis.domain;
+          dialog.querySelector("#graph-grid").checked = spec.grid !== false;
+          syncGraphAutoYState(dialog);
+        }
+
+        function syncGraphAutoYState(dialog) {
+          const auto = dialog.querySelector("#graph-y-auto").checked;
+          dialog.querySelector("#graph-y-min").disabled = auto;
+          dialog.querySelector("#graph-y-max").disabled = auto;
+        }
+
+        function collectGraphSpecFromForm(dialog) {
+          const functions = Array.from(
+            dialog.querySelectorAll(".graph-fn-row"),
+          )
+            .map((row) => ({
+              fn: row.querySelector(".graph-fn-expr").value.trim(),
+              color: row.querySelector(".graph-fn-color").value,
+              label: row.querySelector(".graph-fn-label").value.trim(),
+            }))
+            .filter((f) => f.fn);
+
+          const num = (id) => {
+            const value = dialog.querySelector(`#${id}`).value.trim();
+            return value === "" ? null : Number(value);
+          };
+
+          const spec = {
+            width: num("graph-width") || 360,
+            height: num("graph-height") || 280,
+            grid: dialog.querySelector("#graph-grid").checked,
+            xAxis: {
+              label: dialog.querySelector("#graph-x-label").value.trim() || "x",
+            },
+            yAxis: {
+              label: dialog.querySelector("#graph-y-label").value.trim() || "y",
+            },
+            functions,
+          };
+          const xMin = num("graph-x-min");
+          const xMax = num("graph-x-max");
+          if (xMin !== null && xMax !== null) {
+            spec.xAxis.domain = [xMin, xMax];
+          }
+          if (!dialog.querySelector("#graph-y-auto").checked) {
+            const yMin = num("graph-y-min");
+            const yMax = num("graph-y-max");
+            if (yMin !== null && yMax !== null) {
+              spec.yAxis.domain = [yMin, yMax];
+            }
+          }
+          return normalizeGraphSpec(spec);
+        }
+
+        function renderGraphEditorPreview(dialog) {
+          const preview = dialog.querySelector("#graph-editor-preview");
+          preview.innerHTML = "";
+          const spec = collectGraphSpecFromForm(dialog);
+          if (!spec) {
+            preview.innerHTML =
+              '<span class="graph-preview-error">Add at least one function with a valid range to preview the graph.</span>';
+            return;
+          }
+          if (typeof window.functionPlot !== "function") {
+            preview.innerHTML =
+              '<span class="graph-preview-error">The graphing library has not loaded yet (check the network connection).</span>';
+            return;
+          }
+          try {
+            window.functionPlot(graphSpecToPlotOptions(spec, preview, 560));
+          } catch (err) {
+            preview.innerHTML = `<span class="graph-preview-error">Could not plot: ${
+              err && err.message ? err.message : "invalid expression"
+            }</span>`;
+          }
+        }
+
+        function openGraphEditorDialog(spec, onConfirm) {
+          const dialog = ensureGraphEditorDialog();
+          populateGraphForm(dialog, spec || cloneDefaultGraphSpec());
+          state.graphEditContext = { onConfirm };
+          dialog.returnValue = "";
+          showAsNonModal(dialog);
+          renderGraphEditorPreview(dialog);
+          requestAnimationFrame(() => {
+            const first = dialog.querySelector(".graph-fn-expr");
+            if (first) first.focus();
+          });
+        }
+
+        /* --------------------- Diagram editor dialog ---------------------
+         * Visual tab embeds SVG-edit (cross-origin iframe driven over its
+         * postMessage embed API); the SVG source tab always works offline.
+         * ------------------------------------------------------------------ */
+
+        let svgEditCallId = 0;
+        const svgEditPending = new Map();
+
+        function svgEditHandleMessage(event) {
+          const frame = document.getElementById("svgedit-frame");
+          if (!frame || event.source !== frame.contentWindow) return;
+          let data = event.data;
+          if (typeof data === "string") {
+            try {
+              data = JSON.parse(data);
+            } catch {
+              return;
+            }
+          }
+          if (!data || data.namespace !== "svg-edit") return;
+          const pending = svgEditPending.get(data.id);
+          if (!pending) return;
+          svgEditPending.delete(data.id);
+          clearTimeout(pending.timer);
+          pending.resolve(data.result);
+        }
+
+        function svgEditCall(name, args, timeoutMs) {
+          return new Promise((resolve, reject) => {
+            const frame = document.getElementById("svgedit-frame");
+            if (!frame || !frame.contentWindow) {
+              reject(new Error("SVG editor frame unavailable"));
+              return;
+            }
+            const id = ++svgEditCallId;
+            const timer = setTimeout(() => {
+              svgEditPending.delete(id);
+              reject(new Error(`SVG editor did not respond to ${name}`));
+            }, timeoutMs || 3000);
+            svgEditPending.set(id, { resolve, timer });
+            const payload = {
+              namespace: "svgedit",
+              id,
+              name,
+              args: args || [],
+            };
+            // Different SVG-edit releases expect either a structured-clone
+            // object or a JSON string; send both (the calls we use are
+            // idempotent, and duplicate replies for one id are ignored).
+            frame.contentWindow.postMessage(payload, "*");
+            frame.contentWindow.postMessage(JSON.stringify(payload), "*");
+          });
+        }
+
+        function ensureDiagramEditorDialog() {
+          let dialog = document.getElementById("diagram-editor-dialog");
+          if (dialog) return dialog;
+          dialog = document.createElement("dialog");
+          dialog.id = "diagram-editor-dialog";
+          dialog.className = "no-pdf";
+          dialog.innerHTML = `
+            <form method="dialog" class="edit-dialog-form">
+              <h3>Edit diagram</h3>
+              <div class="edit-tabs" role="tablist">
+                <button type="button" role="tab" class="edit-tab is-active" data-tab="visual" aria-selected="true">Visual editor</button>
+                <button type="button" role="tab" class="edit-tab" data-tab="source" aria-selected="false">SVG source</button>
+              </div>
+              <div class="edit-tab-panel" data-panel="visual">
+                <p id="svgedit-status" hidden></p>
+                <div id="svgedit-frame-wrap"></div>
+              </div>
+              <div class="edit-tab-panel" data-panel="source" hidden>
+                <p class="edit-dialog-hint">Edit the SVG markup directly. A single <code>&lt;svg&gt;</code> element is expected.</p>
+                <textarea id="diagram-svg-source" spellcheck="false" rows="12"></textarea>
+                <div id="diagram-source-preview"></div>
+              </div>
+              <label class="diagram-width-row">
+                Display width (px)
+                <input type="number" id="diagram-display-width" min="40" max="680" step="5">
+                <span class="edit-dialog-hint">Leave blank to keep the SVG's own size.</span>
+              </label>
+              <div class="edit-dialog-actions">
+                <button type="button" data-action="diagram-cancel">Cancel</button>
+                <button type="submit" value="ok">OK</button>
+              </div>
+            </form>
+          `;
+          document.body.appendChild(dialog);
+
+          window.addEventListener("message", svgEditHandleMessage);
+
+          dialog
+            .querySelector('[data-action="diagram-cancel"]')
+            .addEventListener("click", () => dialog.close("cancel"));
+
+          dialog.querySelectorAll(".edit-tab").forEach((tab) => {
+            tab.addEventListener("click", () => {
+              switchDiagramTab(dialog, tab.dataset.tab);
+            });
+          });
+
+          const sourceArea = dialog.querySelector("#diagram-svg-source");
+          sourceArea.addEventListener("input", () => {
+            renderDiagramSourcePreview(dialog);
+          });
+
+          dialog.addEventListener("close", () => {
+            const ctx = state.diagramEditContext;
+            state.diagramEditContext = null;
+            if (!ctx || dialog.returnValue !== "ok") return;
+            finishDiagramEdit(dialog, ctx).catch((err) =>
+              console.error("Diagram edit failed:", err),
+            );
+          });
+
+          return dialog;
+        }
+
+        function setDiagramTabUi(dialog, target) {
+          state.diagramEditTab = target;
+          dialog.querySelectorAll(".edit-tab").forEach((btn) => {
+            const isActive = btn.dataset.tab === target;
+            btn.classList.toggle("is-active", isActive);
+            btn.setAttribute("aria-selected", String(isActive));
+          });
+          dialog.querySelectorAll(".edit-tab-panel").forEach((panel) => {
+            panel.hidden = panel.dataset.panel !== target;
+          });
+        }
+
+        async function switchDiagramTab(dialog, tab) {
+          const target = tab === "source" ? "source" : "visual";
+          const previous = state.diagramEditTab;
+          if (previous === target) return;
+          const sourceArea = dialog.querySelector("#diagram-svg-source");
+
+          if (previous === "visual" && target === "source" && state.svgEditReady) {
+            try {
+              const current = await svgEditCall("getSvgString", [], 4000);
+              if (typeof current === "string" && current.trim()) {
+                sourceArea.value = formatHtmlSource(current);
+              }
+            } catch {}
+          } else if (previous === "source" && target === "visual") {
+            if (state.svgEditReady) {
+              try {
+                await svgEditCall("setSvgString", [sourceArea.value], 4000);
+              } catch {}
+            }
+          }
+
+          setDiagramTabUi(dialog, target);
+          if (target === "source") {
+            renderDiagramSourcePreview(dialog);
+          }
+        }
+
+        function renderDiagramSourcePreview(dialog) {
+          const preview = dialog.querySelector("#diagram-source-preview");
+          const value = dialog.querySelector("#diagram-svg-source").value;
+          const clean = sanitizeSvgString(value);
+          preview.innerHTML = clean
+            ? clean
+            : '<span class="graph-preview-error">Not a valid SVG element yet.</span>';
+        }
+
+        function sanitizeSvgString(str) {
+          if (!str || !str.trim()) return null;
+          const doc = new DOMParser().parseFromString(str, "text/html");
+          const svg = doc.querySelector("svg");
+          if (!svg) return null;
+          svg.querySelectorAll("script").forEach((n) => n.remove());
+          const stripEditorAttrs = (el) => {
+            Array.from(el.attributes).forEach((attr) => {
+              if (
+                attr.name.startsWith("se:") ||
+                attr.name.startsWith("xmlns:se")
+              ) {
+                el.removeAttribute(attr.name);
+              }
+            });
+          };
+          stripEditorAttrs(svg);
+          svg.querySelectorAll("*").forEach(stripEditorAttrs);
+          if (!svg.getAttribute("xmlns")) {
+            svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+          }
+          return svg.outerHTML;
+        }
+
+        async function prepareSvgEditFrame(dialog, svgString) {
+          const statusEl = dialog.querySelector("#svgedit-status");
+          const wrap = dialog.querySelector("#svgedit-frame-wrap");
+          let frame = document.getElementById("svgedit-frame");
+          if (!frame) {
+            frame = document.createElement("iframe");
+            frame.id = "svgedit-frame";
+            frame.title = "SVG-edit visual editor";
+            frame.src = SVGEDIT_EDITOR_URL;
+            wrap.appendChild(frame);
+          }
+
+          state.svgEditReady = false;
+          statusEl.hidden = false;
+          statusEl.textContent = "Loading visual editor…";
+
+          const deadline = Date.now() + 12000;
+          while (Date.now() < deadline) {
+            if (!state.diagramEditContext) return false;
+            try {
+              await svgEditCall("setSvgString", [svgString], 1500);
+              state.svgEditReady = true;
+              statusEl.hidden = true;
+              return true;
+            } catch {
+              /* editor still booting; retry */
+            }
+          }
+
+          statusEl.textContent =
+            "Visual editor unavailable (offline or CDN blocked) — use the SVG source tab instead.";
+          if (state.diagramEditContext && state.diagramEditTab === "visual") {
+            setDiagramTabUi(dialog, "source");
+            renderDiagramSourcePreview(dialog);
+          }
+          return false;
+        }
+
+        async function finishDiagramEdit(dialog, ctx) {
+          let svgString = null;
+          if (state.diagramEditTab === "visual" && state.svgEditReady) {
+            try {
+              svgString = await svgEditCall("getSvgString", [], 4000);
+            } catch {
+              svgString = null;
+            }
+          }
+          if (typeof svgString !== "string" || !svgString.trim()) {
+            svgString = dialog.querySelector("#diagram-svg-source").value;
+          }
+          const clean = sanitizeSvgString(svgString);
+          if (!clean) {
+            showMessage({
+              title: "Diagram not saved",
+              message: "The edited content is not a valid SVG element.",
+              confirmLabel: "OK",
+            });
+            return;
+          }
+          const widthValue = dialog
+            .querySelector("#diagram-display-width")
+            .value.trim();
+          const final = applyDiagramDisplayWidth(clean, widthValue);
+          if (ctx.onConfirm) {
+            ctx.onConfirm(final);
+          }
+        }
+
+        function applyDiagramDisplayWidth(svgString, widthValue) {
+          const tmp = document.createElement("div");
+          tmp.innerHTML = svgString;
+          const svg = tmp.querySelector("svg");
+          if (!svg) return svgString;
+          const width = Number(widthValue);
+          if (widthValue && Number.isFinite(width) && width > 0) {
+            svg.style.width = `${clamp(Math.round(width), 40, 680)}px`;
+            svg.style.height = "auto";
+          } else {
+            svg.style.removeProperty("width");
+            svg.style.removeProperty("height");
+            if (!svg.getAttribute("style")) {
+              svg.removeAttribute("style");
+            }
+          }
+          return svg.outerHTML;
+        }
+
+        function readDiagramDisplayWidth(svgString) {
+          const tmp = document.createElement("div");
+          tmp.innerHTML = svgString;
+          const svg = tmp.querySelector("svg");
+          if (!svg) return "";
+          const m = (svg.getAttribute("style") || "").match(
+            /width:\s*([\d.]+)px/,
+          );
+          return m ? String(Math.round(Number(m[1]))) : "";
+        }
+
+        function openDiagramEditorDialog(svgString, onConfirm) {
+          const dialog = ensureDiagramEditorDialog();
+          const sourceArea = dialog.querySelector("#diagram-svg-source");
+          const initial = svgString || STARTER_SVG;
+          sourceArea.value = formatHtmlSource(initial);
+          dialog.querySelector("#diagram-display-width").value =
+            readDiagramDisplayWidth(initial);
+          state.diagramEditContext = { onConfirm };
+          dialog.returnValue = "";
+          setDiagramTabUi(dialog, "visual");
+          renderDiagramSourcePreview(dialog);
+          showAsNonModal(dialog);
+          prepareSvgEditFrame(dialog, initial).catch((err) =>
+            console.error("SVG editor failed to start:", err),
+          );
+        }
+
+        /* ----------- In-place embed editing from the worksheet ------------ */
+
+        function updateCachedEmbedSource(embedEl, kind, mutate) {
+          const target = embedEl.closest("[data-original-latex]");
+          if (!target) return;
+          const isGraph = kind === "fn-graph";
+          const selector = isGraph ? ".fn-graph" : "svg";
+          const isCandidate = (el) =>
+            isGraph ||
+            !el.closest(".fn-graph, .katex, .marks, .no-pdf");
+
+          const live = Array.from(target.querySelectorAll(selector)).filter(
+            isCandidate,
+          );
+          const index = live.indexOf(embedEl);
+          if (index < 0) return;
+
+          const doc = new DOMParser().parseFromString(
+            `<div id="__root">${target.dataset.originalLatex || ""}</div>`,
+            "text/html",
+          );
+          const root = doc.getElementById("__root");
+          if (!root) return;
+          const cached = Array.from(root.querySelectorAll(selector)).filter(
+            isCandidate,
+          );
+          const cachedEl = cached[index];
+          if (!cachedEl) return;
+          mutate(cachedEl, doc);
+          target.dataset.originalLatex = root.innerHTML;
+        }
+
+        function applyGraphEditInPlace(div, spec) {
+          const json = JSON.stringify(spec);
+          updateCachedEmbedSource(div, "fn-graph", (cachedEl) => {
+            cachedEl.setAttribute("data-graph", json);
+            cachedEl.innerHTML = "";
+          });
+          div.setAttribute("data-graph", json);
+          renderFunctionGraph(div);
+          scheduleLayout();
+        }
+
+        function applyDiagramEditInPlace(svg, newSvgString) {
+          updateCachedEmbedSource(svg, "svg", (cachedEl, doc) => {
+            const tmp = doc.createElement("div");
+            tmp.innerHTML = newSvgString;
+            const next = tmp.querySelector("svg");
+            if (next) {
+              next.classList.remove("worksheet-diagram");
+              if (!next.getAttribute("class")) {
+                next.removeAttribute("class");
+              }
+              cachedEl.replaceWith(next);
+            }
+          });
+          const tmp = document.createElement("div");
+          tmp.innerHTML = newSvgString;
+          const next = tmp.querySelector("svg");
+          if (next) {
+            svg.replaceWith(next);
+            const scope = next.closest(".question-prompt, .answer-body");
+            decorateDiagramSvgs(scope || els.content);
+          }
+          scheduleLayout();
+        }
+
+        function openEmbedEditor(embed) {
+          if (embed.classList.contains("fn-graph")) {
+            const spec =
+              normalizeGraphSpec(embed.getAttribute("data-graph")) ||
+              cloneDefaultGraphSpec();
+            openGraphEditorDialog(spec, (newSpec) =>
+              applyGraphEditInPlace(embed, newSpec),
+            );
+          } else {
+            openDiagramEditorDialog(embed.outerHTML, (newSvg) =>
+              applyDiagramEditInPlace(embed, newSvg),
+            );
+          }
+        }
+
+        function resizeEmbed(embed, factor) {
+          if (embed.classList.contains("fn-graph")) {
+            const spec = normalizeGraphSpec(embed.getAttribute("data-graph"));
+            if (!spec) return;
+            spec.width = clamp(Math.round(spec.width * factor), 120, 680);
+            spec.height = clamp(Math.round(spec.height * factor), 100, 600);
+            applyGraphEditInPlace(embed, spec);
+          } else {
+            const current = embed.getBoundingClientRect().width || 200;
+            const next = clamp(Math.round(current * factor), 40, 680);
+            updateCachedEmbedSource(embed, "svg", (cachedEl) => {
+              cachedEl.style.width = `${next}px`;
+              cachedEl.style.height = "auto";
+            });
+            embed.style.width = `${next}px`;
+            embed.style.height = "auto";
+            scheduleLayout();
+          }
+          positionEmbedToolbar(embed);
+        }
+
+        /* -------------------- Floating embed toolbar ---------------------- */
+
+        let embedToolbarHideTimer = 0;
+
+        function cancelEmbedToolbarHide() {
+          if (embedToolbarHideTimer) {
+            clearTimeout(embedToolbarHideTimer);
+            embedToolbarHideTimer = 0;
+          }
+        }
+
+        function hideEmbedToolbar() {
+          cancelEmbedToolbarHide();
+          const bar = document.getElementById("embed-toolbar");
+          if (bar) bar.classList.remove("is-visible");
+          state.embedToolbarTarget = null;
+        }
+
+        function scheduleEmbedToolbarHide() {
+          cancelEmbedToolbarHide();
+          embedToolbarHideTimer = setTimeout(hideEmbedToolbar, 1000);
+        }
+
+        function positionEmbedToolbar(embed) {
+          const bar = document.getElementById("embed-toolbar");
+          if (!bar || !embed.isConnected) return;
+          const rect = embed.getBoundingClientRect();
+          bar.style.top = `${window.scrollY + rect.top - 4}px`;
+          bar.style.left = `${Math.max(
+            8,
+            window.scrollX + rect.right - bar.offsetWidth,
+          )}px`;
+        }
+
+        function showEmbedToolbarFor(embed) {
+          cancelEmbedToolbarHide();
+          const bar = document.getElementById("embed-toolbar");
+          if (!bar) return;
+          state.embedToolbarTarget = embed;
+          bar.classList.add("is-visible");
+          positionEmbedToolbar(embed);
+        }
+
+        function ensureEmbedToolbar() {
+          if (document.getElementById("embed-toolbar")) return;
+          const bar = document.createElement("div");
+          bar.id = "embed-toolbar";
+          bar.className = "no-pdf";
+          bar.innerHTML = `
+            <button type="button" data-embed-action="edit" title="Edit this diagram or graph">Edit</button>
+            <button type="button" data-embed-action="shrink" title="Reduce display size" aria-label="Reduce display size">−</button>
+            <button type="button" data-embed-action="grow" title="Increase display size" aria-label="Increase display size">+</button>
+          `;
+          document.body.appendChild(bar);
+
+          bar.addEventListener("pointerenter", cancelEmbedToolbarHide);
+          bar.addEventListener("pointerleave", scheduleEmbedToolbarHide);
+          bar.addEventListener("click", (event) => {
+            const button = event.target.closest("[data-embed-action]");
+            const embed = state.embedToolbarTarget;
+            if (!button || !embed) return;
+            const action = button.dataset.embedAction;
+            if (action === "edit") {
+              hideEmbedToolbar();
+              openEmbedEditor(embed);
+            } else if (action === "shrink") {
+              resizeEmbed(embed, 1 / 1.1);
+            } else if (action === "grow") {
+              resizeEmbed(embed, 1.1);
+            }
+          });
+
+          els.content.addEventListener("pointerover", (event) => {
+            const embed = event.target.closest(
+              ".fn-graph, svg.worksheet-diagram",
+            );
+            if (embed) {
+              showEmbedToolbarFor(embed);
+            }
+          });
+          els.content.addEventListener("pointerout", (event) => {
+            const embed = event.target.closest(
+              ".fn-graph, svg.worksheet-diagram",
+            );
+            if (embed && embed === state.embedToolbarTarget) {
+              scheduleEmbedToolbarHide();
+            }
+          });
         }
 
         function ensureLatexEditDialog() {
@@ -3647,6 +5155,17 @@
             startSpaceDrag(event, handle);
           });
 
+          els.content.addEventListener("dblclick", (event) => {
+            const embed = event.target.closest(
+              ".fn-graph, svg.worksheet-diagram",
+            );
+            if (!embed || embed.closest(".no-pdf")) {
+              return;
+            }
+            event.preventDefault();
+            openEmbedEditor(embed);
+          });
+
           els.content.addEventListener("click", (event) => {
             const button = event.target.closest("button[data-action]");
             if (!button) {
@@ -4386,6 +5905,114 @@
           );
         }
 
+        // html2canvas only partially supports inline SVG (clip paths, text
+        // anchors), so diagrams and rendered graphs are swapped for 2x PNG
+        // snapshots for the duration of the export.
+        async function rasterizeSvgsForExport(root) {
+          const svgs = Array.from(
+            root.querySelectorAll(".fn-graph svg, svg.worksheet-diagram"),
+          );
+          const swaps = [];
+          await Promise.all(
+            svgs.map(async (svg) => {
+              try {
+                const img = await svgToPngImage(svg);
+                if (!img) return;
+                svg.replaceWith(img);
+                swaps.push({ svg, img });
+              } catch (err) {
+                console.warn("SVG rasterize failed; exporting as-is:", err);
+              }
+            }),
+          );
+          return () => {
+            swaps.forEach(({ svg, img }) => {
+              img.replaceWith(svg);
+            });
+          };
+        }
+
+        async function svgToPngImage(svg) {
+          const rect = svg.getBoundingClientRect();
+          const width = Math.max(1, Math.round(rect.width));
+          const height = Math.max(1, Math.round(rect.height));
+          const clone = svg.cloneNode(true);
+          clone.setAttribute("width", String(width));
+          clone.setAttribute("height", String(height));
+          clone.style.removeProperty("width");
+          clone.style.removeProperty("height");
+          if (!clone.getAttribute("xmlns")) {
+            clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+          }
+          inlineSvgComputedStyles(svg, clone);
+          const markup = new XMLSerializer().serializeToString(clone);
+          const blob = new Blob([markup], {
+            type: "image/svg+xml;charset=utf-8",
+          });
+          const url = URL.createObjectURL(blob);
+          try {
+            const image = await loadImageFromUrl(url);
+            const canvas = document.createElement("canvas");
+            canvas.width = width * 2;
+            canvas.height = height * 2;
+            const ctx = canvas.getContext("2d");
+            ctx.scale(2, 2);
+            ctx.drawImage(image, 0, 0, width, height);
+            const img = document.createElement("img");
+            img.src = canvas.toDataURL("image/png");
+            img.width = width;
+            img.height = height;
+            img.alt = svg.getAttribute("aria-label") || "";
+            return img;
+          } finally {
+            URL.revokeObjectURL(url);
+          }
+        }
+
+        function loadImageFromUrl(url) {
+          return new Promise((resolve, reject) => {
+            const image = new Image();
+            image.onload = () => resolve(image);
+            image.onerror = () =>
+              reject(new Error("SVG image failed to load"));
+            image.src = url;
+          });
+        }
+
+        function inlineSvgComputedStyles(source, clone) {
+          const props = [
+            "fill",
+            "stroke",
+            "stroke-width",
+            "stroke-dasharray",
+            "stroke-linecap",
+            "stroke-linejoin",
+            "opacity",
+            "fill-opacity",
+            "stroke-opacity",
+            "font-family",
+            "font-size",
+            "font-weight",
+            "font-style",
+            "text-anchor",
+            "dominant-baseline",
+            "visibility",
+          ];
+          const sourceEls = [source, ...source.querySelectorAll("*")];
+          const cloneEls = [clone, ...clone.querySelectorAll("*")];
+          sourceEls.forEach((el, i) => {
+            const copy = cloneEls[i];
+            if (!copy || !(el instanceof Element)) return;
+            const computed = window.getComputedStyle(el);
+            props.forEach((prop) => {
+              const value = computed.getPropertyValue(prop);
+              if (value) {
+                copy.style.setProperty(prop, value);
+              }
+            });
+          });
+        }
+
         async function savePdf() {
           const page = getPage();
           const filename = makeFilename();
@@ -4393,9 +6020,12 @@
           els.savePdf.disabled = true;
           els.savePdfLabel.textContent = "Saving";
 
+          let restoreSvgs = null;
           try {
             updateScreenPagination();
             els.body.classList.add("exporting");
+            await nextFrame();
+            restoreSvgs = await rasterizeSvgsForExport(els.content);
             await nextFrame();
             await waitForPdfLibrary();
 
@@ -4433,6 +6063,7 @@
                     ".answers-title",
                     ".question-prompt",
                     ".answer-body",
+                    ".fn-graph",
                   ],
                 },
               })
@@ -4447,6 +6078,9 @@
               confirmLabel: "OK",
             });
           } finally {
+            if (restoreSvgs) {
+              restoreSvgs();
+            }
             els.body.classList.remove("exporting");
             els.savePdf.disabled = false;
             els.savePdfLabel.textContent = "Save PDF";
@@ -4650,6 +6284,9 @@
             "#message-dialog",
             "#latex-edit-dialog",
             "#image-insert-dialog",
+            "#graph-editor-dialog",
+            "#diagram-editor-dialog",
+            "#embed-toolbar",
             "#dialog-backdrop",
             ".screen-page-spacer",
             ".manual-break-spacer",
@@ -4659,6 +6296,13 @@
           ];
           ephemeralSelectors.forEach((sel) => {
             clone.querySelectorAll(sel).forEach((n) => n.remove());
+          });
+
+          // Rendered plots are ephemeral: keep only the data-graph spec and
+          // re-render when the saved file is opened.
+          clone.querySelectorAll(".fn-graph").forEach((n) => {
+            n.innerHTML = "";
+            n.removeAttribute("data-graph-error");
           });
 
           clone.querySelectorAll(".starts-new-page").forEach((n) => {
