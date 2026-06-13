@@ -568,14 +568,17 @@
       }
 
       .fn-graph {
-        display: block;
+        display: flex;
+        align-items: flex-start;
+        gap: 4mm;
         margin: 3mm 0;
         break-inside: avoid;
         page-break-inside: avoid;
       }
 
-      .fn-graph svg {
+      .fn-graph > svg {
         display: block;
+        flex: 0 0 auto;
       }
 
       .fn-graph[data-graph-error]::before {
@@ -590,16 +593,17 @@
 
       .fn-graph-legend {
         display: flex;
-        flex-wrap: wrap;
-        gap: 1.5mm 5mm;
-        margin-top: 1mm;
+        flex-direction: column;
+        gap: 1.5mm;
         font-size: 9pt;
         color: #4b5563;
+        flex: 0 0 auto;
       }
 
       .fn-graph-legend .legend-item {
         display: inline-flex;
         align-items: center;
+        white-space: nowrap;
       }
 
       .fn-graph-legend .legend-swatch {
@@ -759,8 +763,12 @@
         min-height: 64px;
       }
 
-      .question > .pagination-tools {
+      .question > .pagination-tools.pagination-tools--spacing {
         top: var(--question-tools-top, 0px);
+      }
+
+      .question > .pagination-tools.pagination-tools--header {
+        top: 0;
       }
 
       .hover-trigger {
@@ -1342,9 +1350,15 @@
 
       .ql-fn-graph-preview {
         pointer-events: none;
-        display: block;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
         font-size: 0.85rem;
         color: #155e75;
+      }
+
+      .ql-fn-graph-preview > svg {
+        flex: 0 0 auto;
       }
 
       .ql-insert-graph::before {
@@ -1433,7 +1447,9 @@
 
       #graph-editor-preview {
         display: flex;
+        align-items: flex-start;
         justify-content: center;
+        gap: 12px;
         min-height: 100px;
         max-height: 46vh;
         overflow: auto;
@@ -1441,6 +1457,10 @@
         border-radius: 6px;
         padding: 6px;
         background: #fff;
+      }
+
+      #graph-editor-preview > svg {
+        flex: 0 0 auto;
       }
 
       #graph-editor-preview .graph-preview-error {
@@ -1461,17 +1481,223 @@
 
       #svgedit-host {
         position: relative;
-        display: block;
+        display: flex;
+        flex-direction: column;
         width: 100%;
         height: min(560px, 62vh);
-        overflow: auto;
+        overflow: hidden;
         border: 1px solid #e5e7eb;
         border-radius: 6px;
         background: #fff;
       }
 
-      #svgedit-host #svg_editor {
+      .mini-svg-editor {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .mini-svg-editor .mse-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 6px 8px;
+        border-bottom: 1px solid #e5e7eb;
+        background: #f8fafc;
+        align-items: center;
+      }
+
+      .mini-svg-editor .mse-toolgroup {
+        display: flex;
+        gap: 2px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        padding: 2px;
+        background: #fff;
+      }
+
+      .mini-svg-editor .mse-tool {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 26px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        font-size: 0.9rem;
+        border-radius: 3px;
+        color: #1f2937;
+      }
+
+      .mini-svg-editor .mse-tool svg {
+        width: 16px;
+        height: 16px;
+        pointer-events: none;
+      }
+
+      .mini-svg-editor .mse-tool.is-active {
+        background: #0f766e;
+        color: #fff;
+      }
+
+      .mini-svg-editor .mse-tool:hover:not(.is-active):not([disabled]) {
+        background: #e5e7eb;
+      }
+
+      .mini-svg-editor .mse-tool[disabled] {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .mini-svg-editor .mse-sep {
+        width: 1px;
+        align-self: stretch;
+        background: #d1d5db;
+        margin: 0 2px;
+      }
+
+      .mini-svg-editor .mse-label {
+        font-size: 0.78rem;
+        color: #374151;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .mini-svg-editor .mse-zoom-readout {
+        font-size: 0.72rem;
+        color: #475569;
+        min-width: 34px;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .mini-svg-editor select,
+      .mini-svg-editor input[type="number"] {
+        font-size: 0.78rem;
+        padding: 2px 4px;
+        border: 1px solid #d1d5db;
+        border-radius: 3px;
+        background: #fff;
+      }
+
+      .mini-svg-editor .mse-canvas-wrap {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+        background:
+          repeating-conic-gradient(#f1f5f9 0% 25%, #fff 0% 50%) 50% / 16px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+      }
+
+      .mini-svg-editor .mse-canvas-wrap.is-panning,
+      .mini-svg-editor .mse-canvas-wrap.is-panning svg.mse-canvas {
+        cursor: grabbing;
+      }
+
+      .mini-svg-editor .mse-canvas-wrap.is-pan-ready svg.mse-canvas {
+        cursor: grab;
+      }
+
+      .mini-svg-editor svg.mse-canvas {
+        background: #fff;
+        display: block;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      .mini-svg-editor svg.mse-canvas.is-select-mode .mse-content > * {
+        cursor: grab;
+      }
+
+      .mini-svg-editor .mse-canvas-wrap.is-pan-ready svg.mse-canvas,
+      .mini-svg-editor .mse-canvas-wrap.is-pan-ready svg.mse-canvas .mse-content > * {
+        cursor: grab;
+      }
+
+      .mini-svg-editor .mse-canvas-wrap.is-panning svg.mse-canvas,
+      .mini-svg-editor .mse-canvas-wrap.is-panning svg.mse-canvas .mse-content > * {
+        cursor: grabbing;
+      }
+
+      .mini-svg-editor svg.mse-canvas .mse-handle {
+        fill: #fff;
+        stroke: #0f766e;
+        stroke-width: 1.5;
+        cursor: nwse-resize;
+      }
+
+      .mini-svg-editor svg.mse-canvas .mse-handle.mse-handle-move {
+        cursor: grab;
+      }
+
+      .mini-svg-editor svg.mse-canvas .mse-handle.mse-handle-rotate {
+        cursor: url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M20%2012a8%208%200%201%201-2.6-5.9M20%204v5h-5%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cpath%20d%3D%22M20%2012a8%208%200%201%201-2.6-5.9M20%204v5h-5%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E") 12 12, grab;
+        fill: #0f766e;
+        stroke: #fff;
+        stroke-width: 1.5;
+      }
+
+      .mini-svg-editor svg.mse-canvas .mse-rotate-tether {
+        stroke: #0f766e;
+        stroke-width: 1;
+        stroke-dasharray: 2 2;
+        fill: none;
+        pointer-events: none;
+      }
+
+      .mini-svg-editor svg.mse-canvas .mse-selection {
+        fill: none;
+        stroke: #0f766e;
+        stroke-dasharray: 4 3;
+        stroke-width: 1;
+        pointer-events: none;
+      }
+
+      .mini-svg-editor input[type="color"] {
+        width: 28px;
+        height: 24px;
+        border: 1px solid #d1d5db;
+        padding: 0;
+        background: #fff;
+      }
+
+      .mini-svg-editor .mse-arrow-flyout {
         position: relative;
+      }
+
+      .mini-svg-editor .mse-arrow-popover {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        z-index: 6;
+        display: none;
+        gap: 2px;
+        padding: 4px;
+        background: #fff;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.16);
+      }
+
+      .mini-svg-editor .mse-arrow-flyout.is-enabled:hover .mse-arrow-popover,
+      .mini-svg-editor .mse-arrow-flyout.is-enabled:focus-within .mse-arrow-popover {
+        display: flex;
+      }
+
+      .mini-svg-editor svg.mse-canvas .mse-marquee {
+        fill: rgba(15, 118, 110, 0.08);
+        stroke: #0f766e;
+        stroke-dasharray: 4 3;
+        stroke-width: 1;
+        pointer-events: none;
       }
 
       #diagram-svg-source {
@@ -2436,14 +2662,7 @@
           { left: "$", right: "$", display: false },
         ];
 
-        // SVG-edit is loaded in-page (same origin as the worksheet) and
-        // mounted into a div, rather than in a cross-origin iframe: the iframe
-        // approach trips the browser's same-origin policy (the editor's
-        // startup reaches back into our frame). In-page we can also drive the
-        // canvas API directly instead of postMessage. Pinned exact version so
-        // the editor's many sub-modules stay internally consistent.
-        const SVGEDIT_MODULE_URL =
-          "https://unpkg.com/svgedit@7.3.2/dist/editor/Editor.js";
+        // In-house mini SVG editor -- see createMiniSvgEditor below.
 
         const GRAPH_COLOR_CYCLE = [
           "#0f766e",
@@ -2515,18 +2734,6 @@
           decorateDiagramSvgs(els.content);
           decorateEmbedMarkers();
           renderAllFunctionGraphs(els.content);
-
-          // Warm the SVG-edit module in the background once the page has
-          // loaded so the diagram editor mounts quickly on first open.
-          // Best-effort: ignore failures (offline falls back to the source tab).
-          const warmSvgEditor = () => {
-            import(SVGEDIT_MODULE_URL).catch(() => {});
-          };
-          if (document.readyState === "complete") {
-            warmSvgEditor();
-          } else {
-            window.addEventListener("load", warmSvgEditor, { once: true });
-          }
 
           if (document.fonts && document.fonts.ready) {
             document.fonts.ready.then(scheduleLayout);
@@ -2917,6 +3124,32 @@
             });
           });
 
+          // Diagram dblclick is also bound directly inside RawHtmlBlot.create
+          // (so freshly inserted SVGs work too); this delegated handler
+          // catches blots that were materialised by Quill's clipboard pipeline
+          // when loading existing content, where create() never runs.
+          quill.root.addEventListener("dblclick", (event) => {
+            const wrap = event.target.closest(
+              '.ql-raw-html[data-raw-type="svg"]',
+            );
+            if (!wrap || !quill.root.contains(wrap)) return;
+            event.preventDefault();
+            event.stopPropagation();
+            let current = "";
+            try {
+              current = decodeURIComponent(
+                wrap.getAttribute("data-raw-html") || "",
+              );
+            } catch {}
+            openDiagramEditorDialog(current, (newSvg) => {
+              wrap.setAttribute("data-raw-html", encodeURIComponent(newSvg));
+              const preview = wrap.querySelector(
+                ":scope > .ql-raw-html-content",
+              );
+              if (preview) preview.innerHTML = newSvg;
+            });
+          });
+
           state.quillInstance = quill;
           return quill;
         }
@@ -3073,11 +3306,21 @@
           if (!html || !/<svg[\s>]/i.test(html)) return false;
           const tmp = document.createElement("div");
           tmp.innerHTML = html;
-          return (
-            tmp.children.length === 1 &&
-            tmp.firstElementChild.tagName.toLowerCase() === "svg" &&
-            !(tmp.textContent || "").trim()
-          );
+          if (
+            tmp.children.length !== 1 ||
+            tmp.firstElementChild.tagName.toLowerCase() !== "svg"
+          ) {
+            return false;
+          }
+          // Only stray text *around* the SVG disqualifies it -- text inside
+          // the SVG (e.g. a <text> label like "r = 4 cm") is legitimate
+          // diagram content.
+          for (const node of tmp.childNodes) {
+            if (node.nodeType === 3 && (node.nodeValue || "").trim() !== "") {
+              return false;
+            }
+          }
+          return true;
         }
 
         function buildFnGraphBlotContent(node) {
@@ -3100,6 +3343,7 @@
               window.functionPlot(
                 graphSpecToPlotOptions(spec, preview, 280),
               );
+              appendGraphLegend(preview, spec);
               return;
             } catch {}
           }
@@ -3160,9 +3404,10 @@
               "data-raw-html",
               encodeURIComponent(svg.outerHTML),
             );
+            wrap.setAttribute("data-raw-type", "svg");
             const label = doc.createElement("span");
             label.className = "ql-raw-html-label";
-            label.textContent = "Custom HTML (preserved)";
+            label.textContent = "Diagram (double-click to edit)";
             const content = doc.createElement("span");
             content.className = "ql-raw-html-content";
             content.innerHTML = svg.outerHTML;
@@ -3738,6 +3983,7 @@
           }
           try {
             window.functionPlot(graphSpecToPlotOptions(spec, preview, 560));
+            appendGraphLegend(preview, spec);
           } catch (err) {
             preview.innerHTML = `<span class="graph-preview-error">Could not plot: ${
               err && err.message ? err.message : "invalid expression"
@@ -3895,84 +4141,1574 @@
           return svg.outerHTML;
         }
 
-        // Mount SVG-edit once (in-page, same origin) and reuse it across opens.
-        // Resolves to the editor instance, or rejects if the module/mount
-        // fails (e.g. offline) — callers then fall back to the source tab.
-        let svgEditorPromise = null;
+        // Minimal in-page SVG editor: select / move / resize / rotate,
+        // draw rect / ellipse / line / text / freehand path, undo-redo,
+        // z-order, duplicate, zoom + pan. Built directly against the SVG
+        // DOM, no external deps.
+        function createMiniSvgEditor(hostEl, opts) {
+          const SVG_NS = "http://www.w3.org/2000/svg";
+          const defaultWidth = (opts && opts.width) || 640;
+          const defaultHeight = (opts && opts.height) || 480;
+          const instanceId = Math.random().toString(36).slice(2, 8);
 
-        function loadSvgEditor() {
-          if (svgEditorPromise) return svgEditorPromise;
-          svgEditorPromise = (async () => {
-            const dialog = ensureDiagramEditorDialog();
-            const host = dialog.querySelector("#svgedit-host");
-            const mod = await import(SVGEDIT_MODULE_URL);
-            const Editor = mod.default || mod.Editor;
-            if (typeof Editor !== "function") {
-              throw new Error("SVG-edit Editor export not found");
-            }
-            const editor = new Editor(host);
-            try {
-              if (typeof editor.setConfig === "function") {
-                editor.setConfig({
-                  allowInitialUserOverride: false,
-                  noStorageOnLoad: true,
-                  showRulers: false,
-                  dimensions: [640, 480],
-                });
-              }
-            } catch (err) {
-              console.warn("SVG-edit setConfig rejected an option:", err);
-            }
-            editor.init();
-            await waitForCondition(
-              () =>
-                editor.svgCanvas &&
-                typeof editor.svgCanvas.setSvgString === "function",
-              15000,
-            );
-            state.svgEditor = editor;
-            return editor;
-          })();
-          svgEditorPromise.catch(() => {
-            // Allow a later retry if the first attempt failed.
-            svgEditorPromise = null;
+          let vb = { x: 0, y: 0, w: defaultWidth, h: defaultHeight };
+          let tool = "select";
+          let zoom = 1;
+          let spaceDown = false;
+          const style = {
+            stroke: "#111827",
+            fill: "none",
+            strokeWidth: 2,
+            dashStyle: "solid",
+            fontSize: 16,
+          };
+          let selected = null;
+          let selection = [];
+          let drag = null;
+          const history = [];
+          let historyIdx = -1;
+          const HISTORY_LIMIT = 60;
+
+          // SVG icon paths drawn against a 16x16 viewBox. Strokes use
+          // currentColor so .is-active inverts cleanly.
+          const ICONS = {
+            select:
+              '<path d="M3 2l9 6-4 1 2.5 5-2 1-2.5-5-3 3z" fill="currentColor"/>',
+            rect:
+              '<rect x="2.5" y="3.5" width="11" height="9" fill="none" stroke="currentColor" stroke-width="1.5"/>',
+            ellipse:
+              '<ellipse cx="8" cy="8" rx="5.5" ry="4" fill="none" stroke="currentColor" stroke-width="1.5"/>',
+            line:
+              '<line x1="2.5" y1="13.5" x2="13.5" y2="2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+            text:
+              '<path d="M3 3h10v2.5H9.5V13H6.5V5.5H3z" fill="currentColor"/>',
+            free:
+              '<path d="M2 13c2-2 2.5-7 5-7s2 6 4 6 1.5-4 3-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+            arrow:
+              '<path d="M2 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
+            arrowOpenEnd:
+              '<path d="M1 8h12M10 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
+            arrowOpenBoth:
+              '<path d="M2 8h12M11 4l3 4-3 4M5 4l-3 4 3 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
+            arrowSolidEnd:
+              '<path d="M1 8h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 4l4 4-4 4z" fill="currentColor"/>',
+            arrowSolidBoth:
+              '<path d="M5 8h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 4l4 4-4 4z M6 4l-4 4 4 4z" fill="currentColor"/>',
+            undo:
+              '<path d="M4 7h6a3 3 0 0 1 0 6H7M4 7l2-2M4 7l2 2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
+            redo:
+              '<path d="M12 7H6a3 3 0 0 0 0 6h3M12 7l-2-2M12 7l-2 2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
+            duplicate:
+              '<rect x="2.5" y="4.5" width="7" height="8" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="6.5" y="2.5" width="7" height="8" fill="none" stroke="currentColor" stroke-width="1.4"/>',
+            front:
+              '<rect x="4.5" y="4.5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="2.5" y="2.5" width="6" height="6" fill="currentColor" opacity="0.18" stroke="currentColor" stroke-width="1.4"/>',
+            back:
+              '<rect x="2.5" y="2.5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="7.5" y="7.5" width="6" height="6" fill="currentColor" opacity="0.18" stroke="currentColor" stroke-width="1.4"/>',
+            "delete":
+              '<path d="M3 5h10M6 5V3h4v2M5 5l1 9h4l1-9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
+            zoomIn:
+              '<circle cx="7" cy="7" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 7h4M7 5v4M10 10l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+            zoomOut:
+              '<circle cx="7" cy="7" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 7h4M10 10l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+            zoomReset:
+              '<rect x="3" y="3" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 6l4 4M10 6l-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>',
+            canvasWider:
+              '<rect x="3.5" y="5" width="9" height="6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2 8h1.5M12.5 8H14M1 6.5L1 9.5M15 6.5v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>',
+            canvasNarrower:
+              '<rect x="2.5" y="5" width="11" height="6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M5 8h6M5 6.5L4 8l1 1.5M11 6.5L12 8l-1 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>',
+            canvasTaller:
+              '<rect x="5" y="3.5" width="6" height="9" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M8 2v1.5M8 12.5V14M6.5 1h3M6.5 15h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>',
+            canvasShorter:
+              '<rect x="5" y="2.5" width="6" height="11" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M8 5v6M6.5 5L8 4l1.5 1M6.5 11L8 12l1.5-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>',
+          };
+
+          const root = document.createElement("div");
+          root.className = "mini-svg-editor";
+
+          const toolbar = document.createElement("div");
+          toolbar.className = "mse-toolbar";
+
+          const makeSep = () => {
+            const s = document.createElement("span");
+            s.className = "mse-sep";
+            return s;
+          };
+          const makeLabel = (t) => {
+            const s = document.createElement("span");
+            s.className = "mse-label";
+            s.textContent = t;
+            return s;
+          };
+          const makeIconBtn = (iconKey, label, onClick) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "mse-tool";
+            btn.setAttribute("aria-label", label);
+            btn.title = label;
+            btn.innerHTML = `<svg viewBox="0 0 16 16" aria-hidden="true">${ICONS[iconKey] || ""}</svg>`;
+            if (onClick) btn.addEventListener("click", onClick);
+            return btn;
+          };
+
+          const toolGroup = document.createElement("div");
+          toolGroup.className = "mse-toolgroup";
+          const TOOLS = [
+            ["select", "Select"],
+            ["rect", "Rectangle"],
+            ["ellipse", "Ellipse"],
+            ["line", "Line"],
+            ["text", "Text"],
+            ["free", "Freehand"],
+          ];
+          TOOLS.forEach(([id, label]) => {
+            const btn = makeIconBtn(id, label, () => setTool(id));
+            btn.dataset.tool = id;
+            if (id === tool) btn.classList.add("is-active");
+            toolGroup.appendChild(btn);
           });
-          return svgEditorPromise;
+          toolbar.appendChild(toolGroup);
+
+          toolbar.appendChild(makeSep());
+          toolbar.appendChild(makeLabel("Stroke"));
+          const strokeInput = document.createElement("input");
+          strokeInput.type = "color";
+          strokeInput.value = style.stroke;
+          strokeInput.title = "Stroke colour";
+          strokeInput.addEventListener("input", () => {
+            style.stroke = strokeInput.value;
+            selection.forEach(applyStyles);
+          });
+          strokeInput.addEventListener("change", () => {
+            if (selection.length) commit();
+          });
+          toolbar.appendChild(strokeInput);
+
+          toolbar.appendChild(makeLabel("Fill"));
+          const fillInput = document.createElement("input");
+          fillInput.type = "color";
+          fillInput.value = "#cccccc";
+          fillInput.title = "Fill colour";
+          fillInput.addEventListener("input", () => {
+            // Picking a fill colour implicitly turns off the "none" toggle.
+            if (fillNone.checked) fillNone.checked = false;
+            style.fill = fillInput.value;
+            selection.forEach(applyStyles);
+          });
+          fillInput.addEventListener("change", () => {
+            if (selection.length) commit();
+          });
+          toolbar.appendChild(fillInput);
+          const fillNoneLabel = document.createElement("label");
+          fillNoneLabel.className = "mse-label";
+          const fillNone = document.createElement("input");
+          fillNone.type = "checkbox";
+          fillNone.checked = true;
+          fillNone.title = "No fill";
+          fillNone.addEventListener("change", () => {
+            style.fill = fillNone.checked ? "none" : fillInput.value;
+            if (selection.length) {
+              selection.forEach(applyStyles);
+              commit();
+            }
+          });
+          fillNoneLabel.appendChild(fillNone);
+          fillNoneLabel.appendChild(document.createTextNode(" none"));
+          toolbar.appendChild(fillNoneLabel);
+
+          toolbar.appendChild(makeLabel("W"));
+          const widthSelect = document.createElement("select");
+          widthSelect.title = "Stroke width";
+          [
+            ["1", "Small"],
+            ["2", "Med"],
+            ["4", "Large"],
+          ].forEach(([v, l]) => {
+            const opt = document.createElement("option");
+            opt.value = v;
+            opt.textContent = l;
+            if (Number(v) === style.strokeWidth) opt.selected = true;
+            widthSelect.appendChild(opt);
+          });
+          widthSelect.addEventListener("change", () => {
+            style.strokeWidth = Number(widthSelect.value);
+            if (selection.length) {
+              selection.forEach(applyStyles);
+              commit();
+            }
+          });
+          toolbar.appendChild(widthSelect);
+
+          toolbar.appendChild(makeLabel("Style"));
+          const dashSelect = document.createElement("select");
+          dashSelect.title = "Stroke style";
+          [
+            ["solid", "Solid"],
+            ["dashed", "Dashed"],
+            ["dotted", "Dotted"],
+          ].forEach(([v, l]) => {
+            const opt = document.createElement("option");
+            opt.value = v;
+            opt.textContent = l;
+            if (v === style.dashStyle) opt.selected = true;
+            dashSelect.appendChild(opt);
+          });
+          dashSelect.addEventListener("change", () => {
+            style.dashStyle = dashSelect.value;
+            if (selection.length) {
+              selection.forEach(applyStyles);
+              commit();
+            }
+          });
+          toolbar.appendChild(dashSelect);
+
+          toolbar.appendChild(makeLabel("Font"));
+          const fontSelect = document.createElement("select");
+          fontSelect.title = "Text size";
+          ["10", "12", "14", "16", "20", "24", "32", "48"].forEach((v) => {
+            const opt = document.createElement("option");
+            opt.value = v;
+            opt.textContent = v;
+            if (Number(v) === style.fontSize) opt.selected = true;
+            fontSelect.appendChild(opt);
+          });
+          fontSelect.addEventListener("change", () => {
+            style.fontSize = Number(fontSelect.value);
+            if (selected && selected.tagName.toLowerCase() === "text") {
+              selected.setAttribute("font-size", String(style.fontSize));
+              renderHandles();
+              commit();
+            }
+          });
+          toolbar.appendChild(fontSelect);
+
+          const arrowFlyout = document.createElement("div");
+          arrowFlyout.className = "mse-arrow-flyout";
+          const arrowBtn = makeIconBtn(
+            "arrow",
+            "Arrow on line (hover to pick a style)",
+            null,
+          );
+          arrowBtn.disabled = true;
+          arrowFlyout.appendChild(arrowBtn);
+          const arrowPop = document.createElement("div");
+          arrowPop.className = "mse-arrow-popover";
+          const ARROW_STYLES = [
+            ["open-end", "Open arrow", "arrowOpenEnd"],
+            ["open-both", "Double open arrow", "arrowOpenBoth"],
+            ["solid-end", "Solid arrow", "arrowSolidEnd"],
+            ["solid-both", "Double solid arrow", "arrowSolidBoth"],
+          ];
+          ARROW_STYLES.forEach(([id, label, iconKey]) => {
+            const b = makeIconBtn(iconKey, label, () => pickArrow(id));
+            b.dataset.arrowStyle = id;
+            arrowPop.appendChild(b);
+          });
+          arrowFlyout.appendChild(arrowPop);
+          toolbar.appendChild(arrowFlyout);
+
+          toolbar.appendChild(makeSep());
+          const undoBtn = makeIconBtn("undo", "Undo (Ctrl+Z)", undo);
+          toolbar.appendChild(undoBtn);
+          const redoBtn = makeIconBtn("redo", "Redo (Ctrl+Y)", redo);
+          toolbar.appendChild(redoBtn);
+          const duplicateBtn = makeIconBtn(
+            "duplicate",
+            "Duplicate (Ctrl+D)",
+            duplicateSelected,
+          );
+          duplicateBtn.disabled = true;
+          toolbar.appendChild(duplicateBtn);
+          const frontBtn = makeIconBtn(
+            "front",
+            "Bring forward",
+            bringForward,
+          );
+          frontBtn.disabled = true;
+          toolbar.appendChild(frontBtn);
+          const backBtn = makeIconBtn("back", "Send back", sendBack);
+          backBtn.disabled = true;
+          toolbar.appendChild(backBtn);
+          const deleteBtn = makeIconBtn("delete", "Delete", deleteSelected);
+          deleteBtn.disabled = true;
+          toolbar.appendChild(deleteBtn);
+
+          toolbar.appendChild(makeSep());
+          const zoomOutBtn = makeIconBtn("zoomOut", "Zoom out", () =>
+            setZoom(zoom / 1.25),
+          );
+          toolbar.appendChild(zoomOutBtn);
+          const zoomReadout = document.createElement("span");
+          zoomReadout.className = "mse-zoom-readout";
+          zoomReadout.textContent = "100%";
+          toolbar.appendChild(zoomReadout);
+          const zoomInBtn = makeIconBtn("zoomIn", "Zoom in", () =>
+            setZoom(zoom * 1.25),
+          );
+          toolbar.appendChild(zoomInBtn);
+          const zoomResetBtn = makeIconBtn("zoomReset", "Reset zoom", () =>
+            setZoom(1),
+          );
+          toolbar.appendChild(zoomResetBtn);
+
+          toolbar.appendChild(makeSep());
+          const canvasStep = 40;
+          const canvasMin = 80;
+          const canvasMax = 2400;
+          const widerBtn = makeIconBtn(
+            "canvasWider",
+            "Widen canvas",
+            () => resizeCanvas(canvasStep, 0),
+          );
+          toolbar.appendChild(widerBtn);
+          const narrowerBtn = makeIconBtn(
+            "canvasNarrower",
+            "Narrow canvas",
+            () => resizeCanvas(-canvasStep, 0),
+          );
+          toolbar.appendChild(narrowerBtn);
+          const tallerBtn = makeIconBtn(
+            "canvasTaller",
+            "Taller canvas",
+            () => resizeCanvas(0, canvasStep),
+          );
+          toolbar.appendChild(tallerBtn);
+          const shorterBtn = makeIconBtn(
+            "canvasShorter",
+            "Shorter canvas",
+            () => resizeCanvas(0, -canvasStep),
+          );
+          toolbar.appendChild(shorterBtn);
+
+          const canvasWrap = document.createElement("div");
+          canvasWrap.className = "mse-canvas-wrap";
+          const svgEl = document.createElementNS(SVG_NS, "svg");
+          svgEl.setAttribute("class", "mse-canvas is-select-mode");
+          svgEl.setAttribute("xmlns", SVG_NS);
+          applyViewBoxAttrs();
+          const defsEl = document.createElementNS(SVG_NS, "defs");
+          const contentG = document.createElementNS(SVG_NS, "g");
+          contentG.setAttribute("class", "mse-content");
+          const overlayG = document.createElementNS(SVG_NS, "g");
+          overlayG.setAttribute("class", "mse-overlay");
+          svgEl.appendChild(defsEl);
+          svgEl.appendChild(contentG);
+          svgEl.appendChild(overlayG);
+          canvasWrap.appendChild(svgEl);
+
+          root.appendChild(toolbar);
+          root.appendChild(canvasWrap);
+          hostEl.appendChild(root);
+
+          function applyViewBoxAttrs() {
+            svgEl.setAttribute("viewBox", `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+            svgEl.setAttribute("width", String(Math.round(vb.w * zoom)));
+            svgEl.setAttribute("height", String(Math.round(vb.h * zoom)));
+          }
+
+          function setZoom(z) {
+            zoom = Math.max(0.1, Math.min(8, z));
+            applyViewBoxAttrs();
+            zoomReadout.textContent = `${Math.round(zoom * 100)}%`;
+          }
+
+          function resizeCanvas(dw, dh) {
+            const nw = Math.max(canvasMin, Math.min(canvasMax, vb.w + dw));
+            const nh = Math.max(canvasMin, Math.min(canvasMax, vb.h + dh));
+            if (nw === vb.w && nh === vb.h) return;
+            vb = { ...vb, w: nw, h: nh };
+            applyViewBoxAttrs();
+            renderHandles();
+            commit();
+          }
+
+          function toUserCoords(evt) {
+            const pt = svgEl.createSVGPoint();
+            pt.x = evt.clientX;
+            pt.y = evt.clientY;
+            const ctm = svgEl.getScreenCTM();
+            if (!ctm) return { x: 0, y: 0 };
+            const u = pt.matrixTransform(ctm.inverse());
+            return { x: u.x, y: u.y };
+          }
+
+          function setTool(name) {
+            tool = name;
+            toolbar
+              .querySelectorAll(".mse-tool[data-tool]")
+              .forEach((btn) =>
+                btn.classList.toggle("is-active", btn.dataset.tool === name),
+              );
+            svgEl.classList.toggle("is-select-mode", name === "select");
+            if (name !== "select") deselect();
+          }
+
+          function dashArrayFor(styleName, strokeWidth) {
+            const w = Math.max(1, strokeWidth || 1);
+            if (styleName === "dashed") return `${w * 3} ${w * 2}`;
+            if (styleName === "dotted") return `${w} ${w * 2}`;
+            return null;
+          }
+
+          function applyStyles(el) {
+            const tag = el.tagName.toLowerCase();
+            if (tag === "text") {
+              // Font-size is managed exclusively by the font-size dropdown
+              // so changing stroke/fill on a mixed selection doesn't reset
+              // text sizes the user already chose.
+              el.setAttribute("fill", style.stroke);
+              el.removeAttribute("stroke");
+              return;
+            }
+            el.setAttribute("stroke", style.stroke);
+            el.setAttribute("stroke-width", String(style.strokeWidth));
+            if (tag === "line" || tag === "polyline") {
+              el.setAttribute("fill", "none");
+            } else {
+              el.setAttribute("fill", style.fill);
+            }
+            const da = dashArrayFor(style.dashStyle, style.strokeWidth);
+            if (da) {
+              el.setAttribute("stroke-dasharray", da);
+            } else {
+              el.removeAttribute("stroke-dasharray");
+            }
+          }
+
+          function getAngle(el) {
+            const a = Number(el && el.dataset.mseAngle);
+            return Number.isFinite(a) ? a : 0;
+          }
+
+          function bboxOf(el) {
+            try {
+              return el.getBBox();
+            } catch (err) {
+              return null;
+            }
+          }
+
+          function bboxCenter(el) {
+            const b = bboxOf(el);
+            if (!b) return null;
+            return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+          }
+
+          function setRotation(el, angle, pivot) {
+            const c = pivot || bboxCenter(el);
+            if (!c) return;
+            const a = Number(angle) || 0;
+            el.dataset.mseAngle = String(a);
+            if (a === 0) {
+              el.removeAttribute("transform");
+            } else {
+              el.setAttribute("transform", `rotate(${a} ${c.x} ${c.y})`);
+            }
+          }
+
+          function refreshPivot(el) {
+            const a = getAngle(el);
+            if (a === 0) {
+              el.removeAttribute("transform");
+              return;
+            }
+            const c = bboxCenter(el);
+            if (!c) return;
+            el.setAttribute("transform", `rotate(${a} ${c.x} ${c.y})`);
+          }
+
+          function ensureArrowMarker(kind) {
+            const id = `mse-arrow-${kind}-${instanceId}`;
+            if (defsEl.querySelector(`#${id}`)) return id;
+            const marker = document.createElementNS(SVG_NS, "marker");
+            marker.setAttribute("id", id);
+            marker.setAttribute("viewBox", "0 0 10 10");
+            marker.setAttribute("refX", "9");
+            marker.setAttribute("refY", "5");
+            marker.setAttribute("markerWidth", "5");
+            marker.setAttribute("markerHeight", "5");
+            marker.setAttribute("orient", "auto-start-reverse");
+            marker.setAttribute("markerUnits", "strokeWidth");
+            const path = document.createElementNS(SVG_NS, "path");
+            if (kind === "open") {
+              path.setAttribute("d", "M0,1 L10,5 L0,9");
+              path.setAttribute("fill", "none");
+              path.setAttribute("stroke", "context-stroke");
+              path.setAttribute("stroke-width", "1.6");
+              path.setAttribute("stroke-linecap", "round");
+              path.setAttribute("stroke-linejoin", "round");
+            } else {
+              path.setAttribute("d", "M0,0 L10,5 L0,10 z");
+              path.setAttribute("fill", "context-stroke");
+            }
+            marker.appendChild(path);
+            defsEl.appendChild(marker);
+            return id;
+          }
+
+          function setLineArrowStyle(el, styleId) {
+            el.removeAttribute("marker-start");
+            el.removeAttribute("marker-end");
+            if (!styleId) return;
+            const kind = styleId.startsWith("solid") ? "solid" : "open";
+            const id = ensureArrowMarker(kind);
+            el.setAttribute("marker-end", `url(#${id})`);
+            if (styleId.endsWith("both")) {
+              el.setAttribute("marker-start", `url(#${id})`);
+            }
+          }
+
+          function getLineArrowStyle(el) {
+            const ms = el.getAttribute("marker-start") || "";
+            const me = el.getAttribute("marker-end") || "";
+            if (!me) return null;
+            const kind = me.includes("solid") ? "solid" : "open";
+            return ms ? `${kind}-both` : `${kind}-end`;
+          }
+
+          function pickArrow(styleId) {
+            if (!selected || selected.tagName.toLowerCase() !== "line") return;
+            const current = getLineArrowStyle(selected);
+            setLineArrowStyle(selected, current === styleId ? null : styleId);
+            updateSelectionDependentUi();
+            commit();
+          }
+
+          function refreshArrowPopover() {
+            const current =
+              selected && selected.tagName.toLowerCase() === "line"
+                ? getLineArrowStyle(selected)
+                : null;
+            arrowPop
+              .querySelectorAll("[data-arrow-style]")
+              .forEach((btn) =>
+                btn.classList.toggle(
+                  "is-active",
+                  btn.dataset.arrowStyle === current,
+                ),
+              );
+          }
+
+          function snapshot(el) {
+            const tag = el.tagName.toLowerCase();
+            const num = (k) => Number(el.getAttribute(k)) || 0;
+            const base = { angle: getAngle(el) };
+            if (tag === "rect") {
+              return { ...base, x: num("x"), y: num("y"), w: num("width"), h: num("height") };
+            }
+            if (tag === "ellipse") {
+              return { ...base, cx: num("cx"), cy: num("cy"), rx: num("rx"), ry: num("ry") };
+            }
+            if (tag === "circle") {
+              return { ...base, cx: num("cx"), cy: num("cy"), r: num("r") };
+            }
+            if (tag === "line") {
+              return { ...base, x1: num("x1"), y1: num("y1"), x2: num("x2"), y2: num("y2") };
+            }
+            if (tag === "text") {
+              return { ...base, x: num("x"), y: num("y") };
+            }
+            if (tag === "polyline" || tag === "polygon") {
+              return { ...base, points: el.getAttribute("points") || "" };
+            }
+            return base;
+          }
+
+          function startDraw(pt) {
+            let el = null;
+            if (tool === "rect") {
+              el = document.createElementNS(SVG_NS, "rect");
+              el.setAttribute("x", String(pt.x));
+              el.setAttribute("y", String(pt.y));
+              el.setAttribute("width", "0");
+              el.setAttribute("height", "0");
+            } else if (tool === "ellipse") {
+              el = document.createElementNS(SVG_NS, "ellipse");
+              el.setAttribute("cx", String(pt.x));
+              el.setAttribute("cy", String(pt.y));
+              el.setAttribute("rx", "0");
+              el.setAttribute("ry", "0");
+            } else if (tool === "line") {
+              el = document.createElementNS(SVG_NS, "line");
+              el.setAttribute("x1", String(pt.x));
+              el.setAttribute("y1", String(pt.y));
+              el.setAttribute("x2", String(pt.x));
+              el.setAttribute("y2", String(pt.y));
+            } else if (tool === "free") {
+              el = document.createElementNS(SVG_NS, "polyline");
+              el.setAttribute("points", `${pt.x.toFixed(1)},${pt.y.toFixed(1)}`);
+            } else if (tool === "text") {
+              const text = window.prompt("Text:");
+              if (!text) return;
+              el = document.createElementNS(SVG_NS, "text");
+              el.setAttribute("x", String(pt.x));
+              el.setAttribute("y", String(pt.y));
+              el.setAttribute("font-family", "sans-serif");
+              el.setAttribute("font-size", String(style.fontSize));
+              el.textContent = text;
+              applyStyles(el);
+              contentG.appendChild(el);
+              selectEl(el);
+              setTool("select");
+              commit();
+              return;
+            }
+            if (!el) return;
+            applyStyles(el);
+            contentG.appendChild(el);
+            drag = { mode: "draw", el, startPt: pt, origAttrs: null };
+          }
+
+          function updateDraw(pt) {
+            if (!drag || !drag.el) return;
+            const el = drag.el;
+            const s = drag.startPt;
+            const tag = el.tagName.toLowerCase();
+            if (tag === "rect") {
+              el.setAttribute("x", String(Math.min(s.x, pt.x)));
+              el.setAttribute("y", String(Math.min(s.y, pt.y)));
+              el.setAttribute("width", String(Math.abs(pt.x - s.x)));
+              el.setAttribute("height", String(Math.abs(pt.y - s.y)));
+            } else if (tag === "ellipse") {
+              el.setAttribute("cx", String((s.x + pt.x) / 2));
+              el.setAttribute("cy", String((s.y + pt.y) / 2));
+              el.setAttribute("rx", String(Math.abs(pt.x - s.x) / 2));
+              el.setAttribute("ry", String(Math.abs(pt.y - s.y) / 2));
+            } else if (tag === "line") {
+              el.setAttribute("x2", String(pt.x));
+              el.setAttribute("y2", String(pt.y));
+            } else if (tag === "polyline") {
+              const cur = el.getAttribute("points") || "";
+              const tokens = cur.trim().split(/\s+/);
+              const last = tokens[tokens.length - 1] || "0,0";
+              const [lx, ly] = last.split(",").map(Number);
+              if (Math.hypot(pt.x - lx, pt.y - ly) >= 2) {
+                el.setAttribute(
+                  "points",
+                  `${cur} ${pt.x.toFixed(1)},${pt.y.toFixed(1)}`,
+                );
+              }
+            }
+          }
+
+          function finishDraw() {
+            if (!drag || !drag.el) {
+              drag = null;
+              return;
+            }
+            const el = drag.el;
+            const tag = el.tagName.toLowerCase();
+            const num = (k) => Number(el.getAttribute(k)) || 0;
+            let degenerate = false;
+            if (tag === "rect") {
+              degenerate = num("width") < 2 || num("height") < 2;
+            } else if (tag === "ellipse") {
+              degenerate = num("rx") < 1 || num("ry") < 1;
+            } else if (tag === "line") {
+              degenerate =
+                Math.hypot(num("x2") - num("x1"), num("y2") - num("y1")) < 2;
+            } else if (tag === "polyline") {
+              const pts = (el.getAttribute("points") || "").trim().split(/\s+/);
+              degenerate = pts.length < 2;
+            }
+            if (degenerate) {
+              el.remove();
+              drag = null;
+              return;
+            }
+            selectEl(el);
+            setTool("select");
+            drag = null;
+            commit();
+          }
+
+          function hitTest(target) {
+            let n = target;
+            while (n && n !== svgEl) {
+              if (n.parentNode === contentG) return n;
+              n = n.parentNode;
+            }
+            return null;
+          }
+
+          function updateSelectionDependentUi() {
+            const has = selection.length > 0;
+            const single = selection.length === 1;
+            deleteBtn.disabled = !has;
+            duplicateBtn.disabled = !single;
+            frontBtn.disabled = !single;
+            backBtn.disabled = !single;
+            const isLine =
+              single && selected.tagName.toLowerCase() === "line";
+            arrowBtn.disabled = !isLine;
+            arrowBtn.classList.toggle(
+              "is-active",
+              isLine && !!getLineArrowStyle(selected),
+            );
+            arrowFlyout.classList.toggle("is-enabled", isLine);
+            refreshArrowPopover();
+          }
+
+          function setSelection(els) {
+            selection = (els || []).filter((e) => e && e.parentNode === contentG);
+            selected = selection[0] || null;
+            updateSelectionDependentUi();
+            renderHandles();
+            syncStyleControls();
+          }
+
+          function selectEl(el) {
+            setSelection([el]);
+          }
+
+          function selectMany(els) {
+            setSelection(els);
+          }
+
+          function deselect() {
+            setSelection([]);
+          }
+
+          function deleteSelected() {
+            if (!selection.length) return;
+            selection.forEach((el) => el.remove());
+            setSelection([]);
+            commit();
+          }
+
+          function duplicateSelected() {
+            if (!selected) return;
+            const clone = selected.cloneNode(true);
+            const offset = Math.max(6, Math.min(vb.w, vb.h) / 40);
+            offsetElement(clone, offset, offset);
+            refreshPivot(clone);
+            contentG.appendChild(clone);
+            selectEl(clone);
+            commit();
+          }
+
+          function bringForward() {
+            if (!selected || !selected.nextElementSibling) return;
+            contentG.insertBefore(
+              selected.nextElementSibling,
+              selected,
+            );
+            commit();
+          }
+
+          function sendBack() {
+            if (!selected || !selected.previousElementSibling) return;
+            contentG.insertBefore(selected, selected.previousElementSibling);
+            commit();
+          }
+
+          function offsetElement(el, dx, dy) {
+            const tag = el.tagName.toLowerCase();
+            const num = (k) => Number(el.getAttribute(k)) || 0;
+            if (tag === "rect" || tag === "text") {
+              el.setAttribute("x", String(num("x") + dx));
+              el.setAttribute("y", String(num("y") + dy));
+            } else if (tag === "ellipse" || tag === "circle") {
+              el.setAttribute("cx", String(num("cx") + dx));
+              el.setAttribute("cy", String(num("cy") + dy));
+            } else if (tag === "line") {
+              el.setAttribute("x1", String(num("x1") + dx));
+              el.setAttribute("y1", String(num("y1") + dy));
+              el.setAttribute("x2", String(num("x2") + dx));
+              el.setAttribute("y2", String(num("y2") + dy));
+            } else if (tag === "polyline" || tag === "polygon") {
+              const pts = (el.getAttribute("points") || "")
+                .trim()
+                .split(/\s+/)
+                .map((p) => {
+                  const [px, py] = p.split(",").map(Number);
+                  return `${(px + dx).toFixed(1)},${(py + dy).toFixed(1)}`;
+                })
+                .join(" ");
+              el.setAttribute("points", pts);
+            }
+          }
+
+          function normalizeColor(c) {
+            if (!c || c === "none") return null;
+            if (/^#[0-9a-fA-F]{6}$/.test(c)) return c.toLowerCase();
+            if (/^#[0-9a-fA-F]{3}$/.test(c)) {
+              return (
+                "#" +
+                c
+                  .slice(1)
+                  .split("")
+                  .map((x) => x + x)
+                  .join("")
+                  .toLowerCase()
+              );
+            }
+            const probe = document.createElement("span");
+            probe.style.color = c;
+            document.body.appendChild(probe);
+            const computed = getComputedStyle(probe).color;
+            probe.remove();
+            const m = computed.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+            if (!m) return null;
+            return (
+              "#" +
+              [m[1], m[2], m[3]]
+                .map((v) => Number(v).toString(16).padStart(2, "0"))
+                .join("")
+            );
+          }
+
+          function syncStyleControls() {
+            if (!selected) return;
+            const tag = selected.tagName.toLowerCase();
+            if (tag === "text") {
+              const c = normalizeColor(selected.getAttribute("fill"));
+              if (c) {
+                style.stroke = c;
+                strokeInput.value = c;
+              }
+              const fs = Number(selected.getAttribute("font-size"));
+              if (Number.isFinite(fs) && fs > 0) {
+                style.fontSize = fs;
+                const nearest = ["10", "12", "14", "16", "20", "24", "32", "48"].reduce(
+                  (a, b) =>
+                    Math.abs(Number(b) - fs) < Math.abs(Number(a) - fs) ? b : a,
+                );
+                fontSelect.value = nearest;
+              }
+              return;
+            }
+            const sc = normalizeColor(selected.getAttribute("stroke"));
+            if (sc) {
+              style.stroke = sc;
+              strokeInput.value = sc;
+            }
+            const fillRaw = selected.getAttribute("fill");
+            if (!fillRaw || fillRaw === "none") {
+              style.fill = "none";
+              fillNone.checked = true;
+            } else {
+              const fc = normalizeColor(fillRaw);
+              if (fc) {
+                style.fill = fc;
+                fillInput.value = fc;
+                fillNone.checked = false;
+              }
+            }
+            const sw = Number(selected.getAttribute("stroke-width"));
+            if (Number.isFinite(sw) && sw > 0) {
+              style.strokeWidth = sw;
+              const closest = ["1", "2", "4"].reduce((a, b) =>
+                Math.abs(Number(b) - sw) < Math.abs(Number(a) - sw) ? b : a,
+              );
+              widthSelect.value = closest;
+            }
+            const da = (selected.getAttribute("stroke-dasharray") || "").trim();
+            if (!da) {
+              style.dashStyle = "solid";
+              dashSelect.value = "solid";
+            } else {
+              const first = Number(da.split(/[\s,]+/)[0]);
+              if (Number.isFinite(first) && first <= style.strokeWidth + 0.5) {
+                style.dashStyle = "dotted";
+                dashSelect.value = "dotted";
+              } else {
+                style.dashStyle = "dashed";
+                dashSelect.value = "dashed";
+              }
+            }
+          }
+
+          function renderHandles() {
+            overlayG.innerHTML = "";
+            overlayG.removeAttribute("transform");
+            if (selection.length === 0) return;
+            if (selection.length > 1) {
+              let minX = Infinity,
+                minY = Infinity,
+                maxX = -Infinity,
+                maxY = -Infinity;
+              selection.forEach((el) => {
+                const b = bboxOf(el);
+                if (!b) return;
+                minX = Math.min(minX, b.x);
+                minY = Math.min(minY, b.y);
+                maxX = Math.max(maxX, b.x + b.width);
+                maxY = Math.max(maxY, b.y + b.height);
+              });
+              if (!Number.isFinite(minX)) return;
+              const sel = document.createElementNS(SVG_NS, "rect");
+              sel.setAttribute("x", String(minX));
+              sel.setAttribute("y", String(minY));
+              sel.setAttribute("width", String(maxX - minX));
+              sel.setAttribute("height", String(maxY - minY));
+              sel.setAttribute("class", "mse-selection");
+              overlayG.appendChild(sel);
+              return;
+            }
+            const tag = selected.tagName.toLowerCase();
+            const handleSize = Math.max(6, Math.min(vb.w, vb.h) / 60);
+            const rotateOffset = handleSize * 2.5;
+            const addHandle = (x, y, role, cls) => {
+              const h = document.createElementNS(SVG_NS, "rect");
+              h.setAttribute("x", String(x - handleSize / 2));
+              h.setAttribute("y", String(y - handleSize / 2));
+              h.setAttribute("width", String(handleSize));
+              h.setAttribute("height", String(handleSize));
+              h.setAttribute("class", cls || "mse-handle");
+              h.dataset.role = role;
+              overlayG.appendChild(h);
+            };
+            const angle = getAngle(selected);
+            if (tag === "line" && angle === 0) {
+              const x1 = Number(selected.getAttribute("x1"));
+              const y1 = Number(selected.getAttribute("y1"));
+              const x2 = Number(selected.getAttribute("x2"));
+              const y2 = Number(selected.getAttribute("y2"));
+              const sel = document.createElementNS(SVG_NS, "line");
+              sel.setAttribute("x1", String(x1));
+              sel.setAttribute("y1", String(y1));
+              sel.setAttribute("x2", String(x2));
+              sel.setAttribute("y2", String(y2));
+              sel.setAttribute("class", "mse-selection");
+              overlayG.appendChild(sel);
+              addHandle(x1, y1, "resize-line-p1", "mse-handle mse-handle-move");
+              addHandle(x2, y2, "resize-line-p2", "mse-handle mse-handle-move");
+              const mx = (x1 + x2) / 2;
+              const my = (y1 + y2) / 2;
+              addRotationHandle(mx, my - rotateOffset, mx, my);
+              return;
+            }
+            const bbox = bboxOf(selected);
+            if (!bbox) return;
+            const cx = bbox.x + bbox.width / 2;
+            const cy = bbox.y + bbox.height / 2;
+            if (angle) {
+              overlayG.setAttribute(
+                "transform",
+                `rotate(${angle} ${cx} ${cy})`,
+              );
+            }
+            const sel = document.createElementNS(SVG_NS, "rect");
+            sel.setAttribute("x", String(bbox.x));
+            sel.setAttribute("y", String(bbox.y));
+            sel.setAttribute("width", String(bbox.width));
+            sel.setAttribute("height", String(bbox.height));
+            sel.setAttribute("class", "mse-selection");
+            overlayG.appendChild(sel);
+            if (
+              (tag === "rect" || tag === "ellipse" || tag === "circle") &&
+              angle === 0
+            ) {
+              addHandle(
+                bbox.x + bbox.width,
+                bbox.y + bbox.height,
+                "resize-se",
+                "mse-handle",
+              );
+            }
+            addRotationHandle(
+              cx,
+              bbox.y - rotateOffset,
+              cx,
+              bbox.y,
+            );
+          }
+
+          function addRotationHandle(hx, hy, anchorX, anchorY) {
+            const tether = document.createElementNS(SVG_NS, "line");
+            tether.setAttribute("x1", String(anchorX));
+            tether.setAttribute("y1", String(anchorY));
+            tether.setAttribute("x2", String(hx));
+            tether.setAttribute("y2", String(hy));
+            tether.setAttribute("class", "mse-rotate-tether");
+            overlayG.appendChild(tether);
+            const handleSize = Math.max(6, Math.min(vb.w, vb.h) / 60);
+            const r = handleSize * 0.6;
+            const knob = document.createElementNS(SVG_NS, "circle");
+            knob.setAttribute("cx", String(hx));
+            knob.setAttribute("cy", String(hy));
+            knob.setAttribute("r", String(r));
+            knob.setAttribute("class", "mse-handle mse-handle-rotate");
+            knob.dataset.role = "rotate";
+            overlayG.appendChild(knob);
+          }
+
+          function applyMove(el, orig, dx, dy) {
+            const tag = el.tagName.toLowerCase();
+            if (tag === "rect" || tag === "text") {
+              el.setAttribute("x", String(orig.x + dx));
+              el.setAttribute("y", String(orig.y + dy));
+            } else if (tag === "ellipse" || tag === "circle") {
+              el.setAttribute("cx", String(orig.cx + dx));
+              el.setAttribute("cy", String(orig.cy + dy));
+            } else if (tag === "line") {
+              el.setAttribute("x1", String(orig.x1 + dx));
+              el.setAttribute("y1", String(orig.y1 + dy));
+              el.setAttribute("x2", String(orig.x2 + dx));
+              el.setAttribute("y2", String(orig.y2 + dy));
+            } else if (tag === "polyline" || tag === "polygon") {
+              const pts = orig.points
+                .trim()
+                .split(/\s+/)
+                .map((p) => {
+                  const [px, py] = p.split(",").map(Number);
+                  return `${(px + dx).toFixed(1)},${(py + dy).toFixed(1)}`;
+                })
+                .join(" ");
+              el.setAttribute("points", pts);
+            }
+            // Updating the rotation pivot too keeps the rendered shape moving
+            // by exactly (dx, dy) in screen space, while preserving the angle
+            // and keeping the pivot at the bbox center (see comment in
+            // setRotation).
+            if (orig.angle) {
+              refreshPivot(el);
+            }
+          }
+
+          function applyResizeSE(el, orig, dx, dy) {
+            const tag = el.tagName.toLowerCase();
+            if (tag === "rect") {
+              el.setAttribute("width", String(Math.max(2, orig.w + dx)));
+              el.setAttribute("height", String(Math.max(2, orig.h + dy)));
+            } else if (tag === "ellipse") {
+              const newRx = Math.max(1, orig.rx + dx / 2);
+              const newRy = Math.max(1, orig.ry + dy / 2);
+              el.setAttribute("rx", String(newRx));
+              el.setAttribute("ry", String(newRy));
+              el.setAttribute("cx", String(orig.cx + (newRx - orig.rx)));
+              el.setAttribute("cy", String(orig.cy + (newRy - orig.ry)));
+            } else if (tag === "circle") {
+              const d = Math.max(dx, dy);
+              const newR = Math.max(1, orig.r + d / 2);
+              el.setAttribute("r", String(newR));
+              el.setAttribute("cx", String(orig.cx + (newR - orig.r)));
+              el.setAttribute("cy", String(orig.cy + (newR - orig.r)));
+            }
+          }
+
+          function applyRotation(el, fromPt, toPt, center, origAngle) {
+            const a1 = Math.atan2(fromPt.y - center.y, fromPt.x - center.x);
+            const a2 = Math.atan2(toPt.y - center.y, toPt.x - center.x);
+            let newAngle = origAngle + ((a2 - a1) * 180) / Math.PI;
+            newAngle = ((newAngle % 360) + 360) % 360;
+            if (newAngle > 180) newAngle -= 360;
+            setRotation(el, newAngle, center);
+          }
+
+          function onPointerDown(evt) {
+            evt.preventDefault();
+            const pt = toUserCoords(evt);
+            if (spaceDown || evt.button === 1) {
+              drag = {
+                mode: "pan",
+                startScreen: { x: evt.clientX, y: evt.clientY },
+                startScroll: {
+                  x: canvasWrap.scrollLeft,
+                  y: canvasWrap.scrollTop,
+                },
+              };
+              try {
+                svgEl.setPointerCapture(evt.pointerId);
+              } catch (err) {
+                /* pointer capture may be unsupported on legacy browsers */
+              }
+              canvasWrap.classList.add("is-panning");
+              return;
+            }
+            try {
+              svgEl.setPointerCapture(evt.pointerId);
+            } catch (err) {
+              /* pointer capture may be unsupported on legacy browsers */
+            }
+            const handle =
+              evt.target && evt.target.closest
+                ? evt.target.closest(".mse-handle")
+                : null;
+            if (handle && selection.length === 1) {
+              const role = handle.dataset.role;
+              if (role === "rotate") {
+                const center = bboxCenter(selected);
+                drag = {
+                  mode: "rotate",
+                  el: selected,
+                  startPt: pt,
+                  origAttrs: snapshot(selected),
+                  center: center || { x: pt.x, y: pt.y },
+                };
+              } else {
+                drag = {
+                  mode: role,
+                  el: selected,
+                  startPt: pt,
+                  origAttrs: snapshot(selected),
+                };
+              }
+              return;
+            }
+            if (tool === "select") {
+              const hit = hitTest(evt.target);
+              if (hit) {
+                // Clicking inside the current selection keeps it intact (so
+                // you can move the whole group); clicking a different shape
+                // narrows to just that shape.
+                if (!selection.includes(hit)) selectEl(hit);
+                drag = {
+                  mode: "move",
+                  els: selection.slice(),
+                  startPt: pt,
+                  origAttrs: selection.map((el) => ({
+                    el,
+                    attrs: snapshot(el),
+                  })),
+                };
+              } else {
+                deselect();
+                startMarquee(pt);
+              }
+            } else {
+              startDraw(pt);
+            }
+          }
+
+          function startMarquee(pt) {
+            const m = document.createElementNS(SVG_NS, "rect");
+            m.setAttribute("class", "mse-marquee");
+            m.setAttribute("x", String(pt.x));
+            m.setAttribute("y", String(pt.y));
+            m.setAttribute("width", "0");
+            m.setAttribute("height", "0");
+            overlayG.appendChild(m);
+            drag = { mode: "marquee", startPt: pt, marqueeEl: m };
+          }
+
+          function updateMarquee(pt) {
+            if (!drag || !drag.marqueeEl) return;
+            const x = Math.min(drag.startPt.x, pt.x);
+            const y = Math.min(drag.startPt.y, pt.y);
+            const w = Math.abs(pt.x - drag.startPt.x);
+            const h = Math.abs(pt.y - drag.startPt.y);
+            drag.marqueeEl.setAttribute("x", String(x));
+            drag.marqueeEl.setAttribute("y", String(y));
+            drag.marqueeEl.setAttribute("width", String(w));
+            drag.marqueeEl.setAttribute("height", String(h));
+          }
+
+          function finishMarquee(pt) {
+            const x1 = Math.min(drag.startPt.x, pt.x);
+            const y1 = Math.min(drag.startPt.y, pt.y);
+            const x2 = Math.max(drag.startPt.x, pt.x);
+            const y2 = Math.max(drag.startPt.y, pt.y);
+            const marqueeArea = (x2 - x1) * (y2 - y1);
+            drag.marqueeEl.remove();
+            // A marquee that barely moved is treated as a deselect click.
+            if (marqueeArea < 4) {
+              setSelection([]);
+              return;
+            }
+            const hits = [];
+            Array.from(contentG.children).forEach((el) => {
+              const b = bboxOf(el);
+              if (!b) return;
+              if (b.x + b.width < x1 || b.x > x2) return;
+              if (b.y + b.height < y1 || b.y > y2) return;
+              hits.push(el);
+            });
+            setSelection(hits);
+          }
+
+          function onPointerMove(evt) {
+            if (!drag) return;
+            if (drag.mode === "pan") {
+              canvasWrap.scrollLeft =
+                drag.startScroll.x - (evt.clientX - drag.startScreen.x);
+              canvasWrap.scrollTop =
+                drag.startScroll.y - (evt.clientY - drag.startScreen.y);
+              return;
+            }
+            const pt = toUserCoords(evt);
+            const dx = pt.x - drag.startPt.x;
+            const dy = pt.y - drag.startPt.y;
+            if (drag.mode === "marquee") {
+              updateMarquee(pt);
+              drag.changed = true;
+            } else if (drag.mode === "draw") {
+              updateDraw(pt);
+              drag.changed = true;
+            } else if (drag.mode === "move") {
+              drag.origAttrs.forEach(({ el, attrs }) => {
+                applyMove(el, attrs, dx, dy);
+              });
+              renderHandles();
+              drag.changed = drag.changed || dx !== 0 || dy !== 0;
+            } else if (drag.mode === "resize-se") {
+              applyResizeSE(drag.el, drag.origAttrs, dx, dy);
+              renderHandles();
+              drag.changed = true;
+            } else if (drag.mode === "resize-line-p1") {
+              drag.el.setAttribute("x1", String(pt.x));
+              drag.el.setAttribute("y1", String(pt.y));
+              renderHandles();
+              drag.changed = true;
+            } else if (drag.mode === "resize-line-p2") {
+              drag.el.setAttribute("x2", String(pt.x));
+              drag.el.setAttribute("y2", String(pt.y));
+              renderHandles();
+              drag.changed = true;
+            } else if (drag.mode === "rotate") {
+              applyRotation(
+                drag.el,
+                drag.startPt,
+                pt,
+                drag.center,
+                drag.origAttrs.angle,
+              );
+              renderHandles();
+              drag.changed = true;
+            }
+          }
+
+          function onPointerUp(evt) {
+            if (!drag) return;
+            if (drag.mode === "pan") {
+              canvasWrap.classList.remove("is-panning");
+              drag = null;
+              return;
+            }
+            if (drag.mode === "marquee") {
+              const pt = toUserCoords(evt);
+              finishMarquee(pt);
+              drag = null;
+              return;
+            }
+            if (drag.mode === "draw") {
+              finishDraw();
+              return;
+            }
+            const changed = !!drag.changed;
+            drag = null;
+            if (changed) commit();
+          }
+
+          function onDblClick(evt) {
+            const target = evt.target;
+            if (!target) return;
+            const textEl =
+              target.tagName && target.tagName.toLowerCase() === "text"
+                ? target
+                : null;
+            if (textEl && textEl.parentNode === contentG) {
+              evt.preventDefault();
+              const current = textEl.textContent || "";
+              const next = window.prompt("Edit text:", current);
+              if (next !== null && next !== current) {
+                textEl.textContent = next;
+                if (!textEl.textContent) {
+                  textEl.remove();
+                  deselect();
+                } else {
+                  refreshPivot(textEl);
+                  renderHandles();
+                }
+                commit();
+              }
+            }
+          }
+
+          function onKey(evt) {
+            const t = evt.target;
+            const inField =
+              t &&
+              (t.tagName === "INPUT" ||
+                t.tagName === "TEXTAREA" ||
+                t.tagName === "SELECT" ||
+                t.isContentEditable);
+            if (!root.isConnected) return;
+            const cmd = evt.ctrlKey || evt.metaKey;
+            if (cmd && !evt.shiftKey && evt.key.toLowerCase() === "z") {
+              evt.preventDefault();
+              undo();
+              return;
+            }
+            if (
+              cmd &&
+              (evt.key.toLowerCase() === "y" ||
+                (evt.key.toLowerCase() === "z" && evt.shiftKey))
+            ) {
+              evt.preventDefault();
+              redo();
+              return;
+            }
+            if (cmd && evt.key.toLowerCase() === "d" && selected) {
+              evt.preventDefault();
+              duplicateSelected();
+              return;
+            }
+            if (inField) return;
+            if (evt.code === "Space") {
+              if (!spaceDown) {
+                spaceDown = true;
+                canvasWrap.classList.add("is-pan-ready");
+              }
+              evt.preventDefault();
+              return;
+            }
+            if (
+              (evt.key === "Delete" || evt.key === "Backspace") &&
+              selection.length
+            ) {
+              evt.preventDefault();
+              deleteSelected();
+              return;
+            }
+            if (evt.key === "Escape") {
+              if (drag && drag.mode === "draw" && drag.el) {
+                drag.el.remove();
+              }
+              if (drag && drag.mode === "marquee" && drag.marqueeEl) {
+                drag.marqueeEl.remove();
+              }
+              drag = null;
+              deselect();
+              return;
+            }
+            if (
+              selection.length &&
+              (evt.key === "ArrowUp" ||
+                evt.key === "ArrowDown" ||
+                evt.key === "ArrowLeft" ||
+                evt.key === "ArrowRight")
+            ) {
+              evt.preventDefault();
+              const step = evt.shiftKey ? 10 : 1;
+              const dx =
+                evt.key === "ArrowRight"
+                  ? step
+                  : evt.key === "ArrowLeft"
+                    ? -step
+                    : 0;
+              const dy =
+                evt.key === "ArrowDown"
+                  ? step
+                  : evt.key === "ArrowUp"
+                    ? -step
+                    : 0;
+              selection.forEach((el) => {
+                offsetElement(el, dx, dy);
+                refreshPivot(el);
+              });
+              renderHandles();
+              commit();
+            }
+          }
+
+          function onKeyUp(evt) {
+            if (evt.code === "Space") {
+              spaceDown = false;
+              canvasWrap.classList.remove("is-pan-ready");
+            }
+          }
+
+          function onWheel(evt) {
+            if (!(evt.ctrlKey || evt.metaKey)) return;
+            evt.preventDefault();
+            const factor = evt.deltaY > 0 ? 1 / 1.1 : 1.1;
+            setZoom(zoom * factor);
+          }
+
+          svgEl.addEventListener("pointerdown", onPointerDown);
+          svgEl.addEventListener("pointermove", onPointerMove);
+          svgEl.addEventListener("pointerup", onPointerUp);
+          svgEl.addEventListener("pointercancel", onPointerUp);
+          svgEl.addEventListener("dblclick", onDblClick);
+          canvasWrap.addEventListener("wheel", onWheel, { passive: false });
+          document.addEventListener("keydown", onKey);
+          document.addEventListener("keyup", onKeyUp);
+
+          function snapshotState() {
+            return {
+              defs: defsEl.innerHTML,
+              content: contentG.innerHTML,
+              vb: { ...vb },
+            };
+          }
+
+          function restoreState(state) {
+            defsEl.innerHTML = state.defs;
+            contentG.innerHTML = state.content;
+            vb = { ...state.vb };
+            applyViewBoxAttrs();
+            deselect();
+          }
+
+          function commit() {
+            if (historyIdx < history.length - 1) {
+              history.splice(historyIdx + 1);
+            }
+            history.push(snapshotState());
+            if (history.length > HISTORY_LIMIT) {
+              history.shift();
+            } else {
+              historyIdx++;
+            }
+            updateHistoryUi();
+          }
+
+          function updateHistoryUi() {
+            undoBtn.disabled = historyIdx <= 0;
+            redoBtn.disabled = historyIdx >= history.length - 1;
+          }
+
+          function undo() {
+            if (historyIdx <= 0) return;
+            historyIdx--;
+            restoreState(history[historyIdx]);
+            updateHistoryUi();
+          }
+
+          function redo() {
+            if (historyIdx >= history.length - 1) return;
+            historyIdx++;
+            restoreState(history[historyIdx]);
+            updateHistoryUi();
+          }
+
+          function setSVG(svgString) {
+            deselect();
+            drag = null;
+            defsEl.innerHTML = "";
+            contentG.innerHTML = "";
+            if (!svgString || !String(svgString).trim()) {
+              vb = { x: 0, y: 0, w: defaultWidth, h: defaultHeight };
+              applyViewBoxAttrs();
+              history.length = 0;
+              historyIdx = -1;
+              commit();
+              return true;
+            }
+            try {
+              // Parse via an HTML <template>, not DOMParser. DOMParser with
+              // "image/svg+xml" leaves children in a *null* namespace if the
+              // source <svg> didn't carry an xmlns attribute -- which is
+              // common because HTML serialisers don't emit it. Null-namespace
+              // children render as inert HTML elements in our SVG canvas, so
+              // the canvas looks empty even though the DOM is populated.
+              // The template's HTML parser correctly infers the SVG
+              // namespace from the <svg> tag.
+              const tmpl = document.createElement("template");
+              tmpl.innerHTML = String(svgString);
+              const incoming = tmpl.content.querySelector("svg");
+              if (!incoming) return false;
+              const vbAttr = incoming.getAttribute("viewBox");
+              if (vbAttr) {
+                const p = vbAttr.split(/[\s,]+/).map(Number);
+                if (p.length === 4 && p.every((n) => Number.isFinite(n))) {
+                  vb = { x: p[0], y: p[1], w: p[2], h: p[3] };
+                }
+              } else {
+                const w = Number(incoming.getAttribute("width")) || defaultWidth;
+                const h = Number(incoming.getAttribute("height")) || defaultHeight;
+                vb = { x: 0, y: 0, w, h };
+              }
+              applyViewBoxAttrs();
+              Array.from(incoming.childNodes).forEach((node) => {
+                if (node.nodeType !== 1) return;
+                const tag = node.tagName.toLowerCase();
+                if (tag === "script") return;
+                const adopted = document.importNode(node, true);
+                if (tag === "defs") {
+                  Array.from(adopted.childNodes).forEach((d) => {
+                    defsEl.appendChild(d.cloneNode(true));
+                  });
+                } else {
+                  contentG.appendChild(adopted);
+                }
+              });
+              // For shapes that came in with a rotate transform but no
+              // data-mse-angle (e.g. hand-written or older exports),
+              // recover the angle so the rotation handle can drive it
+              // additively rather than resetting on first drag.
+              contentG.querySelectorAll("[transform]").forEach((el) => {
+                if (el.dataset.mseAngle != null) return;
+                const t = el.getAttribute("transform") || "";
+                const m = t.match(/rotate\(\s*(-?[\d.]+)/);
+                if (m) el.dataset.mseAngle = m[1];
+              });
+              history.length = 0;
+              historyIdx = -1;
+              commit();
+              return true;
+            } catch (err) {
+              console.error("Mini SVG editor setSVG failed:", err);
+              return false;
+            }
+          }
+
+          function getSVG() {
+            const clone = svgEl.cloneNode(true);
+            const ov = clone.querySelector(".mse-overlay");
+            if (ov) ov.remove();
+            const cg = clone.querySelector(".mse-content");
+            if (cg) {
+              const parent = cg.parentNode;
+              while (cg.firstChild) {
+                parent.insertBefore(cg.firstChild, cg);
+              }
+              cg.remove();
+            }
+            const cloneDefs = clone.querySelector("defs");
+            if (cloneDefs && !cloneDefs.children.length) {
+              cloneDefs.remove();
+            }
+            clone.removeAttribute("class");
+            // Strip our zoom display width/height so the saved SVG renders at
+            // intrinsic size (viewBox already encodes the aspect ratio).
+            // data-mse-angle is preserved so reopening the editor restores
+            // the rotation state.
+            clone.setAttribute("width", String(vb.w));
+            clone.setAttribute("height", String(vb.h));
+            if (!clone.getAttribute("xmlns")) {
+              clone.setAttribute("xmlns", SVG_NS);
+            }
+            return clone.outerHTML;
+          }
+
+          function destroy() {
+            svgEl.removeEventListener("pointerdown", onPointerDown);
+            svgEl.removeEventListener("pointermove", onPointerMove);
+            svgEl.removeEventListener("pointerup", onPointerUp);
+            svgEl.removeEventListener("pointercancel", onPointerUp);
+            svgEl.removeEventListener("dblclick", onDblClick);
+            canvasWrap.removeEventListener("wheel", onWheel);
+            document.removeEventListener("keydown", onKey);
+            document.removeEventListener("keyup", onKeyUp);
+            if (root.parentNode) root.parentNode.removeChild(root);
+          }
+
+          updateHistoryUi();
+          updateSelectionDependentUi();
+
+          return { setSVG, getSVG, destroy };
         }
 
-        function waitForCondition(test, timeoutMs) {
-          return new Promise((resolve, reject) => {
-            if (test()) return resolve();
-            const deadline = Date.now() + (timeoutMs || 8000);
-            const timer = setInterval(() => {
-              if (test()) {
-                clearInterval(timer);
-                resolve();
-              } else if (Date.now() > deadline) {
-                clearInterval(timer);
-                reject(new Error("SVG editor did not become ready"));
-              }
-            }, 100);
-          });
+        let miniEditor = null;
+
+        function loadSvgEditor() {
+          if (miniEditor) return Promise.resolve(miniEditor);
+          const dialog = ensureDiagramEditorDialog();
+          const host = dialog.querySelector("#svgedit-host");
+          host.innerHTML = "";
+          miniEditor = createMiniSvgEditor(host, { width: 640, height: 480 });
+          state.svgEditor = miniEditor;
+          return Promise.resolve(miniEditor);
         }
 
         function svgEditorSetSvg(svgString) {
-          try {
-            state.svgEditor.svgCanvas.setSvgString(svgString);
-            return true;
-          } catch (err) {
-            console.error("setSvgString failed:", err);
-            return false;
-          }
+          return miniEditor ? miniEditor.setSVG(svgString) : false;
         }
 
         function svgEditorGetSvg() {
-          try {
-            return state.svgEditor.svgCanvas.getSvgString();
-          } catch (err) {
-            console.error("getSvgString failed:", err);
-            return null;
-          }
+          return miniEditor ? miniEditor.getSVG() : null;
         }
 
         async function prepareSvgEditor(dialog, svgString) {
@@ -3983,6 +5719,13 @@
 
           try {
             await loadSvgEditor();
+            if (!state.diagramEditContext) return false;
+            // Yield one frame so the dialog (just opened a microtask ago)
+            // has had a layout pass before the SVG content is mounted.
+            // Without this the first-open render can show an empty canvas
+            // even though the children are in the DOM -- the painter only
+            // catches up once the user toggles tabs.
+            await new Promise((r) => requestAnimationFrame(r));
             if (!state.diagramEditContext) return false;
             svgEditorSetSvg(svgString);
             state.svgEditReady = true;
@@ -4249,15 +5992,17 @@
             .querySelectorAll(".embed-tools")
             .forEach((marker) => marker.remove());
 
+          // SVG diagrams and function graphs are edited via the question
+          // editor's double-click flow, so the in-margin embed panel is only
+          // useful for images now.
           els.content
-            .querySelectorAll(".fn-graph, svg.worksheet-diagram, img")
+            .querySelectorAll("img")
             .forEach((embed) => {
               const block = embed.closest(".question, .answer");
               if (!block) return;
               if (
-                embed.tagName.toLowerCase() === "img" &&
-                (!embed.closest(".question-prompt, .answer-body") ||
-                  embed.closest(".no-pdf"))
+                !embed.closest(".question-prompt, .answer-body") ||
+                embed.closest(".no-pdf")
               ) {
                 return;
               }
@@ -5102,13 +6847,6 @@
             return;
           }
 
-          const spacer = document.createElement("div");
-          spacer.className = "manual-break-spacer no-pdf";
-          spacer.setAttribute("aria-hidden", "true");
-          block.appendChild(spacer);
-
-          const tools = document.createElement("div");
-          tools.className = "pagination-tools no-pdf";
           const breakPressed = block.classList.contains("page-break-after");
           const splitPressed = block.classList.contains("split-across-pages");
           const editIcon = `
@@ -5117,52 +6855,37 @@
               <path d="m13.5 6.5 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
             </svg>
           `;
-          const questionActions = `
-            <button type="button" data-action="move-up" aria-label="Move question up" title="Move question up (also moves matching answer)">
-              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-              </svg>
-            </button>
-            <button type="button" data-action="move-down" aria-label="Move question down" title="Move question down (also moves matching answer)">
-              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 5v14M19 12l-7 7-7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-              </svg>
-            </button>
-            <button class="edit-button" type="button" data-action="edit-question" aria-label="Edit question" title="Edit question">
-              ${editIcon}
-            </button>
-            <button class="delete-button" type="button" data-action="delete-question" aria-label="Delete question" title="Delete question (also removes matching answer)">
-              <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-              </svg>
-            </button>
-          `;
-          const answerActions = `
-            <button class="edit-button" type="button" data-action="edit-answer" aria-label="Edit answer" title="Edit answer">
-              ${editIcon}
-            </button>
-            <span class="action-divider" aria-hidden="true"></span>
-          `;
-          const splitButton = hasSpacing
-            ? `
-              <button class="split-button" type="button" data-action="toggle-split" aria-pressed="${splitPressed}" aria-label="Allow this working space to split across pages" title="Allow working space split">
-                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M6 4v16M18 4v16M10 8h4M10 16h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
-                  <path d="m13 11 3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+          const questionActionsRow = `
+            <div class="tool-row" aria-label="Question edit and ordering controls">
+              <button type="button" data-action="move-up" aria-label="Move question up" title="Move question up (also moves matching answer)">
+                <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
                 </svg>
               </button>
-            `
-            : "";
-          const rowsHtml = [
-            hasSpacing
-              ? `
-            <div class="tool-row" aria-label="Question edit and ordering controls">
-              ${questionActions}
+              <button type="button" data-action="move-down" aria-label="Move question down" title="Move question down (also moves matching answer)">
+                <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 5v14M19 12l-7 7-7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </button>
+              <button class="edit-button" type="button" data-action="edit-question" aria-label="Edit question" title="Edit question">
+                ${editIcon}
+              </button>
+              <button class="delete-button" type="button" data-action="delete-question" aria-label="Delete question" title="Delete question (also removes matching answer)">
+                <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </button>
             </div>
-          `
-              : "",
-            hasSpacing
-              ? `
+          `;
+          const splitButton = `
+            <button class="split-button" type="button" data-action="toggle-split" aria-pressed="${splitPressed}" aria-label="Allow this working space to split across pages" title="Allow working space split">
+              <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 4v16M18 4v16M10 8h4M10 16h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                <path d="m13 11 3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </button>
+          `;
+          const spacingRow = `
             <div class="tool-row" aria-label="Working space and page break controls">
               <button class="resize-handle" type="button" data-action="space-drag" aria-label="Drag to resize working space" title="Drag to resize working space">
                 <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
@@ -5180,13 +6903,13 @@
                 </svg>
               </button>
             </div>
-          `
-              : "",
-            hasSpacing
-              ? ""
-              : `
+          `;
+          const answerRow = `
             <div class="tool-row" aria-label="Answer layout and edit controls">
-              ${answerActions}
+              <button class="edit-button" type="button" data-action="edit-answer" aria-label="Edit answer" title="Edit answer">
+                ${editIcon}
+              </button>
+              <span class="action-divider" aria-hidden="true"></span>
               <button class="break-button" type="button" data-action="toggle-break" aria-pressed="${breakPressed}" aria-label="Toggle page break after this item" title="Toggle page break">
                 <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M6 3.5h9l3 3v5M15 3.5v4h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
@@ -5194,17 +6917,54 @@
                 </svg>
               </button>
             </div>
-          `,
-          ].join("");
-
-          const rowCount = hasSpacing ? 2 : 1;
-          tools.dataset.rowCount = String(rowCount);
-          tools.innerHTML = `
-            <div class="tool-rows-stack">${rowsHtml}</div>
-            ${hoverTriggerHtml(hasSpacing ? "Show question controls" : "Show answer controls")}
           `;
-          block.appendChild(tools);
-          wireToolbarHover(tools);
+
+          if (hasSpacing) {
+            // Questions get two separate toolbars:
+            // - header tools (edit/move/delete) anchored at the top-right of the question
+            // - spacing tools (resize/break) anchored at the end of the working space
+            const headerTools = document.createElement("div");
+            headerTools.className =
+              "pagination-tools pagination-tools--header no-pdf";
+            headerTools.dataset.rowCount = "1";
+            headerTools.innerHTML = `
+              <div class="tool-rows-stack">${questionActionsRow}</div>
+              ${hoverTriggerHtml("Show question controls")}
+            `;
+            block.appendChild(headerTools);
+            wireToolbarHover(headerTools);
+
+            const spacer = document.createElement("div");
+            spacer.className = "manual-break-spacer no-pdf";
+            spacer.setAttribute("aria-hidden", "true");
+            block.appendChild(spacer);
+
+            const spacingTools = document.createElement("div");
+            spacingTools.className =
+              "pagination-tools pagination-tools--spacing no-pdf";
+            spacingTools.dataset.rowCount = "1";
+            spacingTools.innerHTML = `
+              <div class="tool-rows-stack">${spacingRow}</div>
+              ${hoverTriggerHtml("Show spacing controls")}
+            `;
+            block.appendChild(spacingTools);
+            wireToolbarHover(spacingTools);
+          } else {
+            const spacer = document.createElement("div");
+            spacer.className = "manual-break-spacer no-pdf";
+            spacer.setAttribute("aria-hidden", "true");
+            block.appendChild(spacer);
+
+            const tools = document.createElement("div");
+            tools.className = "pagination-tools no-pdf";
+            tools.dataset.rowCount = "1";
+            tools.innerHTML = `
+              <div class="tool-rows-stack">${answerRow}</div>
+              ${hoverTriggerHtml("Show answer controls")}
+            `;
+            block.appendChild(tools);
+            wireToolbarHover(tools);
+          }
         }
 
         function hoverTriggerHtml(label) {
@@ -6001,7 +7761,9 @@
             : Array.from(els.content.querySelectorAll(".question"));
 
           questions.forEach((question) => {
-            const tools = question.querySelector(":scope > .pagination-tools");
+            const tools = question.querySelector(
+              ":scope > .pagination-tools--spacing",
+            );
             const spaces = Array.from(
               question.querySelectorAll(":scope > .working-space"),
             );
