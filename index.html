@@ -1911,17 +1911,106 @@
         font: inherit;
       }
 
+      .image-source-tabs {
+        margin: 4px 0 8px;
+      }
+
+      .image-source-panel {
+        margin: 0 0 8px;
+      }
+
+      .image-blank-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px 14px;
+        padding: 8px 10px;
+        background: #f8fafc;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+      }
+
+      .image-blank-row input[type="number"] {
+        width: 70px;
+      }
+
+      .image-blank-row button {
+        font: inherit;
+        padding: 4px 12px;
+        background: var(--accent);
+        color: #fff;
+        border: 1px solid var(--accent-dark);
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
       .image-preview-area {
         position: relative;
         min-height: 200px;
         max-height: 50vh;
-        overflow: hidden;
+        overflow: auto;
         border: 1px solid var(--line);
         border-radius: 6px;
         background: #f8fafc;
         display: flex;
         align-items: center;
         justify-content: center;
+      }
+
+      .image-preview-area > .image-preview-stage {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transform-origin: center center;
+        transition: transform 0.08s linear;
+      }
+
+      .image-preview-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 6px 0 2px;
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+
+      .image-preview-toolbar button {
+        font: inherit;
+        min-width: 26px;
+        padding: 2px 8px;
+        border: 1px solid var(--line);
+        border-radius: 3px;
+        background: #fff;
+        cursor: pointer;
+      }
+
+      .image-preview-toolbar button:hover {
+        background: #f1f5f9;
+      }
+
+      .image-preview-toolbar #image-zoom-readout {
+        font-variant-numeric: tabular-nums;
+        min-width: 38px;
+        text-align: center;
+      }
+
+      .image-preview-toolbar .image-preview-hint {
+        margin-left: 8px;
+        opacity: 0.75;
+      }
+
+      .image-resize-control input[type="number"] {
+        width: 70px;
+      }
+
+      #image-size-reset {
+        font: inherit;
+        padding: 3px 8px;
+        border: 1px solid var(--line);
+        border-radius: 3px;
+        background: #fff;
+        cursor: pointer;
       }
 
       .image-preview-area img,
@@ -1953,7 +2042,7 @@
         font-size: 0.88rem;
       }
 
-      .image-pen-options {
+      .image-pen-options:not([hidden]) {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
@@ -2327,7 +2416,7 @@
               stroke-linejoin="round"
             ></path>
           </svg>
-          <span>Save Edits</span>
+          <span>Save</span>
         </button>
         <button class="pdf-button" id="save-pdf" type="button">
           <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -2348,7 +2437,7 @@
               stroke-linejoin="round"
             ></path>
           </svg>
-          <span id="save-pdf-label">Save PDF</span>
+          <span id="save-pdf-label">Make PDF</span>
         </button>
       </div>
     </header>
@@ -3240,9 +3329,16 @@
             const blot = window.Quill.find(img);
             if (!blot) return;
             const index = quill.getIndex(blot);
-            openImageEditor(img.getAttribute("src"), (dataUrl) => {
+            const initial = {
+              src: img.getAttribute("src") || "",
+              original: img.getAttribute("data-pen-original") || null,
+              strokes: img.getAttribute("data-pen-strokes") || null,
+            };
+            openImageEditor(initial, (result) => {
+              const value =
+                result && typeof result === "object" ? result : { src: result };
               quill.deleteText(index, 1, "user");
-              quill.insertEmbed(index, "image", dataUrl, "user");
+              quill.insertEmbed(index, "image", value, "user");
               quill.setSelection(index + 1, 0, "silent");
             });
           });
@@ -3413,12 +3509,77 @@
           FnGraphBlot.tagName = "DIV";
           FnGraphBlot.className = "ql-fn-graph";
 
+          // Custom image blot: Quill's built-in image format throws away
+          // every attribute except alt/width/height when documents round-
+          // trip, which loses the pen-annotation layer metadata. This
+          // override preserves data-pen-original (the unannotated source)
+          // and data-pen-strokes (a JSON-stringified array of strokes) so
+          // the user can come back later, clear the annotations, and add
+          // new ones on top of the original bitmap.
+          const ImageBlotBase = window.Quill.import("formats/image");
+          class AnnotatedImageBlot extends ImageBlotBase {
+            static create(value) {
+              const node = super.create(
+                typeof value === "string" ? value : value && value.src,
+              );
+              if (value && typeof value === "object") {
+                if (value.src) node.setAttribute("src", value.src);
+                if (value.width) {
+                  node.setAttribute(
+                    "width",
+                    String(Math.round(value.width)),
+                  );
+                }
+                if (value.original) {
+                  node.setAttribute("data-pen-original", value.original);
+                }
+                if (value.strokes) {
+                  node.setAttribute("data-pen-strokes", value.strokes);
+                }
+              }
+              return node;
+            }
+            static value(node) {
+              const src = node.getAttribute("src") || "";
+              const original = node.getAttribute("data-pen-original");
+              const strokes = node.getAttribute("data-pen-strokes");
+              if (!original && !strokes) return src;
+              return { src, original, strokes };
+            }
+            static formats(domNode) {
+              const f = super.formats(domNode) || {};
+              if (domNode.hasAttribute("data-pen-original")) {
+                f["data-pen-original"] =
+                  domNode.getAttribute("data-pen-original");
+              }
+              if (domNode.hasAttribute("data-pen-strokes")) {
+                f["data-pen-strokes"] =
+                  domNode.getAttribute("data-pen-strokes");
+              }
+              return f;
+            }
+            format(name, value) {
+              if (name === "data-pen-original" || name === "data-pen-strokes") {
+                if (value) {
+                  this.domNode.setAttribute(name, value);
+                } else {
+                  this.domNode.removeAttribute(name);
+                }
+              } else {
+                super.format(name, value);
+              }
+            }
+          }
+          AnnotatedImageBlot.blotName = "image";
+          AnnotatedImageBlot.tagName = "IMG";
+
           window.Quill.register(
             {
               "formats/latex-inline": LatexInlineBlot,
               "formats/latex-block": LatexBlockBlot,
               "formats/raw-html": RawHtmlBlot,
               "formats/fn-graph": FnGraphBlot,
+              "formats/image": AnnotatedImageBlot,
             },
             true,
           );
@@ -3918,8 +4079,8 @@
               <fieldset class="graph-fieldset">
                 <legend>Appearance</legend>
                 <div class="graph-axes-grid">
-                  <label>Width (px) <input type="number" id="graph-width" min="120" max="680" step="10"></label>
-                  <label>Height (px) <input type="number" id="graph-height" min="100" max="600" step="10"></label>
+                  <label>Width (px) <input type="number" id="graph-width" min="120" max="680" step="1"></label>
+                  <label>Height (px) <input type="number" id="graph-height" min="100" max="600" step="1"></label>
                   <label class="graph-check"><input type="checkbox" id="graph-grid"> Gridlines</label>
                 </div>
               </fieldset>
@@ -4152,7 +4313,7 @@
               </div>
               <label class="diagram-width-row">
                 Display width (px)
-                <input type="number" id="diagram-display-width" min="40" max="680" step="5">
+                <input type="number" id="diagram-display-width" min="40" max="680" step="1">
                 <span class="edit-dialog-hint">Leave blank to keep the SVG's own size.</span>
               </label>
               <label class = "diagram-width-row">
@@ -4721,12 +4882,95 @@
           }
 
           function bboxCenter(el) {
+            // For paths we maintain position via a translate transform, so
+            // the geometry's "natural" centre (cached on the element) is
+            // offset from where the user actually sees it on screen. Return
+            // the screen-space centre so rotation maths in applyRotation
+            // compares to the right anchor point.
+            const tag = el.tagName.toLowerCase();
+            if (tag === "path") {
+              const p = pathPivot(el);
+              return {
+                x: p.x + (Number(el.dataset.mseTx) || 0),
+                y: p.y + (Number(el.dataset.mseTy) || 0),
+              };
+            }
             const b = bboxOf(el);
             if (!b) return null;
             return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
           }
 
+          // For <path>, we don't mutate the d attribute on move/rotate -- we
+          // drive everything through a transform="translate(tx ty) rotate(a
+          // px py)" attribute. That avoids the complexity of translating a
+          // d-string by hand (arcs, beziers, mixed absolute/relative). The
+          // pivot is the bbox centre of the un-transformed path, cached on
+          // the element so subsequent operations stay consistent.
+          function pathPivot(el) {
+            if (
+              el.dataset.msePivotX !== undefined &&
+              el.dataset.msePivotY !== undefined &&
+              el.dataset.msePivotX !== "" &&
+              el.dataset.msePivotY !== ""
+            ) {
+              return {
+                x: Number(el.dataset.msePivotX),
+                y: Number(el.dataset.msePivotY),
+              };
+            }
+            const b = pathNaturalBBox(el);
+            const x = b.x + b.width / 2;
+            const y = b.y + b.height / 2;
+            el.dataset.msePivotX = String(x);
+            el.dataset.msePivotY = String(y);
+            return { x, y };
+          }
+
+          function pathNaturalBBox(el) {
+            if (el.dataset.mseNaturalBbox) {
+              const [x, y, w, h] = el.dataset.mseNaturalBbox
+                .split(",")
+                .map(Number);
+              return { x, y, width: w, height: h };
+            }
+            const t = el.getAttribute("transform");
+            if (t) el.removeAttribute("transform");
+            let b = null;
+            try {
+              b = el.getBBox();
+            } catch (err) {
+              /* element not laid out */
+            }
+            if (t) el.setAttribute("transform", t);
+            if (!b) return { x: 0, y: 0, width: 0, height: 0 };
+            el.dataset.mseNaturalBbox = `${b.x},${b.y},${b.width},${b.height}`;
+            return { x: b.x, y: b.y, width: b.width, height: b.height };
+          }
+
+          function buildPathTransform(el) {
+            const tx = Number(el.dataset.mseTx) || 0;
+            const ty = Number(el.dataset.mseTy) || 0;
+            const angle = getAngle(el);
+            if (!tx && !ty && !angle) {
+              el.removeAttribute("transform");
+              return;
+            }
+            const parts = [];
+            if (tx || ty) parts.push(`translate(${tx} ${ty})`);
+            if (angle) {
+              const p = pathPivot(el);
+              parts.push(`rotate(${angle} ${p.x} ${p.y})`);
+            }
+            el.setAttribute("transform", parts.join(" "));
+          }
+
           function setRotation(el, angle, pivot) {
+            const tag = el.tagName.toLowerCase();
+            if (tag === "path") {
+              el.dataset.mseAngle = String(Number(angle) || 0);
+              buildPathTransform(el);
+              return;
+            }
             const c = pivot || bboxCenter(el);
             if (!c) return;
             const a = Number(angle) || 0;
@@ -4739,6 +4983,11 @@
           }
 
           function refreshPivot(el) {
+            const tag = el.tagName.toLowerCase();
+            if (tag === "path") {
+              buildPathTransform(el);
+              return;
+            }
             const a = getAngle(el);
             if (a === 0) {
               el.removeAttribute("transform");
@@ -4860,6 +5109,13 @@
             }
             if (tag === "polyline" || tag === "polygon") {
               return { ...base, points: el.getAttribute("points") || "" };
+            }
+            if (tag === "path") {
+              return {
+                ...base,
+                tx: Number(el.dataset.mseTx) || 0,
+                ty: Number(el.dataset.mseTy) || 0,
+              };
             }
             return base;
           }
@@ -5085,6 +5341,10 @@
                 })
                 .join(" ");
               el.setAttribute("points", pts);
+            } else if (tag === "path") {
+              el.dataset.mseTx = String((Number(el.dataset.mseTx) || 0) + dx);
+              el.dataset.mseTy = String((Number(el.dataset.mseTy) || 0) + dy);
+              buildPathTransform(el);
             }
           }
 
@@ -5246,6 +5506,31 @@
               addRotationHandle(mx, my - rotateOffset, mx, my);
               return;
             }
+            if (tag === "path") {
+              // Mirror the path's transform onto the overlay so the
+              // selection rect and rotation handle line up with the
+              // user-visible position.
+              const nb = pathNaturalBBox(selected);
+              const tx = Number(selected.dataset.mseTx) || 0;
+              const ty = Number(selected.dataset.mseTy) || 0;
+              const p = pathPivot(selected);
+              const parts = [];
+              if (tx || ty) parts.push(`translate(${tx} ${ty})`);
+              if (angle) parts.push(`rotate(${angle} ${p.x} ${p.y})`);
+              if (parts.length) {
+                overlayG.setAttribute("transform", parts.join(" "));
+              }
+              const sel = document.createElementNS(SVG_NS, "rect");
+              sel.setAttribute("x", String(nb.x));
+              sel.setAttribute("y", String(nb.y));
+              sel.setAttribute("width", String(nb.width));
+              sel.setAttribute("height", String(nb.height));
+              sel.setAttribute("class", "mse-selection");
+              overlayG.appendChild(sel);
+              const topMidX = nb.x + nb.width / 2;
+              addRotationHandle(topMidX, nb.y - rotateOffset, topMidX, nb.y);
+              return;
+            }
             const bbox = bboxOf(selected);
             if (!bbox) return;
             const cx = bbox.x + bbox.width / 2;
@@ -5319,6 +5604,11 @@
                 })
                 .join(" ");
               el.setAttribute("points", pts);
+            } else if (tag === "path") {
+              el.dataset.mseTx = String((orig.tx || 0) + dx);
+              el.dataset.mseTy = String((orig.ty || 0) + dy);
+              buildPathTransform(el);
+              return; // path rotation already handled in buildPathTransform
             }
             // Updating the rotation pivot too keeps the rendered shape moving
             // by exactly (dx, dy) in screen space, while preserving the angle
@@ -5789,15 +6079,29 @@
                   contentG.appendChild(adopted);
                 }
               });
-              // For shapes that came in with a rotate transform but no
-              // data-mse-angle (e.g. hand-written or older exports),
-              // recover the angle so the rotation handle can drive it
-              // additively rather than resetting on first drag.
+              // For shapes that came in with a rotate/translate transform
+              // but no editor metadata (e.g. hand-written or older
+              // exports), recover the angle/translation so the editor
+              // drives them additively rather than resetting on first
+              // drag. Paths track translation via transform; other shapes
+              // mutate their geometry directly so only angle is recovered.
               contentG.querySelectorAll("[transform]").forEach((el) => {
-                if (el.dataset.mseAngle != null) return;
                 const t = el.getAttribute("transform") || "";
-                const m = t.match(/rotate\(\s*(-?[\d.]+)/);
-                if (m) el.dataset.mseAngle = m[1];
+                if (el.dataset.mseAngle == null) {
+                  const rm = t.match(/rotate\(\s*(-?[\d.]+)/);
+                  if (rm) el.dataset.mseAngle = rm[1];
+                }
+                if (el.tagName.toLowerCase() === "path") {
+                  if (el.dataset.mseTx == null) {
+                    const tm = t.match(
+                      /translate\(\s*(-?[\d.]+)[\s,]+(-?[\d.]+)/,
+                    );
+                    if (tm) {
+                      el.dataset.mseTx = tm[1];
+                      el.dataset.mseTy = tm[2];
+                    }
+                  }
+                }
               });
               history.length = 0;
               historyIdx = -1;
@@ -6057,12 +6361,43 @@
           scheduleLayout();
         }
 
-        function applyImageEditInPlace(img, dataUrl) {
-          if (!dataUrl) return;
-          updateCachedEmbedSource(img, "img", (cachedEl) => {
-            cachedEl.setAttribute("src", dataUrl);
-          });
-          img.setAttribute("src", dataUrl);
+        function applyImageEditInPlace(img, result) {
+          if (!result) return;
+          // The image editor can return either a plain data URL string
+          // (legacy) or a payload {src, width, height, original, strokes}.
+          // The worksheet img element gets the baked src, the resampled
+          // display size, and the pen-layer metadata.
+          const isObj = typeof result === "object";
+          const src = isObj ? result.src : result;
+          const width = isObj ? result.width : null;
+          const original = isObj ? result.original : null;
+          const strokes = isObj ? result.strokes : null;
+          if (!src) return;
+          const applyAttrs = (el) => {
+            el.setAttribute("src", src);
+            if (width) {
+              // Match the rendered size to the resample so resampling up
+              // actually shows the image bigger in the worksheet.
+              el.setAttribute("width", String(Math.round(width)));
+              // Drop any stale explicit height so the natural aspect
+              // takes over.
+              el.removeAttribute("height");
+              el.style.removeProperty("width");
+              el.style.removeProperty("height");
+            }
+            if (original) {
+              el.setAttribute("data-pen-original", original);
+            } else {
+              el.removeAttribute("data-pen-original");
+            }
+            if (strokes) {
+              el.setAttribute("data-pen-strokes", strokes);
+            } else {
+              el.removeAttribute("data-pen-strokes");
+            }
+          };
+          updateCachedEmbedSource(img, "img", applyAttrs);
+          applyAttrs(img);
           decorateEmbedMarkers();
           scheduleLayout();
         }
@@ -6077,8 +6412,13 @@
               applyGraphEditInPlace(embed, newSpec),
             );
           } else if (kind === "img") {
-            openImageEditor(embed.getAttribute("src"), (dataUrl) =>
-              applyImageEditInPlace(embed, dataUrl),
+            const payload = {
+              src: embed.getAttribute("src") || "",
+              original: embed.getAttribute("data-pen-original") || null,
+              strokes: embed.getAttribute("data-pen-strokes") || null,
+            };
+            openImageEditor(payload, (result) =>
+              applyImageEditInPlace(embed, result),
             );
           } else {
             openDiagramEditorDialog(embed.outerHTML, (newSvg) =>
@@ -6468,18 +6808,46 @@
             <form method="dialog" class="edit-dialog-form">
               <h3>Insert image</h3>
               <p class="edit-dialog-hint">The image is embedded as a base-64 data URL inside the worksheet.</p>
-              <div class="image-pick-row">
-                <input type="file" id="image-file" accept="image/*" />
+              <div class="edit-tabs image-source-tabs" role="tablist">
+                <button type="button" role="tab" class="edit-tab is-active" data-image-source="file" aria-selected="true">Browse file</button>
+                <button type="button" role="tab" class="edit-tab" data-image-source="blank" aria-selected="false">Create blank canvas</button>
+              </div>
+              <div class="image-source-panel" data-source="file">
+                <div class="image-pick-row">
+                  <input type="file" id="image-file" accept="image/*" />
+                </div>
+              </div>
+              <div class="image-source-panel" data-source="blank" hidden>
+                <div class="image-blank-row">
+                  <label>Width <input type="number" id="image-blank-w" min="50" max="6000" step="1" value="800" /> px</label>
+                  <label>Height <input type="number" id="image-blank-h" min="50" max="6000" step="1" value="600" /> px</label>
+                  <label>Background <input type="color" id="image-blank-bg" value="#ffffff" /></label>
+                  <button type="button" id="image-blank-create">Create canvas</button>
+                </div>
               </div>
               <div class="image-preview-area" id="image-preview-wrap">
                 <span class="image-preview-placeholder">Choose an image to preview</span>
               </div>
+              <div class="image-preview-toolbar" id="image-preview-toolbar">
+                <button type="button" data-action="image-zoom-out" title="Zoom preview out">−</button>
+                <span id="image-zoom-readout">100%</span>
+                <button type="button" data-action="image-zoom-in" title="Zoom preview in">+</button>
+                <button type="button" data-action="image-zoom-fit" title="Fit preview">Fit</button>
+                <span class="image-preview-hint">Zoom affects display only.</span>
+              </div>
               <div class="image-options">
-                <label>
-                  Max dimension
-                  <input type="number" id="image-max-dim" min="100" max="4000" step="50" value="1200" />
+                <label class="image-resize-control">
+                  Resize to
+                  <input type="number" id="image-target-w" min="10" max="8000" step="1" />
+                  ×
+                  <input type="number" id="image-target-h" min="10" max="8000" step="1" />
                   px
                 </label>
+                <label>
+                  <input type="checkbox" id="image-lock-aspect" checked />
+                  Lock aspect
+                </label>
+                <button type="button" id="image-size-reset">Reset</button>
                 <label>
                   <input type="checkbox" id="image-crop-enabled" />
                   Crop
@@ -6490,14 +6858,14 @@
                 </label>
                 <label class="image-quality-control">
                   Quality
-                  <input type="number" id="image-quality" min="40" max="100" step="5" value="85" />
+                  <input type="number" id="image-quality" min="40" max="100" step="1" value="85" />
                   %
                   <input
                     type="range"
                     id="image-quality-slider"
                     min="40"
                     max="100"
-                    step="5"
+                    step="1"
                     value="85"
                     aria-label="Image quality slider"
                   />
@@ -6532,8 +6900,7 @@
           const qualityNumber = dialog.querySelector("#image-quality");
           const qualitySlider = dialog.querySelector("#image-quality-slider");
           const snapQuality = (raw) => {
-            const v = clamp(Number(raw) || 85, 40, 100);
-            return Math.round(v / 5) * 5;
+            return clamp(Math.round(Number(raw) || 85), 40, 100);
           };
           qualitySlider.addEventListener("input", () => {
             const v = snapQuality(qualitySlider.value);
@@ -6575,6 +6942,103 @@
             penWidthReadout.textContent = `${penWidth.value} px`;
           });
 
+          // Source tabs (file vs blank canvas)
+          const sourceTabs = dialog.querySelectorAll(
+            ".image-source-tabs .edit-tab",
+          );
+          const sourcePanels = dialog.querySelectorAll(".image-source-panel");
+          sourceTabs.forEach((tab) => {
+            tab.addEventListener("click", () => {
+              const which = tab.dataset.imageSource;
+              sourceTabs.forEach((t) => {
+                const active = t.dataset.imageSource === which;
+                t.classList.toggle("is-active", active);
+                t.setAttribute("aria-selected", String(active));
+              });
+              sourcePanels.forEach((p) => {
+                p.hidden = p.dataset.source !== which;
+              });
+            });
+          });
+
+          // Blank canvas creation
+          const blankW = dialog.querySelector("#image-blank-w");
+          const blankH = dialog.querySelector("#image-blank-h");
+          const blankBg = dialog.querySelector("#image-blank-bg");
+          const blankCreate = dialog.querySelector("#image-blank-create");
+          blankCreate.addEventListener("click", () => {
+            const w = clamp(Number(blankW.value) || 800, 50, 6000);
+            const h = clamp(Number(blankH.value) || 600, 50, 6000);
+            const canvas = document.createElement("canvas");
+            canvas.width = w;
+            canvas.height = h;
+            const c2d = canvas.getContext("2d");
+            c2d.fillStyle = blankBg.value || "#ffffff";
+            c2d.fillRect(0, 0, w, h);
+            const dataUrl = canvas.toDataURL("image/png");
+            ctx.originalDataUrl = dataUrl;
+            ctx.originalWidth = w;
+            ctx.originalHeight = h;
+            setPreview(dataUrl, w, h);
+            setTargetSize(w, h);
+          });
+
+          // Target size (resample) controls
+          const targetW = dialog.querySelector("#image-target-w");
+          const targetH = dialog.querySelector("#image-target-h");
+          const lockAspect = dialog.querySelector("#image-lock-aspect");
+          const sizeReset = dialog.querySelector("#image-size-reset");
+          let aspectRatio = 1;
+          function setTargetSize(w, h) {
+            targetW.value = String(Math.round(w));
+            targetH.value = String(Math.round(h));
+            if (h > 0) aspectRatio = w / h;
+          }
+          targetW.addEventListener("input", () => {
+            const w = Number(targetW.value);
+            if (lockAspect.checked && aspectRatio && Number.isFinite(w) && w > 0) {
+              targetH.value = String(Math.max(1, Math.round(w / aspectRatio)));
+            }
+          });
+          targetH.addEventListener("input", () => {
+            const h = Number(targetH.value);
+            if (lockAspect.checked && aspectRatio && Number.isFinite(h) && h > 0) {
+              targetW.value = String(Math.max(1, Math.round(h * aspectRatio)));
+            }
+          });
+          lockAspect.addEventListener("change", () => {
+            const w = Number(targetW.value);
+            const h = Number(targetH.value);
+            if (lockAspect.checked && w > 0 && h > 0) aspectRatio = w / h;
+          });
+          sizeReset.addEventListener("click", () => {
+            if (ctx.originalWidth && ctx.originalHeight) {
+              setTargetSize(ctx.originalWidth, ctx.originalHeight);
+            }
+          });
+
+          // Zoom controls (display-only)
+          const zoomReadout = dialog.querySelector("#image-zoom-readout");
+          let previewZoom = 1;
+          function applyPreviewZoom() {
+            zoomReadout.textContent = `${Math.round(previewZoom * 100)}%`;
+            const stage = previewWrap.querySelector(":scope > .image-preview-stage");
+            if (stage) stage.style.transform = `scale(${previewZoom})`;
+          }
+          function setPreviewZoom(z) {
+            previewZoom = Math.max(0.1, Math.min(8, z));
+            applyPreviewZoom();
+          }
+          dialog
+            .querySelector('[data-action="image-zoom-in"]')
+            .addEventListener("click", () => setPreviewZoom(previewZoom * 1.25));
+          dialog
+            .querySelector('[data-action="image-zoom-out"]')
+            .addEventListener("click", () => setPreviewZoom(previewZoom / 1.25));
+          dialog
+            .querySelector('[data-action="image-zoom-fit"]')
+            .addEventListener("click", () => setPreviewZoom(1));
+
           const destroyCropper = () => {
             if (ctx.cropper) {
               try {
@@ -6584,16 +7048,26 @@
             }
           };
 
+          const newPreviewStage = () => {
+            const stage = document.createElement("div");
+            stage.className = "image-preview-stage";
+            previewWrap.appendChild(stage);
+            applyPreviewZoom();
+            return stage;
+          };
+
           const setPreview = (dataUrl, w, h) => {
             destroyCropper();
             disablePenMode();
             previewWrap.innerHTML = "";
+            const stage = newPreviewStage();
             const img = document.createElement("img");
             img.src = dataUrl;
             img.alt = "Preview";
-            previewWrap.appendChild(img);
+            stage.appendChild(img);
             ctx.previewImg = img;
             ctx.penStrokes = [];
+            setTargetSize(w, h);
             info.textContent = `Original: ${w}×${h} px · approx ${formatBytes(approxBase64Bytes(dataUrl))}`;
             penToggle.disabled = false;
             if (cropToggle.checked && window.Cropper) {
@@ -6614,11 +7088,12 @@
             if (!ctx.originalDataUrl) return;
             destroyCropper();
             previewWrap.innerHTML = "";
+            const stage = newPreviewStage();
             const canvas = document.createElement("canvas");
             canvas.className = "image-pen-canvas";
             canvas.width = ctx.originalWidth;
             canvas.height = ctx.originalHeight;
-            previewWrap.appendChild(canvas);
+            stage.appendChild(canvas);
             ctx.penCanvas = canvas;
             ctx.penBaseImg = new Image();
             ctx.penBaseImg.onload = () => redrawPen();
@@ -6823,10 +7298,15 @@
               destroyCropper();
               return;
             }
-            const maxDim = clamp(
-              Number(dialog.querySelector("#image-max-dim").value) || 1200,
-              50,
-              6000,
+            const wantedW = clamp(
+              Number(targetW.value) || ctx.originalWidth || 1,
+              10,
+              8000,
+            );
+            const wantedH = clamp(
+              Number(targetH.value) || ctx.originalHeight || 1,
+              10,
+              8000,
             );
             const quality =
               clamp(
@@ -6835,28 +7315,65 @@
                 100,
               ) / 100;
 
-            const finalize = (sourceCanvasOrImg, sw, sh) => {
-              const out = downsampleToDataUrl(
+            const finalize = (sourceCanvasOrImg, sw, sh, extras) => {
+              // If the user kept the original aspect, scale to (wantedW, wantedH).
+              // Otherwise, fit-into to preserve aspect while respecting the
+              // bigger of the requested dimensions.
+              let outW = wantedW;
+              let outH = wantedH;
+              if (sw > 0 && sh > 0) {
+                const srcAspect = sw / sh;
+                const wantedAspect = wantedW / wantedH;
+                // If the source aspect ratio differs (e.g. user cropped), keep
+                // aspect by scaling so the longer side matches.
+                if (Math.abs(srcAspect - wantedAspect) > 0.001) {
+                  if (srcAspect > wantedAspect) {
+                    outH = Math.max(1, Math.round(wantedW / srcAspect));
+                  } else {
+                    outW = Math.max(1, Math.round(wantedH * srcAspect));
+                  }
+                }
+              }
+              const out = resampleToDataUrl(
                 sourceCanvasOrImg,
-                sw,
-                sh,
-                maxDim,
+                outW,
+                outH,
                 quality,
               );
               const context = state.imageDialogContext;
               state.imageDialogContext = null;
               if (context && context.onConfirm) {
-                context.onConfirm(out);
+                // Include the chosen display dimensions in the payload --
+                // the worksheet/Quill-blot consumers use these to update
+                // the rendered display size to match the resample,
+                // otherwise a user who resamples up to (say) 1200px would
+                // still see the image at the previous tiny width.
+                const payload = {
+                  src: out,
+                  width: outW,
+                  height: outH,
+                  ...(extras || {}),
+                };
+                context.onConfirm(payload);
               }
               destroyCropper();
             };
 
             if (penToggle.checked && ctx.penCanvas) {
-              // Bake the strokes into the bitmap on the way out.
+              // Bake the strokes into the bitmap on the way out, AND keep
+              // the unannotated source + stroke list so the user can come
+              // back later, clear the layer, and replace it.
+              const extras = ctx.penStrokes.length
+                ? {
+                    original: ctx.originalDataUrl,
+                    strokes: JSON.stringify(ctx.penStrokes),
+                  }
+                : null;
               finalize(
                 ctx.penCanvas,
                 ctx.penCanvas.width,
                 ctx.penCanvas.height,
+                extras,
               );
             } else if (ctx.cropper) {
               const canvas = ctx.cropper.getCroppedCanvas();
@@ -6886,18 +7403,78 @@
             cropToggle.disabled = false;
             penToggle.checked = false;
             penToggle.disabled = true;
+            targetW.value = "";
+            targetH.value = "";
+            aspectRatio = 1;
+            previewZoom = 1;
+            applyPreviewZoom();
+            // Reset source tabs to "file" view.
+            sourceTabs.forEach((t) => {
+              const active = t.dataset.imageSource === "file";
+              t.classList.toggle("is-active", active);
+              t.setAttribute("aria-selected", String(active));
+            });
+            sourcePanels.forEach((p) => {
+              p.hidden = p.dataset.source !== "file";
+            });
           };
 
-          dialog._loadImage = (dataUrl) => {
-            if (!dataUrl) return;
+          dialog._loadImage = (input) => {
+            // input can be a plain data URL string or an object with
+            // {src, original, strokes} carrying the editable annotation
+            // layer from a previously saved image.
+            let src = "";
+            let original = null;
+            let strokes = null;
+            if (typeof input === "string") {
+              src = input;
+            } else if (input && typeof input === "object") {
+              src = input.src || "";
+              original = input.original || null;
+              strokes = input.strokes || null;
+            }
+            if (!src) return;
+            const baseSrc = original || src;
+            let parsedStrokes = [];
+            if (strokes) {
+              try {
+                parsedStrokes = JSON.parse(strokes) || [];
+              } catch (err) {
+                parsedStrokes = [];
+              }
+            }
             const probe = new Image();
             probe.onload = () => {
-              ctx.originalDataUrl = dataUrl;
+              ctx.originalDataUrl = baseSrc;
               ctx.originalWidth = probe.naturalWidth;
               ctx.originalHeight = probe.naturalHeight;
-              setPreview(dataUrl, probe.naturalWidth, probe.naturalHeight);
+              // setPreview() unconditionally clears ctx.penStrokes (it
+              // assumes a fresh image), so the restore has to happen
+              // *after* setPreview but *before* enablePenMode + the
+              // updatePenButtons it calls.
+              setPreview(baseSrc, probe.naturalWidth, probe.naturalHeight);
+              if (original || strokes) {
+                ctx.penStrokes = parsedStrokes;
+                penToggle.checked = true;
+                penToggle.disabled = false;
+                cropToggle.disabled = true;
+                enablePenMode();
+                // ctx.penBaseImg was just (re)created inside
+                // enablePenMode; once it finishes loading, redraw the
+                // image + the restored strokes.
+                if (ctx.penBaseImg) {
+                  ctx.penBaseImg.addEventListener(
+                    "load",
+                    () => {
+                      redrawPen();
+                      updatePenButtons();
+                    },
+                    { once: true },
+                  );
+                }
+              }
             };
-            probe.src = dataUrl;
+            probe.src = baseSrc;
           };
 
           return dialog;
@@ -6915,8 +7492,13 @@
           }
         }
 
-        function insertImageIntoQuill(dataUrl) {
-          if (!state.quillInstance || !dataUrl) return;
+        function insertImageIntoQuill(result) {
+          if (!state.quillInstance) return;
+          // Accept either a plain data URL string or an annotated-image
+          // payload (the same shape AnnotatedImageBlot.create handles).
+          const value =
+            result && typeof result === "object" ? result : { src: result };
+          if (!value || !value.src) return;
           const range = state.quillInstance.getSelection(true) || {
             index: state.quillInstance.getLength(),
             length: 0,
@@ -6924,7 +7506,7 @@
           state.quillInstance.insertEmbed(
             range.index,
             "image",
-            dataUrl,
+            value,
             "user",
           );
           state.quillInstance.setSelection(range.index + 1, 0, "silent");
@@ -6939,22 +7521,23 @@
           dialog.showModal();
         }
 
-        function openImageEditor(dataUrl, onConfirm) {
+        function openImageEditor(input, onConfirm) {
           const dialog = ensureImageInsertDialog();
           dialog._reset && dialog._reset();
           setImageDialogMode(dialog, "edit");
           state.imageDialogContext = { onConfirm };
           dialog.returnValue = "";
           dialog.showModal();
-          if (dataUrl) {
-            dialog._loadImage(dataUrl);
+          if (input && typeof input === "object" && input.src) {
+            dialog._loadImage(input);
+          } else if (typeof input === "string" && input) {
+            dialog._loadImage(input);
           }
         }
 
-        function downsampleToDataUrl(source, srcW, srcH, maxDim, quality) {
-          const ratio = Math.min(maxDim / srcW, maxDim / srcH, 1);
-          const w = Math.max(1, Math.round(srcW * ratio));
-          const h = Math.max(1, Math.round(srcH * ratio));
+        function resampleToDataUrl(source, outW, outH, quality) {
+          const w = Math.max(1, Math.round(outW));
+          const h = Math.max(1, Math.round(outH));
           const canvas = document.createElement("canvas");
           canvas.width = w;
           canvas.height = h;
