@@ -42,7 +42,10 @@
       defer
       src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"
     ></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/mathlive@0.99.0/dist/mathlive.min.js"></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/mathlive@0.99.0/dist/mathlive.min.js"
+    ></script>
     <script
       defer
       src="https://cdnjs.cloudflare.com/ajax/libs/function-plot/1.25.1/function-plot.min.js"
@@ -1542,6 +1545,12 @@
         color: #fff;
       }
 
+      .mini-svg-editor .mse-tool.is-locked {
+        box-shadow:
+          inset 0 0 0 2px #fff,
+          0 0 0 2px #ea580c;
+      }
+
       .mini-svg-editor .mse-tool:hover:not(.is-active):not([disabled]) {
         background: #e5e7eb;
       }
@@ -1587,8 +1596,8 @@
         flex: 1 1 auto;
         min-height: 0;
         overflow: auto;
-        background:
-          repeating-conic-gradient(#f1f5f9 0% 25%, #fff 0% 50%) 50% / 16px 16px;
+        background: repeating-conic-gradient(#f1f5f9 0% 25%, #fff 0% 50%) 50% /
+          16px 16px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1618,12 +1627,20 @@
       }
 
       .mini-svg-editor .mse-canvas-wrap.is-pan-ready svg.mse-canvas,
-      .mini-svg-editor .mse-canvas-wrap.is-pan-ready svg.mse-canvas .mse-content > * {
+      .mini-svg-editor
+        .mse-canvas-wrap.is-pan-ready
+        svg.mse-canvas
+        .mse-content
+        > * {
         cursor: grab;
       }
 
       .mini-svg-editor .mse-canvas-wrap.is-panning svg.mse-canvas,
-      .mini-svg-editor .mse-canvas-wrap.is-panning svg.mse-canvas .mse-content > * {
+      .mini-svg-editor
+        .mse-canvas-wrap.is-panning
+        svg.mse-canvas
+        .mse-content
+        > * {
         cursor: grabbing;
       }
 
@@ -1639,7 +1656,10 @@
       }
 
       .mini-svg-editor svg.mse-canvas .mse-handle.mse-handle-rotate {
-        cursor: url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M20%2012a8%208%200%201%201-2.6-5.9M20%204v5h-5%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cpath%20d%3D%22M20%2012a8%208%200%201%201-2.6-5.9M20%204v5h-5%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E") 12 12, grab;
+        cursor:
+          url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M20%2012a8%208%200%201%201-2.6-5.9M20%204v5h-5%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cpath%20d%3D%22M20%2012a8%208%200%201%201-2.6-5.9M20%204v5h-5%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E")
+            12 12,
+          grab;
         fill: #0f766e;
         stroke: #fff;
         stroke-width: 1.5;
@@ -1675,20 +1695,34 @@
 
       .mini-svg-editor .mse-arrow-popover {
         position: absolute;
-        top: calc(100% + 4px);
+        top: 100%;
         left: 0;
         z-index: 6;
         display: none;
         gap: 2px;
         padding: 4px;
+        margin-top: 4px;
         background: #fff;
         border: 1px solid #d1d5db;
         border-radius: 4px;
         box-shadow: 0 4px 12px rgba(15, 23, 42, 0.16);
       }
 
+      /* Invisible bridge so the cursor can travel from the button to the
+         popover without :hover dropping while crossing the visual gap. */
+      .mini-svg-editor .mse-arrow-popover::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: -8px;
+        height: 8px;
+      }
+
       .mini-svg-editor .mse-arrow-flyout.is-enabled:hover .mse-arrow-popover,
-      .mini-svg-editor .mse-arrow-flyout.is-enabled:focus-within .mse-arrow-popover {
+      .mini-svg-editor
+        .mse-arrow-flyout.is-enabled:focus-within
+        .mse-arrow-popover {
         display: flex;
       }
 
@@ -1890,10 +1924,18 @@
         justify-content: center;
       }
 
-      .image-preview-area img {
+      .image-preview-area img,
+      .image-preview-area canvas.image-pen-canvas {
         max-width: 100%;
         max-height: 50vh;
         display: block;
+      }
+
+      .image-preview-area canvas.image-pen-canvas {
+        touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
+        cursor: crosshair;
       }
 
       .image-preview-area .image-preview-placeholder {
@@ -1909,6 +1951,58 @@
         margin: 10px 0 6px;
         color: var(--muted);
         font-size: 0.88rem;
+      }
+
+      .image-pen-options {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px 16px;
+        margin: 4px 0 8px;
+        padding: 8px 10px;
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        border-radius: 6px;
+        color: #9a3412;
+        font-size: 0.85rem;
+      }
+
+      .image-pen-options input[type="color"] {
+        width: 32px;
+        height: 24px;
+        border: 1px solid #d1d5db;
+        padding: 0;
+        background: #fff;
+        vertical-align: middle;
+      }
+
+      .image-pen-options .image-pen-width-control {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .image-pen-options .image-pen-width-control input[type="range"] {
+        width: 140px;
+      }
+
+      .image-pen-options button {
+        font: inherit;
+        padding: 4px 10px;
+        background: #fff;
+        border: 1px solid #fdba74;
+        border-radius: 4px;
+        color: #9a3412;
+        cursor: pointer;
+      }
+
+      .image-pen-options button:hover:not([disabled]) {
+        background: #ffedd5;
+      }
+
+      .image-pen-options button[disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
       }
 
       .image-options label {
@@ -2067,7 +2161,6 @@
           min-height: 0 !important;
           background-image: none !important;
         }
-
       }
     </style>
   </head>
@@ -2135,16 +2228,49 @@
               ></path>
             </svg>
           </button>
-          <div class="margins-popover" id="margins-popover" role="dialog" aria-label="Page margins">
+          <div
+            class="margins-popover"
+            id="margins-popover"
+            role="dialog"
+            aria-label="Page margins"
+          >
             <div class="margins-grid">
               <label for="margin-top">Top</label>
-              <input id="margin-top" type="number" min="0" max="50" step="1" value="15" />
+              <input
+                id="margin-top"
+                type="number"
+                min="0"
+                max="50"
+                step="1"
+                value="15"
+              />
               <label for="margin-right">Right</label>
-              <input id="margin-right" type="number" min="0" max="50" step="1" value="15" />
+              <input
+                id="margin-right"
+                type="number"
+                min="0"
+                max="50"
+                step="1"
+                value="15"
+              />
               <label for="margin-bottom">Bottom</label>
-              <input id="margin-bottom" type="number" min="0" max="50" step="1" value="15" />
+              <input
+                id="margin-bottom"
+                type="number"
+                min="0"
+                max="50"
+                step="1"
+                value="15"
+              />
               <label for="margin-left">Left</label>
-              <input id="margin-left" type="number" min="0" max="50" step="1" value="15" />
+              <input
+                id="margin-left"
+                type="number"
+                min="0"
+                max="50"
+                step="1"
+                value="15"
+              />
             </div>
             <small>millimetres</small>
           </div>
@@ -2340,9 +2466,9 @@
             <div class="question-prompt">
               <div>
                 <p>
-                  The logo shown is printed 6 cm wide. Its width-to-height
-                  ratio is 4 : 3. Find the printed height and the printed
-                  area. <span class="marks">2 marks</span>
+                  The logo shown is printed 6 cm wide. Its width-to-height ratio
+                  is 4 : 3. Find the printed height and the printed area.
+                  <span class="marks">2 marks</span>
                 </p>
                 <img
                   src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAA2UlEQVR42u3ZMQ6DMBBEUd+ANn3ulzIny/2gSBOBAt717M4YreXKonn609GW92vq2wpQgALsnz7Px+9dlY4HIGVwAnQMfoAIowvw/VTTYACcGIgMG0AwhQcgZXACdObkB4ikGAXQDQAAd04YADEFEkAxgAH5c8IDklNEAdJSBAJyUoQDog0ZgNA5JQHiUqQCIgzZAPicCABsChoAlYIJgKTgAwYNEoCROakA3Cm0AA6DHMA6J0WAKYUuoNMgDeiZkzrgMsUcgBPDNIB/jMkAR0P9Jy5AAW4H2ADtYa/rFOc+jgAAAABJRU5ErkJggg=="
@@ -2500,14 +2626,13 @@
             <div class="answer-body">
               <div>
                 <p>
-                  At an intersection \((x-2)(x+3) = 3-x\), so
-                  \(x^2+x-6 = 3-x\), giving \(x^2+2x-9 = 0\) and
-                  \(x = -1 \pm \sqrt{10}\).
+                  At an intersection \((x-2)(x+3) = 3-x\), so \(x^2+x-6 = 3-x\),
+                  giving \(x^2+2x-9 = 0\) and \(x = -1 \pm \sqrt{10}\).
                 </p>
                 <p>
-                  Using \(y = 3-x\), the points are
-                  \((-1+\sqrt{10},\, 4-\sqrt{10}) \approx (2.16,\, 0.84)\) and
-                  \((-1-\sqrt{10},\, 4+\sqrt{10}) \approx (-4.16,\, 7.16)\).
+                  Using \(y = 3-x\), the points are \((-1+\sqrt{10},\,
+                  4-\sqrt{10}) \approx (2.16,\, 0.84)\) and \((-1-\sqrt{10},\,
+                  4+\sqrt{10}) \approx (-4.16,\, 7.16)\).
                 </p>
               </div>
             </div>
@@ -2849,9 +2974,7 @@
         }
 
         function getQuestionEditableTarget(block) {
-          return block.querySelector(
-            ":scope > .question-prompt > div",
-          );
+          return block.querySelector(":scope > .question-prompt > div");
         }
 
         function getAnswerEditableTarget(block) {
@@ -3340,9 +3463,7 @@
           }
           if (typeof window.functionPlot === "function") {
             try {
-              window.functionPlot(
-                graphSpecToPlotOptions(spec, preview, 280),
-              );
+              window.functionPlot(graphSpecToPlotOptions(spec, preview, 280));
               appendGraphLegend(preview, spec);
               return;
             } catch {}
@@ -3368,9 +3489,7 @@
               return;
             } catch {}
           }
-          node.textContent = displayMode
-            ? `$$${latex}$$`
-            : `\\(${latex}\\)`;
+          node.textContent = displayMode ? `$$${latex}$$` : `\\(${latex}\\)`;
         }
 
         function loadHtmlIntoQuill(quill, html) {
@@ -3536,11 +3655,7 @@
             length: 0,
           };
           state.quillInstance.insertEmbed(range.index, blotName, value, "user");
-          state.quillInstance.setSelection(
-            range.index + 1,
-            0,
-            "silent",
-          );
+          state.quillInstance.setSelection(range.index + 1, 0, "silent");
         }
 
         function formatHtmlSource(html) {
@@ -3824,7 +3939,10 @@
           let previewTimer = 0;
           const schedulePreview = () => {
             clearTimeout(previewTimer);
-            previewTimer = setTimeout(() => renderGraphEditorPreview(dialog), 250);
+            previewTimer = setTimeout(
+              () => renderGraphEditorPreview(dialog),
+              250,
+            );
           };
 
           form.addEventListener("input", schedulePreview);
@@ -3899,7 +4017,10 @@
             dialog.querySelector(`#${id}`).value =
               value === undefined || value === null ? "" : String(value);
           };
-          setValue("graph-x-min", spec.xAxis.domain ? spec.xAxis.domain[0] : -5);
+          setValue(
+            "graph-x-min",
+            spec.xAxis.domain ? spec.xAxis.domain[0] : -5,
+          );
           setValue("graph-x-max", spec.xAxis.domain ? spec.xAxis.domain[1] : 5);
           setValue("graph-x-label", spec.xAxis.label || "x");
           setValue(
@@ -3925,9 +4046,7 @@
         }
 
         function collectGraphSpecFromForm(dialog) {
-          const functions = Array.from(
-            dialog.querySelectorAll(".graph-fn-row"),
-          )
+          const functions = Array.from(dialog.querySelectorAll(".graph-fn-row"))
             .map((row) => ({
               fn: row.querySelector(".graph-fn-expr").value.trim(),
               color: row.querySelector(".graph-fn-color").value,
@@ -4036,6 +4155,9 @@
                 <input type="number" id="diagram-display-width" min="40" max="680" step="5">
                 <span class="edit-dialog-hint">Leave blank to keep the SVG's own size.</span>
               </label>
+              <label class = "diagram-width-row">
+                Click the free tool icon twice to lock the pen mode on.
+              </label>
               <div class="edit-dialog-actions">
                 <button type="button" data-action="diagram-cancel">Cancel</button>
                 <button type="submit" value="ok">OK</button>
@@ -4091,7 +4213,11 @@
           if (previous === target) return;
           const sourceArea = dialog.querySelector("#diagram-svg-source");
 
-          if (previous === "visual" && target === "source" && state.svgEditReady) {
+          if (
+            previous === "visual" &&
+            target === "source" &&
+            state.svgEditReady
+          ) {
             const current = svgEditorGetSvg();
             if (typeof current === "string" && current.trim()) {
               sourceArea.value = formatHtmlSource(current);
@@ -4153,6 +4279,7 @@
 
           let vb = { x: 0, y: 0, w: defaultWidth, h: defaultHeight };
           let tool = "select";
+          let freeLocked = false;
           let zoom = 1;
           let spaceDown = false;
           const style = {
@@ -4174,16 +4301,12 @@
           const ICONS = {
             select:
               '<path d="M3 2l9 6-4 1 2.5 5-2 1-2.5-5-3 3z" fill="currentColor"/>',
-            rect:
-              '<rect x="2.5" y="3.5" width="11" height="9" fill="none" stroke="currentColor" stroke-width="1.5"/>',
+            rect: '<rect x="2.5" y="3.5" width="11" height="9" fill="none" stroke="currentColor" stroke-width="1.5"/>',
             ellipse:
               '<ellipse cx="8" cy="8" rx="5.5" ry="4" fill="none" stroke="currentColor" stroke-width="1.5"/>',
-            line:
-              '<line x1="2.5" y1="13.5" x2="13.5" y2="2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
-            text:
-              '<path d="M3 3h10v2.5H9.5V13H6.5V5.5H3z" fill="currentColor"/>',
-            free:
-              '<path d="M2 13c2-2 2.5-7 5-7s2 6 4 6 1.5-4 3-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+            line: '<line x1="2.5" y1="13.5" x2="13.5" y2="2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+            text: '<path d="M3 3h10v2.5H9.5V13H6.5V5.5H3z" fill="currentColor"/>',
+            free: '<path d="M2 13c2-2 2.5-7 5-7s2 6 4 6 1.5-4 3-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
             arrow:
               '<path d="M2 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
             arrowOpenEnd:
@@ -4194,17 +4317,14 @@
               '<path d="M1 8h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 4l4 4-4 4z" fill="currentColor"/>',
             arrowSolidBoth:
               '<path d="M5 8h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 4l4 4-4 4z M6 4l-4 4 4 4z" fill="currentColor"/>',
-            undo:
-              '<path d="M4 7h6a3 3 0 0 1 0 6H7M4 7l2-2M4 7l2 2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
-            redo:
-              '<path d="M12 7H6a3 3 0 0 0 0 6h3M12 7l-2-2M12 7l-2 2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
+            undo: '<path d="M4 7h6a3 3 0 0 1 0 6H7M4 7l2-2M4 7l2 2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
+            redo: '<path d="M12 7H6a3 3 0 0 0 0 6h3M12 7l-2-2M12 7l-2 2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
             duplicate:
               '<rect x="2.5" y="4.5" width="7" height="8" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="6.5" y="2.5" width="7" height="8" fill="none" stroke="currentColor" stroke-width="1.4"/>',
             front:
               '<rect x="4.5" y="4.5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="2.5" y="2.5" width="6" height="6" fill="currentColor" opacity="0.18" stroke="currentColor" stroke-width="1.4"/>',
-            back:
-              '<rect x="2.5" y="2.5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="7.5" y="7.5" width="6" height="6" fill="currentColor" opacity="0.18" stroke="currentColor" stroke-width="1.4"/>',
-            "delete":
+            back: '<rect x="2.5" y="2.5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="7.5" y="7.5" width="6" height="6" fill="currentColor" opacity="0.18" stroke="currentColor" stroke-width="1.4"/>',
+            delete:
               '<path d="M3 5h10M6 5V3h4v2M5 5l1 9h4l1-9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
             zoomIn:
               '<circle cx="7" cy="7" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 7h4M7 5v4M10 10l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
@@ -4418,11 +4538,7 @@
           );
           duplicateBtn.disabled = true;
           toolbar.appendChild(duplicateBtn);
-          const frontBtn = makeIconBtn(
-            "front",
-            "Bring forward",
-            bringForward,
-          );
+          const frontBtn = makeIconBtn("front", "Bring forward", bringForward);
           frontBtn.disabled = true;
           toolbar.appendChild(frontBtn);
           const backBtn = makeIconBtn("back", "Send back", sendBack);
@@ -4454,10 +4570,8 @@
           const canvasStep = 40;
           const canvasMin = 80;
           const canvasMax = 2400;
-          const widerBtn = makeIconBtn(
-            "canvasWider",
-            "Widen canvas",
-            () => resizeCanvas(canvasStep, 0),
+          const widerBtn = makeIconBtn("canvasWider", "Widen canvas", () =>
+            resizeCanvas(canvasStep, 0),
           );
           toolbar.appendChild(widerBtn);
           const narrowerBtn = makeIconBtn(
@@ -4466,10 +4580,8 @@
             () => resizeCanvas(-canvasStep, 0),
           );
           toolbar.appendChild(narrowerBtn);
-          const tallerBtn = makeIconBtn(
-            "canvasTaller",
-            "Taller canvas",
-            () => resizeCanvas(0, canvasStep),
+          const tallerBtn = makeIconBtn("canvasTaller", "Taller canvas", () =>
+            resizeCanvas(0, canvasStep),
           );
           toolbar.appendChild(tallerBtn);
           const shorterBtn = makeIconBtn(
@@ -4532,14 +4644,35 @@
           }
 
           function setTool(name) {
+            // Re-clicking the already-active Free tool toggles "lock" mode,
+            // so a teacher can ink multiple words/strokes without the tool
+            // bouncing back to Select between each pen-lift.
+            if (name === "free" && tool === "free") {
+              freeLocked = !freeLocked;
+              refreshFreeLockUi();
+              return;
+            }
+            if (name !== "free") freeLocked = false;
             tool = name;
             toolbar
               .querySelectorAll(".mse-tool[data-tool]")
               .forEach((btn) =>
                 btn.classList.toggle("is-active", btn.dataset.tool === name),
               );
+            refreshFreeLockUi();
             svgEl.classList.toggle("is-select-mode", name === "select");
             if (name !== "select") deselect();
+          }
+
+          function refreshFreeLockUi() {
+            const btn = toolbar.querySelector('.mse-tool[data-tool="free"]');
+            if (!btn) return;
+            btn.classList.toggle("is-locked", freeLocked);
+            btn.title = freeLocked
+              ? "Freehand (locked - click to unlock)"
+              : tool === "free"
+                ? "Freehand (click again to lock for continuous ink)"
+                : "Freehand";
           }
 
           function dashArrayFor(styleName, strokeWidth) {
@@ -4693,16 +4826,34 @@
             const num = (k) => Number(el.getAttribute(k)) || 0;
             const base = { angle: getAngle(el) };
             if (tag === "rect") {
-              return { ...base, x: num("x"), y: num("y"), w: num("width"), h: num("height") };
+              return {
+                ...base,
+                x: num("x"),
+                y: num("y"),
+                w: num("width"),
+                h: num("height"),
+              };
             }
             if (tag === "ellipse") {
-              return { ...base, cx: num("cx"), cy: num("cy"), rx: num("rx"), ry: num("ry") };
+              return {
+                ...base,
+                cx: num("cx"),
+                cy: num("cy"),
+                rx: num("rx"),
+                ry: num("ry"),
+              };
             }
             if (tag === "circle") {
               return { ...base, cx: num("cx"), cy: num("cy"), r: num("r") };
             }
             if (tag === "line") {
-              return { ...base, x1: num("x1"), y1: num("y1"), x2: num("x2"), y2: num("y2") };
+              return {
+                ...base,
+                x1: num("x1"),
+                y1: num("y1"),
+                x2: num("x2"),
+                y2: num("y2"),
+              };
             }
             if (tag === "text") {
               return { ...base, x: num("x"), y: num("y") };
@@ -4735,7 +4886,10 @@
               el.setAttribute("y2", String(pt.y));
             } else if (tool === "free") {
               el = document.createElementNS(SVG_NS, "polyline");
-              el.setAttribute("points", `${pt.x.toFixed(1)},${pt.y.toFixed(1)}`);
+              el.setAttribute(
+                "points",
+                `${pt.x.toFixed(1)},${pt.y.toFixed(1)}`,
+              );
             } else if (tool === "text") {
               const text = window.prompt("Text:");
               if (!text) return;
@@ -4815,6 +4969,14 @@
               drag = null;
               return;
             }
+            // Locked free tool stays armed for continuous inking -- don't
+            // select the stroke (so subsequent draws don't move it) and
+            // don't switch back to Select.
+            if (tool === "free" && freeLocked) {
+              drag = null;
+              commit();
+              return;
+            }
             selectEl(el);
             setTool("select");
             drag = null;
@@ -4837,8 +4999,7 @@
             duplicateBtn.disabled = !single;
             frontBtn.disabled = !single;
             backBtn.disabled = !single;
-            const isLine =
-              single && selected.tagName.toLowerCase() === "line";
+            const isLine = single && selected.tagName.toLowerCase() === "line";
             arrowBtn.disabled = !isLine;
             arrowBtn.classList.toggle(
               "is-active",
@@ -4849,7 +5010,9 @@
           }
 
           function setSelection(els) {
-            selection = (els || []).filter((e) => e && e.parentNode === contentG);
+            selection = (els || []).filter(
+              (e) => e && e.parentNode === contentG,
+            );
             selected = selection[0] || null;
             updateSelectionDependentUi();
             renderHandles();
@@ -4888,10 +5051,7 @@
 
           function bringForward() {
             if (!selected || !selected.nextElementSibling) return;
-            contentG.insertBefore(
-              selected.nextElementSibling,
-              selected,
-            );
+            contentG.insertBefore(selected.nextElementSibling, selected);
             commit();
           }
 
@@ -4969,9 +5129,17 @@
               const fs = Number(selected.getAttribute("font-size"));
               if (Number.isFinite(fs) && fs > 0) {
                 style.fontSize = fs;
-                const nearest = ["10", "12", "14", "16", "20", "24", "32", "48"].reduce(
-                  (a, b) =>
-                    Math.abs(Number(b) - fs) < Math.abs(Number(a) - fs) ? b : a,
+                const nearest = [
+                  "10",
+                  "12",
+                  "14",
+                  "16",
+                  "20",
+                  "24",
+                  "32",
+                  "48",
+                ].reduce((a, b) =>
+                  Math.abs(Number(b) - fs) < Math.abs(Number(a) - fs) ? b : a,
                 );
                 fontSelect.value = nearest;
               }
@@ -5106,12 +5274,7 @@
                 "mse-handle",
               );
             }
-            addRotationHandle(
-              cx,
-              bbox.y - rotateOffset,
-              cx,
-              bbox.y,
-            );
+            addRotationHandle(cx, bbox.y - rotateOffset, cx, bbox.y);
           }
 
           function addRotationHandle(hx, hy, anchorX, anchorY) {
@@ -5606,8 +5769,10 @@
                   vb = { x: p[0], y: p[1], w: p[2], h: p[3] };
                 }
               } else {
-                const w = Number(incoming.getAttribute("width")) || defaultWidth;
-                const h = Number(incoming.getAttribute("height")) || defaultHeight;
+                const w =
+                  Number(incoming.getAttribute("width")) || defaultWidth;
+                const h =
+                  Number(incoming.getAttribute("height")) || defaultHeight;
                 vb = { x: 0, y: 0, w, h };
               }
               applyViewBoxAttrs();
@@ -5995,30 +6160,28 @@
           // SVG diagrams and function graphs are edited via the question
           // editor's double-click flow, so the in-margin embed panel is only
           // useful for images now.
-          els.content
-            .querySelectorAll("img")
-            .forEach((embed) => {
-              const block = embed.closest(".question, .answer");
-              if (!block) return;
-              if (
-                !embed.closest(".question-prompt, .answer-body") ||
-                embed.closest(".no-pdf")
-              ) {
-                return;
-              }
-              const kind = embedKind(embed);
-              const noun =
-                kind === "fn-graph"
-                  ? "graph"
-                  : kind === "img"
-                    ? "image"
-                    : "diagram";
-              const editLabel = `Edit ${noun}`;
-              const deleteLabel = `Delete ${noun}`;
-              const marker = document.createElement("span");
-              marker.className = "content-element-tools embed-tools no-pdf";
-              marker.dataset.rowCount = "1";
-              marker.innerHTML = `
+          els.content.querySelectorAll("img").forEach((embed) => {
+            const block = embed.closest(".question, .answer");
+            if (!block) return;
+            if (
+              !embed.closest(".question-prompt, .answer-body") ||
+              embed.closest(".no-pdf")
+            ) {
+              return;
+            }
+            const kind = embedKind(embed);
+            const noun =
+              kind === "fn-graph"
+                ? "graph"
+                : kind === "img"
+                  ? "image"
+                  : "diagram";
+            const editLabel = `Edit ${noun}`;
+            const deleteLabel = `Delete ${noun}`;
+            const marker = document.createElement("span");
+            marker.className = "content-element-tools embed-tools no-pdf";
+            marker.dataset.rowCount = "1";
+            marker.innerHTML = `
                 <span class="tool-rows-stack">
                   <span class="tool-row" aria-label="${editLabel} controls">
                     <button class="edit-button" type="button" data-action="embed-edit" aria-label="${editLabel}" title="${editLabel}">
@@ -6039,10 +6202,10 @@
                 </span>
                 ${hoverTriggerHtml(`Show ${noun} controls`)}
               `;
-              marker._embedTarget = embed;
-              block.appendChild(marker);
-              wireToolbarHover(marker);
-            });
+            marker._embedTarget = embed;
+            block.appendChild(marker);
+            wireToolbarHover(marker);
+          });
 
           positionEmbedMarkers();
         }
@@ -6057,9 +6220,7 @@
             }
             const blockRect = block.getBoundingClientRect();
             const embedRect = embed.getBoundingClientRect();
-            marker.style.top = `${Math.round(
-              embedRect.top - blockRect.top,
-            )}px`;
+            marker.style.top = `${Math.round(embedRect.top - blockRect.top)}px`;
           });
         }
 
@@ -6211,12 +6372,14 @@
           }
           state.latexEditContext = { node, onConfirm };
           state.latexEditMode = "latex";
-          dialog.querySelectorAll(".latex-edit-modes button").forEach((b) =>
-            b.setAttribute(
-              "aria-pressed",
-              String(b.dataset.mode === "latex"),
-            ),
-          );
+          dialog
+            .querySelectorAll(".latex-edit-modes button")
+            .forEach((b) =>
+              b.setAttribute(
+                "aria-pressed",
+                String(b.dataset.mode === "latex"),
+              ),
+            );
           dialog.querySelectorAll(".latex-edit-pane").forEach((pane) => {
             pane.hidden = pane.dataset.pane !== "latex";
           });
@@ -6319,7 +6482,11 @@
                 </label>
                 <label>
                   <input type="checkbox" id="image-crop-enabled" />
-                  Crop before inserting
+                  Crop
+                </label>
+                <label>
+                  <input type="checkbox" id="image-pen-enabled" />
+                  Add pen annotations
                 </label>
                 <label class="image-quality-control">
                   Quality
@@ -6335,6 +6502,19 @@
                     aria-label="Image quality slider"
                   />
                 </label>
+              </div>
+              <div class="image-pen-options" id="image-pen-options" hidden>
+                <label>
+                  Pen colour
+                  <input type="color" id="image-pen-color" value="#dc2626" />
+                </label>
+                <label class="image-pen-width-control">
+                  Thickness
+                  <input type="range" id="image-pen-width" min="1" max="60" step="1" value="3" />
+                  <span id="image-pen-width-readout">3 px</span>
+                </label>
+                <button type="button" data-action="image-pen-undo" id="image-pen-undo">Undo last stroke</button>
+                <button type="button" data-action="image-pen-clear" id="image-pen-clear">Clear all</button>
               </div>
               <div class="image-info" id="image-info"></div>
               <div class="edit-dialog-actions">
@@ -6374,7 +6554,26 @@
             originalHeight: 0,
             cropper: null,
             previewImg: null,
+            penCanvas: null,
+            penBaseImg: null,
+            penStrokes: [],
+            penActiveStroke: null,
           };
+
+          const penToggle = dialog.querySelector("#image-pen-enabled");
+          const penOptions = dialog.querySelector("#image-pen-options");
+          const penColor = dialog.querySelector("#image-pen-color");
+          const penWidth = dialog.querySelector("#image-pen-width");
+          const penWidthReadout = dialog.querySelector(
+            "#image-pen-width-readout",
+          );
+          const penUndoBtn = dialog.querySelector("#image-pen-undo");
+          const penClearBtn = dialog.querySelector("#image-pen-clear");
+
+          penToggle.disabled = true;
+          penWidth.addEventListener("input", () => {
+            penWidthReadout.textContent = `${penWidth.value} px`;
+          });
 
           const destroyCropper = () => {
             if (ctx.cropper) {
@@ -6387,13 +6586,16 @@
 
           const setPreview = (dataUrl, w, h) => {
             destroyCropper();
+            disablePenMode();
             previewWrap.innerHTML = "";
             const img = document.createElement("img");
             img.src = dataUrl;
             img.alt = "Preview";
             previewWrap.appendChild(img);
             ctx.previewImg = img;
+            ctx.penStrokes = [];
             info.textContent = `Original: ${w}×${h} px · approx ${formatBytes(approxBase64Bytes(dataUrl))}`;
+            penToggle.disabled = false;
             if (cropToggle.checked && window.Cropper) {
               img.onload = () => {
                 ctx.cropper = new window.Cropper(img, {
@@ -6403,8 +6605,173 @@
                   background: false,
                 });
               };
+            } else if (penToggle.checked) {
+              img.onload = () => enablePenMode();
             }
           };
+
+          function enablePenMode() {
+            if (!ctx.originalDataUrl) return;
+            destroyCropper();
+            previewWrap.innerHTML = "";
+            const canvas = document.createElement("canvas");
+            canvas.className = "image-pen-canvas";
+            canvas.width = ctx.originalWidth;
+            canvas.height = ctx.originalHeight;
+            previewWrap.appendChild(canvas);
+            ctx.penCanvas = canvas;
+            ctx.penBaseImg = new Image();
+            ctx.penBaseImg.onload = () => redrawPen();
+            ctx.penBaseImg.src = ctx.originalDataUrl;
+            attachPenHandlers(canvas);
+            penOptions.hidden = false;
+            penWidthReadout.textContent = `${penWidth.value} px`;
+            updatePenButtons();
+          }
+
+          function disablePenMode() {
+            if (ctx.penCanvas) {
+              ctx.penCanvas.remove();
+              ctx.penCanvas = null;
+            }
+            ctx.penBaseImg = null;
+            ctx.penActiveStroke = null;
+            penOptions.hidden = true;
+          }
+
+          function updatePenButtons() {
+            const has = ctx.penStrokes && ctx.penStrokes.length > 0;
+            penUndoBtn.disabled = !has;
+            penClearBtn.disabled = !has;
+          }
+
+          function attachPenHandlers(canvas) {
+            canvas.addEventListener("pointerdown", (evt) => {
+              evt.preventDefault();
+              try {
+                canvas.setPointerCapture(evt.pointerId);
+              } catch (err) {
+                /* legacy browsers */
+              }
+              const pt = penCoords(canvas, evt);
+              const stroke = {
+                color: penColor.value,
+                width: Number(penWidth.value) || 1,
+                points: [pt],
+              };
+              ctx.penStrokes.push(stroke);
+              ctx.penActiveStroke = stroke;
+              updatePenButtons();
+              drawPenSegment(canvas, stroke, true);
+            });
+            canvas.addEventListener("pointermove", (evt) => {
+              if (!ctx.penActiveStroke) return;
+              const pt = penCoords(canvas, evt);
+              const stroke = ctx.penActiveStroke;
+              const last = stroke.points[stroke.points.length - 1];
+              if (Math.hypot(pt.x - last.x, pt.y - last.y) < 0.5) return;
+              stroke.points.push(pt);
+              drawPenSegment(canvas, stroke, false);
+            });
+            const endStroke = () => {
+              ctx.penActiveStroke = null;
+            };
+            canvas.addEventListener("pointerup", endStroke);
+            canvas.addEventListener("pointercancel", endStroke);
+            canvas.addEventListener("pointerleave", (evt) => {
+              if (evt.pointerType !== "touch") return;
+              endStroke();
+            });
+          }
+
+          function penCoords(canvas, evt) {
+            const rect = canvas.getBoundingClientRect();
+            const sx = canvas.width / rect.width;
+            const sy = canvas.height / rect.height;
+            return {
+              x: (evt.clientX - rect.left) * sx,
+              y: (evt.clientY - rect.top) * sy,
+            };
+          }
+
+          function drawPenSegment(canvas, stroke, isFirst) {
+            // Incremental segment: draw only the latest piece, avoids the
+            // cost of a full image+strokes redraw per pointermove.
+            const c2d = canvas.getContext("2d");
+            const pts = stroke.points;
+            if (pts.length < 2) return;
+            c2d.strokeStyle = stroke.color;
+            c2d.lineWidth = stroke.width;
+            c2d.lineCap = "round";
+            c2d.lineJoin = "round";
+            c2d.beginPath();
+            const a = pts[pts.length - 2];
+            const b = pts[pts.length - 1];
+            c2d.moveTo(a.x, a.y);
+            c2d.lineTo(b.x, b.y);
+            c2d.stroke();
+            void isFirst;
+          }
+
+          function redrawPen() {
+            if (!ctx.penCanvas || !ctx.penBaseImg) return;
+            const canvas = ctx.penCanvas;
+            const c2d = canvas.getContext("2d");
+            c2d.clearRect(0, 0, canvas.width, canvas.height);
+            c2d.drawImage(ctx.penBaseImg, 0, 0, canvas.width, canvas.height);
+            ctx.penStrokes.forEach((stroke) => drawFullPenStroke(c2d, stroke));
+          }
+
+          function drawFullPenStroke(c2d, stroke) {
+            const pts = stroke.points;
+            if (!pts || pts.length === 0) return;
+            c2d.strokeStyle = stroke.color;
+            c2d.lineWidth = stroke.width;
+            c2d.lineCap = "round";
+            c2d.lineJoin = "round";
+            c2d.beginPath();
+            c2d.moveTo(pts[0].x, pts[0].y);
+            for (let i = 1; i < pts.length; i++) {
+              c2d.lineTo(pts[i].x, pts[i].y);
+            }
+            if (pts.length === 1) {
+              // Single tap: draw a dot
+              c2d.lineTo(pts[0].x + 0.01, pts[0].y);
+            }
+            c2d.stroke();
+          }
+
+          penToggle.addEventListener("change", () => {
+            if (penToggle.checked) {
+              if (cropToggle.checked) cropToggle.checked = false;
+              cropToggle.disabled = true;
+              if (ctx.originalDataUrl) enablePenMode();
+            } else {
+              cropToggle.disabled = false;
+              ctx.penStrokes = [];
+              disablePenMode();
+              if (ctx.originalDataUrl) {
+                setPreview(
+                  ctx.originalDataUrl,
+                  ctx.originalWidth,
+                  ctx.originalHeight,
+                );
+              }
+            }
+          });
+
+          penUndoBtn.addEventListener("click", () => {
+            if (!ctx.penStrokes.length) return;
+            ctx.penStrokes.pop();
+            redrawPen();
+            updatePenButtons();
+          });
+
+          penClearBtn.addEventListener("click", () => {
+            ctx.penStrokes = [];
+            redrawPen();
+            updatePenButtons();
+          });
 
           fileInput.addEventListener("change", () => {
             const file = fileInput.files && fileInput.files[0];
@@ -6425,6 +6792,14 @@
           });
 
           cropToggle.addEventListener("change", () => {
+            if (cropToggle.checked) {
+              if (penToggle.checked) penToggle.checked = false;
+              penToggle.disabled = true;
+              disablePenMode();
+              ctx.penStrokes = [];
+            } else {
+              penToggle.disabled = !ctx.originalDataUrl;
+            }
             if (!ctx.originalDataUrl) return;
             setPreview(
               ctx.originalDataUrl,
@@ -6476,7 +6851,14 @@
               destroyCropper();
             };
 
-            if (ctx.cropper) {
+            if (penToggle.checked && ctx.penCanvas) {
+              // Bake the strokes into the bitmap on the way out.
+              finalize(
+                ctx.penCanvas,
+                ctx.penCanvas.width,
+                ctx.penCanvas.height,
+              );
+            } else if (ctx.cropper) {
               const canvas = ctx.cropper.getCroppedCanvas();
               finalize(canvas, canvas.width, canvas.height);
             } else {
@@ -6490,6 +6872,9 @@
 
           dialog._reset = () => {
             destroyCropper();
+            disablePenMode();
+            ctx.penStrokes = [];
+            updatePenButtons();
             fileInput.value = "";
             previewWrap.innerHTML =
               '<span class="image-preview-placeholder">Choose an image to preview</span>';
@@ -6498,6 +6883,9 @@
             ctx.originalWidth = 0;
             ctx.originalHeight = 0;
             cropToggle.checked = false;
+            cropToggle.disabled = false;
+            penToggle.checked = false;
+            penToggle.disabled = true;
           };
 
           dialog._loadImage = (dataUrl) => {
@@ -6533,7 +6921,12 @@
             index: state.quillInstance.getLength(),
             length: 0,
           };
-          state.quillInstance.insertEmbed(range.index, "image", dataUrl, "user");
+          state.quillInstance.insertEmbed(
+            range.index,
+            "image",
+            dataUrl,
+            "user",
+          );
           state.quillInstance.setSelection(range.index + 1, 0, "silent");
         }
 
@@ -6764,9 +7157,7 @@
             return;
           }
 
-          const answers = Array.from(
-            els.content.querySelectorAll(".answer"),
-          );
+          const answers = Array.from(els.content.querySelectorAll(".answer"));
           const blockAnswer = answers[idx];
           const targetAnswer = answers[targetIdx];
 
@@ -7130,10 +7521,7 @@
             } else if (action === "toggle-break") {
               toggleBreak(block);
             } else if (action === "edit-question") {
-              openEditDialog(
-                getQuestionEditableTarget(block),
-                "Edit question",
-              );
+              openEditDialog(getQuestionEditableTarget(block), "Edit question");
             } else if (action === "edit-answer") {
               openEditDialog(getAnswerEditableTarget(block), "Edit answer");
             } else if (action === "delete-question") {
@@ -7303,13 +7691,11 @@
           const page = getPage();
           const printableWidthPx = Math.max(
             260,
-            (page.width - state.marginLeftMm - state.marginRightMm) *
-              MM_TO_PX,
+            (page.width - state.marginLeftMm - state.marginRightMm) * MM_TO_PX,
           );
           const printableHeightPx = Math.max(
             260,
-            (page.height - state.marginTopMm - state.marginBottomMm) *
-              MM_TO_PX,
+            (page.height - state.marginTopMm - state.marginBottomMm) * MM_TO_PX,
           );
 
           els.root.style.setProperty(
@@ -7382,9 +7768,7 @@
           if (!els.pageSize) return;
           const target = `${state.pageSize}-${state.orientation}`;
           if (
-            Array.from(els.pageSize.options).some(
-              (opt) => opt.value === target,
-            )
+            Array.from(els.pageSize.options).some((opt) => opt.value === target)
           ) {
             els.pageSize.value = target;
           }
@@ -7806,8 +8190,7 @@
           const page = getPage();
           return Math.max(
             260,
-            (page.height - state.marginTopMm - state.marginBottomMm) *
-              MM_TO_PX,
+            (page.height - state.marginTopMm - state.marginBottomMm) * MM_TO_PX,
           );
         }
 
@@ -7879,8 +8262,7 @@
           return new Promise((resolve, reject) => {
             const image = new Image();
             image.onload = () => resolve(image);
-            image.onerror = () =>
-              reject(new Error("SVG image failed to load"));
+            image.onerror = () => reject(new Error("SVG image failed to load"));
             image.src = url;
           });
         }
